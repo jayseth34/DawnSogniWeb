@@ -1,49 +1,113 @@
+﻿import { useMemo } from "react";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { api, type DropDesign } from "../api";
+import { useSessionApi } from "./useSession";
+import { formatRupees } from "./money";
+
+function pickImages(drops: DropDesign[], count: number): Array<string | null> {
+  const imgs = drops.flatMap((d) => (d.images?.length ? [d.images[0]] : []));
+  if (imgs.length === 0) return Array.from({ length: count }, () => null);
+  const out: Array<string | null> = [];
+  for (let i = 0; i < count; i++) out.push(imgs[i % imgs.length] ?? null);
+  return out;
+}
 
 export function HomePage() {
+  const { data, isLoading, error } = useQuery({ queryKey: ["drops"], queryFn: api.drops });
+  const { addDropToCart } = useSessionApi();
+
+  const drops = data ?? [];
+  const hero = useMemo(() => pickImages(drops, 4), [drops]);
+  const newArrivals = drops.slice(0, 8);
+
   return (
-    <div style={{ paddingTop: 20 }}>
-      <div className="h1">Dawn Sogni</div>
-      <div className="muted" style={{ fontSize: 16, maxWidth: 820 }}>
-        Dawn Sogni means <b>“the morning dream”</b> — a brand built on fresh ideas, clean silhouettes, and drops that feel
-        like the first light of the day.
-      </div>
-      <div className="hr" />
-      <div className="grid cards">
-        <div className="card">
-          <div className="p">
-            <div className="h2">Design Drops</div>
-            <div className="muted">Limited designs we release as drops. Choose your fit and place a COD order.</div>
-            <div style={{ height: 12 }} />
-            <Link className="btn primary" to="/drops">
-              Explore drops
-            </Link>
-          </div>
+    <div>
+      <div className="heroWrap">
+        <div className="heroGrid">
+          <div className="heroTile heroLeft">{hero[0] ? <img src={hero[0]} alt="" /> : null}</div>
+          <div className="heroTile heroMid">{hero[1] ? <img src={hero[1]} alt="" /> : null}</div>
+          <div className="heroTile heroRight">{hero[2] ? <img src={hero[2]} alt="" /> : null}</div>
+          <div className="heroTile heroBottom">{hero[3] ? <img src={hero[3]} alt="" /> : null}</div>
         </div>
-        <div className="card">
-          <div className="p">
-            <div className="h2">Custom Designs</div>
-            <div className="muted">
-              Want something personal? Request a custom design. We usually quote based on complexity (approx \u20B9600–\u20B9800 as a
-              starting range).
+      </div>
+
+      <div className="marqueeBar" aria-hidden="true">
+        <div className="marqueeTrack">
+          {[
+            "Free Shipping Across India",
+            "COD Available",
+            "Exchanges Available",
+            "5000+ Trusted Customers",
+            "Premium Fabric",
+            "Limited Drops"
+          ]
+            .concat([
+              "Free Shipping Across India",
+              "COD Available",
+              "Exchanges Available",
+              "5000+ Trusted Customers",
+              "Premium Fabric",
+              "Limited Drops"
+            ])
+            .map((t, idx) => (
+              <div key={`${t}-${idx}`} className="marqueeItem">
+                {t}
+              </div>
+            ))}
+        </div>
+      </div>
+
+      <section className="section">
+        <div className="sectionTitle">New Arrivals</div>
+
+        {isLoading && <div className="muted" style={{ textAlign: "center", padding: 18 }}>Loading...</div>}
+        {error && (
+          <div className="muted" style={{ textAlign: "center", padding: 18 }}>
+            Failed to load products.
+          </div>
+        )}
+
+        <div className="productGrid">
+          {newArrivals.map((d) => (
+            <div className="productCard" key={d.id}>
+              {d.images?.[0] ? <img className="productImg" src={d.images[0]} alt={d.title} /> : <div className="productImg" />}
+              <div className="productMeta">
+                <div className="productNameRow">
+                  <div className="productName clamp2" title={d.title}>
+                    {d.title}
+                  </div>
+                </div>
+                <div className="productPrice">{d.priceCents === 0 ? "Quote pending" : formatRupees(d.priceCents)}</div>
+                <div className="productActions">
+                  <button className="btn primary" onClick={() => addDropToCart(d)}>
+                    Add
+                  </button>
+                  <Link className="btn" to="/checkout">
+                    Checkout
+                  </Link>
+                </div>
+              </div>
             </div>
-            <div style={{ height: 12 }} />
-            <Link className="btn" to="/custom">
-              Request custom
-            </Link>
-          </div>
+          ))}
         </div>
-        <div className="card">
-          <div className="p">
-            <div className="h2">Bulk Orders</div>
-            <div className="muted">Collar, round neck, oversized — bulk orders supported. COD only for now.</div>
-            <div style={{ height: 12 }} />
-            <Link className="btn" to="/bulk">
-              Create bulk request
-            </Link>
+
+        {!isLoading && drops.length === 0 && (
+          <div className="muted" style={{ textAlign: "center", padding: 18 }}>
+            No drops yet. Add products from <Link to="/admin/drops">admin → drops</Link>.
           </div>
+        )}
+
+        <div style={{ height: 22 }} />
+        <div style={{ display: "flex", justifyContent: "center", gap: 12, flexWrap: "wrap" }}>
+          <Link className="btn primary" to="/drops">
+            Shop all
+          </Link>
+          <Link className="btn" to="/custom">
+            Request custom
+          </Link>
         </div>
-      </div>
+      </section>
     </div>
   );
 }
