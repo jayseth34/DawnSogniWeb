@@ -6,6 +6,8 @@ export function sessionKeyForPhone(phoneDigits?: string | null) {
   return `${KEY}.phone.${p}`;
 }
 
+export const PENDING_SESSION_KEY = `${KEY}.pending`;
+
 export type CustomerDraft = {
   name: string;
   phone: string;

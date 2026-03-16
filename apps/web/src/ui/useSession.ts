@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo, useState } from "react";
-import { loadSession, saveSession, sessionKeyForPhone, type CartItem, type SessionState } from "../storage";
+import { loadSession, saveSession, PENDING_SESSION_KEY, sessionKeyForPhone, type CartItem, type SessionState } from "../storage";
 import type { DropDesign } from "../api";
 import { useCustomerAuth } from "./useCustomerAuth";
 
@@ -16,8 +16,12 @@ export type SessionApi = {
 };
 
 export function useSessionApi(): SessionApi {
-  const { isAuthed, phoneDigits } = useCustomerAuth();
-  const storageKey = useMemo(() => sessionKeyForPhone(isAuthed ? phoneDigits : ""), [isAuthed, phoneDigits]);
+  const { isAuthed, phoneDigits, ready } = useCustomerAuth();
+
+  const storageKey = useMemo(() => {
+    if (!ready && !phoneDigits) return PENDING_SESSION_KEY;
+    return sessionKeyForPhone(isAuthed ? phoneDigits : "");
+  }, [isAuthed, phoneDigits, ready]);
 
   const [session, setSession] = useState<SessionState>(() => loadSession(storageKey));
 

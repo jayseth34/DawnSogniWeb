@@ -2,9 +2,14 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { api } from "../api";
+import { cacheCustomerPhoneDigits } from "./useCustomerAuth";
 
 function normalizePhone(input: string) {
   return input.replace(/[^0-9+]/g, "").slice(0, 16);
+}
+
+function phoneToDigits(input: string) {
+  return normalizePhone(input).replace(/[^0-9]/g, "").slice(0, 15);
 }
 
 export function LoginPage() {
@@ -44,6 +49,7 @@ export function LoginPage() {
     setLoading(true);
     try {
       await api.customer.verifyLogin(normalizePhone(phone), code.trim());
+      cacheCustomerPhoneDigits(phoneToDigits(phone));
       await qc.invalidateQueries({ queryKey: ["customerMe"] });
       nav(nextUrl);
     } catch (e: any) {
