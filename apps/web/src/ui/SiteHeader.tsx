@@ -13,7 +13,8 @@ const links: LinkItem[] = [
   // { key: "orders", label: "Track Orders", to: "/orders" },
   // { key: "contact", label: "Contact", to: "/contact" },
   // { key: "returns", label: "Returns & Exchanges", to: "/returns" },
-  { key: "size", label: "Size Chart", to: "/size-chart" }
+  { key: "size", label: "Size Chart", to: "/size-chart" },
+  {key:"Custom Order", label: "Custom Order", to:"/custom"}
 ];
 
 function activeKeyFromLocation(loc: ReturnType<typeof useLocation>) {
@@ -23,6 +24,7 @@ function activeKeyFromLocation(loc: ReturnType<typeof useLocation>) {
   if (path === "/contact") return "contact";
   if (path === "/returns") return "returns";
   if (path === "/size-chart") return "size";
+  if (path === "/custom") return "custom";
   if (path === "/drops") {
     const sp = new URLSearchParams(loc.search);
     const cat = (sp.get("category") || "").toLowerCase();
