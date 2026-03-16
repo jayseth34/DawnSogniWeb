@@ -1,6 +1,15 @@
-import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+﻿import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
 import { api } from "../../api";
+
+function AdminNavLink(props: { to: string; label: string; active: boolean }) {
+  return (
+    <Link className={props.active ? "adminNavLink active" : "adminNavLink"} to={props.to}>
+      <span>{props.label}</span>
+      <span style={{ opacity: 0.55 }}>›</span>
+    </Link>
+  );
+}
 
 export function AdminLayout() {
   const loc = useLocation();
@@ -28,43 +37,74 @@ export function AdminLayout() {
     };
   }, [loc.pathname, nav]);
 
-  if (!ready) return <div className="container"><div className="muted">Loading admin…</div></div>;
-  if (!authed && !loc.pathname.endsWith("/login")) return null;
+  const isLogin = loc.pathname.endsWith("/login");
+  const showNav = !isLogin;
 
-  const showNav = !loc.pathname.endsWith("/login");
+  const activeKey = useMemo(() => {
+    const p = loc.pathname;
+    if (p.startsWith("/admin/orders")) return "orders";
+    if (p.startsWith("/admin/drops")) return "drops";
+    if (p.startsWith("/admin/custom")) return "custom";
+    return "";
+  }, [loc.pathname]);
+
+  if (!ready)
+    return (
+      <div className="adminRoot">
+        <div className="container page">
+          <div className="muted">Loading…</div>
+        </div>
+      </div>
+    );
+
+  if (!authed && !isLogin) return null;
 
   return (
-    <div className="container">
-      {showNav && (
-        <div className="nav">
-          <div className="brand">
-            <span className="pill">Admin</span>
-            <span className="muted">Dawn Sogni</span>
+    <div className="adminRoot">
+      <div className="adminTopBar">
+        <div className="adminTopInner">
+          <div className="adminBrand">
+            <div className="adminBrandTitle">Admin</div>
+            <div className="adminBrandSub">Dawn Sogni</div>
           </div>
-          <div className="row">
-            <Link className="pill" to="/admin/orders">
-              Orders
-            </Link>
-            <Link className="pill" to="/admin/drops">
-              Drops
-            </Link>
-            <Link className="pill" to="/admin/custom">
-              Custom Requests
-            </Link>
-            <button
-              className="btn"
-              onClick={async () => {
-                await api.admin.logout();
-                nav("/admin/login");
-              }}
-            >
-              Logout
-            </button>
+
+          <div className="row" style={{ gap: 10 }}>
+            <a className="btn" href="/" target="_blank" rel="noreferrer">
+              View store
+            </a>
+            {showNav && (
+              <button
+                className="btn"
+                onClick={async () => {
+                  await api.admin.logout();
+                  nav("/admin/login");
+                }}
+              >
+                Logout
+              </button>
+            )}
           </div>
         </div>
+      </div>
+
+      {showNav ? (
+        <div className="adminShell">
+          <aside className="adminSide">
+            <div className="adminSideInner">
+              <AdminNavLink to="/admin/orders" label="Orders" active={activeKey === "orders"} />
+              <AdminNavLink to="/admin/drops" label="Products (Drops)" active={activeKey === "drops"} />
+              <AdminNavLink to="/admin/custom" label="Custom Requests" active={activeKey === "custom"} />
+            </div>
+          </aside>
+          <main className="adminMain">
+            <Outlet />
+          </main>
+        </div>
+      ) : (
+        <div className="container page" style={{ maxWidth: 560 }}>
+          <Outlet />
+        </div>
       )}
-      <Outlet />
     </div>
   );
 }
-

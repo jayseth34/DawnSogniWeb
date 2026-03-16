@@ -1,10 +1,12 @@
 ﻿import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { api } from "../../api";
+import { formatRupees } from "../money";
 
-function rupees(cents: number | null | undefined) {
+function moneyText(cents: number | null | undefined) {
   if (cents == null) return "—";
-  return `₹${Math.round(cents / 100)}`;
+  if (cents === 0) return "Quote pending";
+  return formatRupees(cents);
 }
 
 export function AdminOrderDetailPage() {
@@ -12,6 +14,7 @@ export function AdminOrderDetailPage() {
   const [data, setData] = useState<any>(null);
   const [status, setStatus] = useState("");
   const [partial, setPartial] = useState(20000);
+  const [saving, setSaving] = useState(false);
 
   async function load() {
     if (!id) return;
@@ -23,15 +26,30 @@ export function AdminOrderDetailPage() {
     load().catch((e) => setStatus(String(e?.message ?? e)));
   }, [id]);
 
-  const itemsText = useMemo(
-    () => (data?.items ?? []).map((i: any) => `${i.title} × ${i.quantity}`).join(" · "),
-    [data]
-  );
+  const itemsText = useMemo(() => (data?.items ?? []).map((i: any) => `${i.title} × ${i.quantity}`).join(" · "), [data]);
 
-  if (!data) return <div style={{ paddingTop: 18 }} className="muted">Loading…</div>;
+  if (!data)
+    return (
+      <div className="muted" style={{ paddingTop: 18 }}>
+        Loading…
+      </div>
+    );
+
+  async function act(fn: () => Promise<any>) {
+    setStatus("");
+    setSaving(true);
+    try {
+      await fn();
+      await load();
+    } catch (e: any) {
+      setStatus(String(e?.message ?? e));
+    } finally {
+      setSaving(false);
+    }
+  }
 
   return (
-    <div style={{ paddingTop: 18 }}>
+    <div>
       <div className="row" style={{ justifyContent: "space-between" }}>
         <div>
           <div className="h2">{data.orderNumber}</div>
@@ -49,46 +67,29 @@ export function AdminOrderDetailPage() {
           <div className="p">
             <div style={{ fontWeight: 900 }}>Order</div>
             <div className="muted" style={{ marginTop: 8 }}>
-              Total {rupees(data.totalCents)} · Items: {itemsText || "—"}
+              Total {moneyText(data.totalCents)} · Items: {itemsText || "—"}
             </div>
             <div className="muted" style={{ marginTop: 8 }}>
               Address: {data.addressLine1}
               {data.addressLine2 ? `, ${data.addressLine2}` : ""}, {data.city}, {data.state} - {data.pincode}
             </div>
+
             <div style={{ height: 12 }} />
             <div className="row">
-              <button
-                className="btn primary"
-                onClick={async () => {
-                  await api.admin.acceptOrder(data.id);
-                  await load();
-                }}
-              >
-                Accept (notify owner)
+              <button className="btn primary" onClick={() => act(() => api.admin.acceptOrder(data.id))} disabled={saving}>
+                Accept
               </button>
-              <button
-                className="btn"
-                onClick={async () => {
-                  await api.admin.markShipped(data.id);
-                  await load();
-                }}
-              >
+              <button className="btn" onClick={() => act(() => api.admin.markShipped(data.id))} disabled={saving}>
                 Mark shipped
               </button>
-              <button
-                className="btn"
-                onClick={async () => {
-                  await api.admin.markDelivered(data.id);
-                  await load();
-                }}
-              >
+              <button className="btn" onClick={() => act(() => api.admin.markDelivered(data.id))} disabled={saving}>
                 Mark delivered
               </button>
             </div>
 
             <div className="hr" />
             <div style={{ fontWeight: 900 }}>Partial payment</div>
-            <div className="muted" style={{ marginTop: 8 }}>Requested: {rupees(data.partialAmountCents)}</div>
+            <div className="muted" style={{ marginTop: 8 }}>Requested: {moneyText(data.partialAmountCents)}</div>
             <div className="row" style={{ marginTop: 10 }}>
               <input
                 className="input"
@@ -97,23 +98,11 @@ export function AdminOrderDetailPage() {
                 value={Math.round(partial / 100)}
                 onChange={(e) => setPartial(Number(e.target.value) * 100)}
               />
-              <button
-                className="btn"
-                onClick={async () => {
-                  await api.admin.requestPartial(data.id, partial);
-                  await load();
-                }}
-              >
-                Request partial
+              <button className="btn" onClick={() => act(() => api.admin.requestPartial(data.id, partial))} disabled={saving}>
+                Request
               </button>
-              <button
-                className="btn"
-                onClick={async () => {
-                  await api.admin.markPartialPaid(data.id);
-                  await load();
-                }}
-              >
-                Mark partial paid
+              <button className="btn" onClick={() => act(() => api.admin.markPartialPaid(data.id))} disabled={saving}>
+                Mark paid
               </button>
             </div>
           </div>

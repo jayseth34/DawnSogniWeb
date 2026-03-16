@@ -2,10 +2,31 @@
 import { api, type Order } from "../api";
 import { useSessionApi } from "./useSession";
 import { formatRupees } from "./money";
+import { useSearchParams } from "react-router-dom";
 
 function totalText(order: Order) {
   if (order.totalCents === 0) return "Quote pending";
   return formatRupees(order.totalCents);
+}
+
+function maskToken(token: string) {
+  if (!token) return "—";
+  if (token.length <= 10) return token;
+  return `${token.slice(0, 4)}…${token.slice(-4)}`;
+}
+
+async function copyToClipboard(label: string, value: string, onStatus: (msg: string) => void) {
+  try {
+    await navigator.clipboard.writeText(value);
+    onStatus(`${label} copied`);
+    setTimeout(() => onStatus(""), 1400);
+  } catch {
+    try {
+      window.prompt(`Copy ${label}:`, value);
+    } catch {
+      // ignore
+    }
+  }
 }
 
 export function OrdersPage() {
@@ -14,8 +35,11 @@ export function OrdersPage() {
   const [status, setStatus] = useState<string>("");
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [newToken, setNewToken] = useState("");
+  const [uiToast, setUiToast] = useState("");
+  const [params, setParams] = useSearchParams();
 
   const tokens = useMemo(() => session.orderTokens ?? [], [session.orderTokens]);
+  const placedToken = (params.get("placed") || "").trim();
 
   async function fetchAll() {
     setStatus("");
@@ -55,27 +79,87 @@ export function OrdersPage() {
     setNewToken("");
   }
 
+  const placedOrder = useMemo(() => {
+    if (!placedToken) return null;
+    return orders.find((o) => o.accessToken === placedToken) ?? null;
+  }, [orders, placedToken]);
+
+  function dismissPlaced() {
+    const next = new URLSearchParams(params);
+    next.delete("placed");
+    setParams(next, { replace: true });
+  }
+
   return (
     <div className="container page">
       <div className="row" style={{ justifyContent: "space-between" }}>
         <div>
           <div className="h2">Your Orders</div>
-          <div className="muted">Saved on this device (no login yet). Click an order to expand tracking.</div>
+          <div className="muted">Saved to this device.</div>
         </div>
         <button className="btn" onClick={fetchAll}>
-          Refresh all
+          Refresh
         </button>
       </div>
+
+      {uiToast && (
+        <div className="muted" style={{ marginTop: 10 }}>
+          {uiToast}
+        </div>
+      )}
+
+      {placedToken && (
+        <div className="card" style={{ marginTop: 14 }}>
+          <div className="p">
+            <div className="row" style={{ justifyContent: "space-between" }}>
+              <div style={{ fontWeight: 900 }}>Order placed</div>
+              <button className="btn" onClick={dismissPlaced}>
+                Dismiss
+              </button>
+            </div>
+            <div className="muted" style={{ marginTop: 8, lineHeight: 1.6 }}>
+              {placedOrder ? (
+                <>
+                  Order number: <b>{placedOrder.orderNumber}</b>
+                  <br />
+                  Order ID: <b>{placedOrder.id}</b>
+                </>
+              ) : (
+                <>Your tracking token is ready.</>
+              )}
+            </div>
+            <div className="hr" />
+            <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
+              <div className="muted2" style={{ fontSize: 13 }}>
+                Tracking token: <b>{maskToken(placedToken)}</b>
+              </div>
+              <div className="row" style={{ gap: 10 }}>
+                <button className="btn" onClick={() => copyToClipboard("tracking token", placedToken, setUiToast)}>
+                  Copy token
+                </button>
+                {placedOrder && (
+                  <button className="btn" onClick={() => copyToClipboard("order id", placedOrder.id, setUiToast)}>
+                    Copy order id
+                  </button>
+                )}
+              </div>
+            </div>
+            <div className="muted2" style={{ marginTop: 10, fontSize: 12 }}>
+              Keep the token safe. You can use it to track this order on any device.
+            </div>
+          </div>
+        </div>
+      )}
 
       <div style={{ height: 12 }} />
       <div className="card">
         <div className="p">
-          <div style={{ fontWeight: 800 }}>Track an older order</div>
+          <div style={{ fontWeight: 800 }}>Add an order token</div>
           <div className="muted" style={{ marginTop: 6, fontSize: 12 }}>
-            If you have an order tracking token, paste it here to add it to your history on this device.
+            Paste a tracking token to add an order to this device.
           </div>
           <div className="row" style={{ marginTop: 10 }}>
-            <input className="input" value={newToken} onChange={(e) => setNewToken(e.target.value)} placeholder="Order token" />
+            <input className="input" value={newToken} onChange={(e) => setNewToken(e.target.value)} placeholder="Tracking token" />
             <button className="btn primary" onClick={addToken} disabled={!newToken.trim()}>
               Add
             </button>
@@ -97,10 +181,38 @@ export function OrdersPage() {
               <div className="muted" style={{ marginTop: 8 }}>
                 Total {totalText(o)} · COD · {new Date(o.createdAt).toLocaleString()}
               </div>
-              <div className="muted" style={{ marginTop: 6, fontSize: 12 }}>
-                {o.items.map((i) => `${i.title} × ${i.quantity}`).join(" · ")}
+
+              <div className="row" style={{ justifyContent: "space-between", marginTop: 10, gap: 10 }}>
+                <div className="muted2" style={{ fontSize: 12 }}>
+                  Order ID: <b>{o.id}</b>
+                </div>
+                <button
+                  className="btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    void copyToClipboard("order id", o.id, setUiToast);
+                  }}
+                >
+                  Copy
+                </button>
               </div>
-              <div className="muted" style={{ marginTop: 8, fontSize: 12 }}>
+
+              <div className="row" style={{ justifyContent: "space-between", marginTop: 10, gap: 10 }}>
+                <div className="muted2" style={{ fontSize: 12 }}>
+                  Token: <b>{maskToken(o.accessToken)}</b>
+                </div>
+                <button
+                  className="btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    void copyToClipboard("tracking token", o.accessToken, setUiToast);
+                  }}
+                >
+                  Copy
+                </button>
+              </div>
+
+              <div className="muted" style={{ marginTop: 10, fontSize: 12 }}>
                 {expanded[o.id] ? "Hide tracking" : "Show tracking"}
               </div>
             </div>

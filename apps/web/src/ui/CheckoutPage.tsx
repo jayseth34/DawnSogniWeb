@@ -94,7 +94,7 @@ export function CheckoutPage() {
           pincode: normalizePin(draft.pincode)
         },
         items,
-        notes: "COD only (MVP)."
+        notes: "Cash on delivery."
       });
 
       persist({
@@ -103,7 +103,14 @@ export function CheckoutPage() {
         customerDraft: draft,
         orderTokens: [order.accessToken, ...(session.orderTokens ?? [])].slice(0, 50)
       });
-      nav("/orders");
+
+      try {
+        await navigator.clipboard.writeText(order.accessToken);
+      } catch {
+        // ignore clipboard failures
+      }
+
+      nav(`/orders?placed=${encodeURIComponent(order.accessToken)}`);
     } catch (e: any) {
       setStatus(`Failed: ${String(e?.message ?? e)}`);
     } finally {
@@ -115,7 +122,7 @@ export function CheckoutPage() {
     <div className="container page">
       <div className="h2">Checkout</div>
       <div className="muted">
-        Payment method: <b>COD only</b>. Your details are saved on this device.
+        Payment method: <b>COD</b>.
       </div>
       <div className="hr" />
 
@@ -194,7 +201,7 @@ export function CheckoutPage() {
             <div style={{ height: 12 }} />
             {session.cart.length === 0 && (
               <div className="muted">
-                Cart is empty. <Link to="/drops">Shop drops</Link> or <Link to="/bulk">add bulk</Link>.
+                Cart is empty. <Link to="/drops">Shop</Link> or <Link to="/bulk">bulk orders</Link>.
               </div>
             )}
             <div className="grid" style={{ gap: 10 }}>
@@ -228,7 +235,7 @@ export function CheckoutPage() {
             </div>
             <div style={{ height: 14 }} />
             <button className="btn primary" onClick={placeOrder} disabled={!canPlace}>
-              {submitting ? "Placing order..." : "Place COD order"}
+              {submitting ? "Placing order..." : "Place order"}
             </button>
             {status && (
               <div className="muted" style={{ marginTop: 12 }}>

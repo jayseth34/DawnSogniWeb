@@ -453,3 +453,149 @@ textarea {
     font-size: 14px;
   }
 }
+/* ---- Admin portal ---- */
+.adminRoot {
+  min-height: 100vh;
+  background: #000;
+}
+.adminTopBar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: rgba(0, 0, 0, 0.92);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.adminTopInner {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.adminBrand {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.adminBrandTitle {
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 16px;
+}
+.adminBrandSub {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 13px;
+}
+.adminShell {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 18px;
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 18px;
+}
+.adminSide {
+  position: sticky;
+  top: 70px;
+  align-self: start;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  overflow: hidden;
+}
+.adminSideInner {
+  padding: 10px;
+  display: grid;
+  gap: 8px;
+}
+.adminNavLink {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.78);
+  border: 1px solid transparent;
+}
+.adminNavLink:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.95);
+}
+.adminNavLink.active {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.98);
+}
+.adminMain {
+  padding: 18px 0 36px;
+}
+
+.adminPageTitle {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: baseline;
+}
+
+.adminList {
+  display: grid;
+  gap: 12px;
+}
+.adminItem {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+}
+.adminItemInner {
+  padding: 12px;
+  display: grid;
+  grid-template-columns: 86px 1fr auto;
+  gap: 12px;
+  align-items: center;
+}
+.adminThumb {
+  width: 86px;
+  height: 110px;
+  border-radius: 14px;
+  object-fit: cover;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+.adminThumbSm {
+  width: 56px;
+  height: 72px;
+  border-radius: 12px;
+  object-fit: cover;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+.adminMeta {
+  min-width: 0;
+}
+.adminMetaTitle {
+  font-weight: 800;
+  font-size: 15px;
+}
+.adminMetaSub {
+  margin-top: 6px;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 13px;
+}
+
+@media (max-width: 980px) {
+  .adminShell {
+    grid-template-columns: 1fr;
+  }
+  .adminSide {
+    position: relative;
+    top: 0;
+  }
+  .adminItemInner {
+    grid-template-columns: 86px 1fr;
+    grid-template-rows: auto auto;
+  }
+}

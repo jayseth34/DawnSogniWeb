@@ -2,7 +2,7 @@
   return (
     <div className="container page" style={{ maxWidth: 820 }}>
       <div className="h2">Returns & Exchanges</div>
-      <div className="muted">This is an MVP policy page. Update this copy to match your actual business terms.</div>
+      <div className="muted">For returns/exchanges, contact support with your order number and photos (if needed).</div>
       <div className="hr" />
 
       <div className="card">
@@ -27,3 +27,4 @@
     </div>
   );
 }
+

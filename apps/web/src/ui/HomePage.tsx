@@ -94,7 +94,7 @@ export function HomePage() {
 
         {!isLoading && drops.length === 0 && (
           <div className="muted" style={{ textAlign: "center", padding: 18 }}>
-            No drops yet. Add products from <Link to="/admin/drops">admin → drops</Link>.
+            No products available right now. Check back soon.
           </div>
         )}
 
@@ -111,3 +111,5 @@ export function HomePage() {
     </div>
   );
 }
+
+

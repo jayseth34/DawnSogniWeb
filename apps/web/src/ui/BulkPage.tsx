@@ -67,10 +67,11 @@ export function BulkPage() {
             Add to cart
           </button>
           <div className="muted" style={{ marginTop: 10, fontSize: 12 }}>
-            Tip: You can track status in “Your Orders” after placing.
+            You can track status in “Your Orders” after placing.
           </div>
         </div>
       </div>
     </div>
   );
 }
+

@@ -2,7 +2,7 @@
   return (
     <div className="container page" style={{ maxWidth: 820 }}>
       <div className="h2">Size Chart</div>
-      <div className="muted">This is a placeholder. Replace measurements with your brand’s actual chart.</div>
+      <div className="muted">Refer to the measurements below before ordering. If you’re between sizes, size up for a relaxed fit.</div>
       <div className="hr" />
 
       <div className="card">

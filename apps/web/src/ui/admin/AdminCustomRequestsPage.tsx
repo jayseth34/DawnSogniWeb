@@ -1,10 +1,13 @@
-﻿import { useEffect, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { api, type CustomRequest } from "../../api";
 import { uploadToImageKit } from "../../imagekitUpload";
+import { formatRupees } from "../money";
 
-function rupees(cents: number | null) {
-  if (cents == null) return "—";
-  return `₹${Math.round(cents / 100)}`;
+function parseCsv(csv: string) {
+  return csv
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
 }
 
 export function AdminCustomRequestsPage() {
@@ -33,6 +36,7 @@ export function AdminCustomRequestsPage() {
   }, []);
 
   async function update(id: string, patch: any) {
+    setStatus("");
     await api.admin.updateCustomRequest(id, patch);
     await load();
   }
@@ -53,10 +57,7 @@ export function AdminCustomRequestsPage() {
         });
         urls.push(r.url);
       }
-      const existing = designUrlsCsv
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean);
+      const existing = parseCsv(designUrlsCsv);
       setDesignUrlsCsv([...existing, ...urls].join(", "));
     } catch (e: any) {
       setStatus(`Upload failed: ${String(e?.message ?? e)}`);
@@ -66,49 +67,54 @@ export function AdminCustomRequestsPage() {
   }
 
   async function addDesign(id: string) {
-    const images = designUrlsCsv
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
+    const images = parseCsv(designUrlsCsv);
     if (images.length === 0) return;
+    setStatus("");
     await api.admin.addCustomDesign(id, { images });
     setDesignUrlsCsv("");
     await load();
   }
 
-  return (
-    <div style={{ paddingTop: 18 }}>
-      <div className="h2">Custom requests (admin)</div>
-      <div className="muted">Customers request custom designs here. Update status, quote price, upload created designs.</div>
-      <div className="hr" />
+  const selectedDesignUrls = useMemo(() => {
+    return (selected?.designs ?? []).flatMap((d) => d.images);
+  }, [selected]);
 
+  return (
+    <div>
+      <div className="adminPageTitle">
+        <div>
+          <div className="h2">Custom Requests</div>
+          <div className="muted">Review customer requests, set status, and add quotes/designs.</div>
+        </div>
+      </div>
+
+      <div className="hr" />
       {status && <div className="muted">{status}</div>}
+
       <div className="grid" style={{ gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-        <div className="grid">
+        <div className="adminList">
           {list.map((c) => (
             <button
               key={c.id}
-              className="card"
+              className={selected?.id === c.id ? "adminItem" : "adminItem"}
               style={{ textAlign: "left", cursor: "pointer" }}
               onClick={() => {
                 setSelected(c);
                 setQuote(c.quotedPriceCents ?? 70000);
               }}
             >
-              <div className="p">
-                <div className="row" style={{ justifyContent: "space-between" }}>
-                  <div style={{ fontWeight: 800 }}>{c.customerName}</div>
-                  <div className="tag">{c.status}</div>
+              <div className="adminItemInner" style={{ gridTemplateColumns: "1fr auto", gap: 12 }}>
+                <div className="adminMeta">
+                  <div className="adminMetaTitle">{c.customerName}</div>
+                  <div className="adminMetaSub">
+                    {c.phone} · {c.status} · {c.quotedPriceCents ? formatRupees(c.quotedPriceCents) : "No quote"}
+                  </div>
                 </div>
-                <div className="muted" style={{ marginTop: 8 }}>
-                  {c.phone} · Quote {rupees(c.quotedPriceCents)} · Approx ₹{Math.round(c.approxPriceLow / 100)}–₹{Math.round(
-                    c.approxPriceHigh / 100
-                  )}
-                </div>
+                <div className="tag">{new Date(c.createdAt).toLocaleDateString()}</div>
               </div>
             </button>
           ))}
-          {list.length === 0 && <div className="muted">No custom requests yet.</div>}
+          {list.length === 0 && <div className="muted">No requests.</div>}
         </div>
 
         <div className="card">
@@ -129,16 +135,16 @@ export function AdminCustomRequestsPage() {
 
                 <div style={{ height: 10 }} />
                 <div className="row">
-                  <span className="tag">Status: {selected.status}</span>
-                  <span className="tag">Quoted: {rupees(selected.quotedPriceCents)}</span>
+                  <span className="tag">{selected.status}</span>
+                  <span className="tag">Quoted: {selected.quotedPriceCents ? formatRupees(selected.quotedPriceCents) : "—"}</span>
                 </div>
 
-                <div style={{ height: 10 }} />
-                <div className="muted">Reference images:</div>
-                <div className="row" style={{ marginTop: 10 }}>
+                <div style={{ height: 12 }} />
+                <div className="muted">Reference images</div>
+                <div className="row" style={{ marginTop: 10, gap: 10 }}>
                   {(selected.referenceImages ?? []).map((u) => (
-                    <a className="tag" key={u} href={u} target="_blank" rel="noreferrer">
-                      image
+                    <a key={u} href={u} target="_blank" rel="noreferrer">
+                      <img className="adminThumbSm" src={u} alt="" />
                     </a>
                   ))}
                   {(selected.referenceImages ?? []).length === 0 && <span className="muted">—</span>}
@@ -148,8 +154,8 @@ export function AdminCustomRequestsPage() {
 
                 <div className="label">Set status</div>
                 <div className="row">
-                  {["REQUESTED", "IN_PROGRESS", "QUOTED", "ACCEPTED", "DECLINED", "COMPLETED"].map((s) => (
-                    <button key={s} className="btn" onClick={() => update(selected.id, { status: s })}>
+                  {(["REQUESTED", "IN_PROGRESS", "QUOTED", "ACCEPTED", "DECLINED", "COMPLETED"] as const).map((s) => (
+                    <button key={s} className={s === selected.status ? "btn primary" : "btn"} onClick={() => update(selected.id, { status: s })}>
                       {s}
                     </button>
                   ))}
@@ -164,41 +170,40 @@ export function AdminCustomRequestsPage() {
                     value={Math.round(quote / 100)}
                     onChange={(e) => setQuote(Number(e.target.value) * 100)}
                   />
-                  <button
-                    className="btn primary"
-                    onClick={() => update(selected.id, { quotedPriceCents: quote, status: "QUOTED" })}
-                  >
+                  <button className="btn primary" onClick={() => update(selected.id, { quotedPriceCents: quote, status: "QUOTED" })}>
                     Save quote
                   </button>
                 </div>
 
-                <div className="label">Upload created design images (ImageKit)</div>
-                <input
-                  className="input"
-                  type="file"
-                  multiple
-                  disabled={uploading}
-                  onChange={(e) => uploadDesigns(e.currentTarget.files)}
-                />
+                <div className="label">Upload created designs</div>
+                <input className="input" type="file" multiple disabled={uploading} onChange={(e) => uploadDesigns(e.currentTarget.files)} />
 
-                <div className="label">Created design image URLs (comma-separated)</div>
+                <div className="label">Design image URLs (comma-separated)</div>
                 <input className="input" value={designUrlsCsv} onChange={(e) => setDesignUrlsCsv(e.target.value)} />
                 <div style={{ height: 10 }} />
                 <button className="btn primary" onClick={() => addDesign(selected.id)} disabled={!designUrlsCsv.trim() || uploading}>
-                  Save to portal
+                  Add designs
                 </button>
 
-                <div style={{ height: 12 }} />
-                <div className="muted">Saved designs:</div>
-                <div className="row" style={{ marginTop: 10 }}>
-                  {(selected.designs ?? [])
-                    .flatMap((d) => d.images)
-                    .map((u) => (
-                      <a className="tag" key={u} href={u} target="_blank" rel="noreferrer">
-                        image
+                {parseCsv(designUrlsCsv).length > 0 && (
+                  <div className="row" style={{ marginTop: 12, gap: 10 }}>
+                    {parseCsv(designUrlsCsv).slice(0, 6).map((u) => (
+                      <a key={u} href={u} target="_blank" rel="noreferrer">
+                        <img className="adminThumbSm" src={u} alt="" />
                       </a>
                     ))}
-                  {(selected.designs ?? []).length === 0 && <span className="muted">—</span>}
+                  </div>
+                )}
+
+                <div className="hr" />
+                <div className="muted">Saved designs</div>
+                <div className="row" style={{ marginTop: 10, gap: 10 }}>
+                  {selectedDesignUrls.map((u) => (
+                    <a key={u} href={u} target="_blank" rel="noreferrer">
+                      <img className="adminThumbSm" src={u} alt="" />
+                    </a>
+                  ))}
+                  {selectedDesignUrls.length === 0 && <span className="muted">—</span>}
                 </div>
               </>
             )}
