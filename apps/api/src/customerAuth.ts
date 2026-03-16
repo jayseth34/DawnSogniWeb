@@ -4,6 +4,10 @@ import type { Request, Response, NextFunction } from "express";
 
 const COOKIE_NAME = "ds_customer";
 
+function shouldUseSecureCookies() {
+  return env.WEB_ORIGIN.toLowerCase().startsWith("https://");
+}
+
 export function setCustomerCookie(res: Response, phoneDigits: string) {
   const token = jwt.sign({ phone: phoneDigits }, env.CUSTOMER_JWT_SECRET, {
     expiresIn: "30d"
@@ -11,7 +15,7 @@ export function setCustomerCookie(res: Response, phoneDigits: string) {
   res.cookie(COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: env.NODE_ENV === "production",
+    secure: shouldUseSecureCookies(),
     maxAge: 30 * 24 * 60 * 60 * 1000
   });
 }

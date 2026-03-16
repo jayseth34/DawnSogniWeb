@@ -1,8 +1,14 @@
-import jwt from "jsonwebtoken";
+﻿import jwt from "jsonwebtoken";
 import { env } from "./env.js";
 import type { Request, Response, NextFunction } from "express";
 
 const COOKIE_NAME = "ds_admin";
+
+function shouldUseSecureCookies() {
+  // If you run the app on http://localhost with NODE_ENV=production, a `secure` cookie will not be set.
+  // Tie `secure` to the site URL scheme instead.
+  return env.WEB_ORIGIN.toLowerCase().startsWith("https://");
+}
 
 export function setAdminCookie(res: Response) {
   const token = jwt.sign({ role: "admin" }, env.ADMIN_JWT_SECRET, {
@@ -11,7 +17,7 @@ export function setAdminCookie(res: Response) {
   res.cookie(COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: env.NODE_ENV === "production",
+    secure: shouldUseSecureCookies(),
     maxAge: 14 * 24 * 60 * 60 * 1000
   });
 }
@@ -31,4 +37,3 @@ export function requireAdmin(req: Request, res: Response, next: NextFunction) {
     return res.status(401).json({ error: "Invalid session" });
   }
 }
-
