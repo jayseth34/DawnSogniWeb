@@ -10,9 +10,9 @@ const links: LinkItem[] = [
   { key: "tees", label: "Tees", to: "/drops?category=Tee" },
   { key: "shirts", label: "Shirts", to: "/drops?category=Shirt" },
   { key: "shop", label: "Shop", to: "/drops" },
-  { key: "orders", label: "Track Orders", to: "/orders" },
-  { key: "contact", label: "Contact", to: "/contact" },
-  { key: "returns", label: "Returns & Exchanges", to: "/returns" },
+  // { key: "orders", label: "Track Orders", to: "/orders" },
+  // { key: "contact", label: "Contact", to: "/contact" },
+  // { key: "returns", label: "Returns & Exchanges", to: "/returns" },
   { key: "size", label: "Size Chart", to: "/size-chart" }
 ];
 
