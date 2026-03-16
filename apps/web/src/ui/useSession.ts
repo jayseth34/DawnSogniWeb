@@ -16,12 +16,13 @@ export type SessionApi = {
 };
 
 export function useSessionApi(): SessionApi {
-  const { isAuthed, phoneDigits, ready } = useCustomerAuth();
+  const { status, phoneDigits } = useCustomerAuth();
 
   const storageKey = useMemo(() => {
-    if (!ready && !phoneDigits) return PENDING_SESSION_KEY;
-    return sessionKeyForPhone(isAuthed ? phoneDigits : "");
-  }, [isAuthed, phoneDigits, ready]);
+    if (status === "loading") return PENDING_SESSION_KEY;
+    if (status === "authed") return sessionKeyForPhone(phoneDigits);
+    return sessionKeyForPhone("");
+  }, [status, phoneDigits]);
 
   const [session, setSession] = useState<SessionState>(() => loadSession(storageKey));
 
@@ -55,7 +56,7 @@ export function useSessionApi(): SessionApi {
   }
 
   function addDropToCart(drop: DropDesign, opts?: { quantity?: number }) {
-    if (!isAuthed) return requireLogin();
+    if (status !== "authed") return requireLogin();
 
     const quantity = Math.max(1, Math.floor(opts?.quantity ?? 1));
     const existing = session.cart.find((c) => c.kind === "DROP" && c.dropDesignId === drop.id);
@@ -83,7 +84,7 @@ export function useSessionApi(): SessionApi {
   }
 
   function addBulkToCart(item: Omit<CartItem, "kind"> & { kind?: "BULK" }) {
-    if (!isAuthed) return requireLogin();
+    if (status !== "authed") return requireLogin();
 
     const q = Math.max(1, Math.floor(Number(item.quantity) || 1));
     persist({
@@ -104,12 +105,12 @@ export function useSessionApi(): SessionApi {
   }
 
   function removeCartItem(index: number) {
-    if (!isAuthed) return requireLogin();
+    if (status !== "authed") return requireLogin();
     persist({ ...session, cart: session.cart.filter((_, i) => i !== index) });
   }
 
   function updateCartQty(index: number, nextQty: number) {
-    if (!isAuthed) return requireLogin();
+    if (status !== "authed") return requireLogin();
     const q = Math.max(1, Math.floor(Number(nextQty) || 1));
     persist({
       ...session,
@@ -121,7 +122,7 @@ export function useSessionApi(): SessionApi {
     session,
     persist,
     cartCount,
-    canShop: isAuthed,
+    canShop: status === "authed",
     requireLogin,
     addDropToCart,
     addBulkToCart,

@@ -10,6 +10,7 @@ const links: LinkItem[] = [
   { key: "tees", label: "Tees", to: "/drops?category=Tee" },
   { key: "shirts", label: "Shirts", to: "/drops?category=Shirt" },
   { key: "shop", label: "Shop", to: "/drops" },
+  { key: "orders", label: "Track Orders", to: "/orders" },
   { key: "contact", label: "Contact", to: "/contact" },
   { key: "returns", label: "Returns & Exchanges", to: "/returns" },
   { key: "size", label: "Size Chart", to: "/size-chart" }
@@ -18,6 +19,7 @@ const links: LinkItem[] = [
 function activeKeyFromLocation(loc: ReturnType<typeof useLocation>) {
   const path = loc.pathname;
   if (path === "/") return "home";
+  if (path === "/orders") return "orders";
   if (path === "/contact") return "contact";
   if (path === "/returns") return "returns";
   if (path === "/size-chart") return "size";
@@ -47,6 +49,8 @@ export function SiteHeader(props: { cartCount: number }) {
     nav(`/drops?q=${encodeURIComponent(query)}`);
   }
 
+  const ordersLink = "/orders";
+  const accountLink = isAuthed ? "/orders" : `/login?next=${encodeURIComponent("/orders")}`;
   const cartLink = isAuthed ? "/checkout" : `/login?next=${encodeURIComponent("/checkout")}`;
 
   return (
@@ -71,7 +75,7 @@ export function SiteHeader(props: { cartCount: number }) {
             <button className="iconBtn" aria-label="Search" onClick={() => setShowSearch((s) => !s)}>
               <IconSearch width={20} height={20} />
             </button>
-            <Link className="iconBtn" aria-label="Account" to="/login">
+            <Link className="iconBtn" aria-label={isAuthed ? "My orders" : "Sign in"} to={accountLink}>
               <IconUser width={20} height={20} />
             </Link>
             <Link className="iconBtn cartBadge" aria-label="Cart" to={cartLink}>

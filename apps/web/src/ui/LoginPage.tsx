@@ -1,8 +1,8 @@
 ﻿import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { api } from "../api";
-import { cacheCustomerPhoneDigits } from "./useCustomerAuth";
+import { cacheCustomerPhoneDigits, useCustomerAuth } from "./useCustomerAuth";
 
 function normalizePhone(input: string) {
   return input.replace(/[^0-9+]/g, "").slice(0, 16);
@@ -13,10 +13,13 @@ function phoneToDigits(input: string) {
 }
 
 export function LoginPage() {
+  const auth = useCustomerAuth();
   const qc = useQueryClient();
   const nav = useNavigate();
   const [params] = useSearchParams();
-  const nextUrl = (params.get("next") || "/orders").trim() || "/orders";
+
+  const nextUrlRaw = (params.get("next") || "/orders").trim() || "/orders";
+  const nextUrl = nextUrlRaw.startsWith("/login") ? "/orders" : nextUrlRaw;
 
   const [step, setStep] = useState<"start" | "verify">("start");
   const [phone, setPhone] = useState("");
@@ -57,6 +60,33 @@ export function LoginPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (auth.status === "authed") {
+    return (
+      <div className="container page" style={{ maxWidth: 560 }}>
+        <div className="h2">Account</div>
+        <div className="muted">You’re already signed in.</div>
+        <div className="hr" />
+        <div className="card">
+          <div className="p">
+            <div className="row" style={{ justifyContent: "space-between" }}>
+              <div>
+                <div style={{ fontWeight: 800 }}>Phone</div>
+                <div className="muted2" style={{ marginTop: 6 }}>{auth.phoneDigits}</div>
+              </div>
+              <Link className="btn primary" to={nextUrl}>
+                Continue
+              </Link>
+            </div>
+            <div style={{ height: 12 }} />
+            <button className="btn" onClick={auth.logout}>
+              Sign out
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api";
 
@@ -25,9 +25,11 @@ export function cacheCustomerPhoneDigits(phoneDigits: string) {
   saveCachedPhoneDigits(phoneDigits);
 }
 
+export type CustomerAuthStatus = "loading" | "authed" | "anon";
+
 export function useCustomerAuth() {
   const qc = useQueryClient();
-  const [cached, setCached] = useState(() => loadCachedPhoneDigits());
+  const [cachedPhoneDigits, setCachedPhoneDigits] = useState(() => loadCachedPhoneDigits());
 
   const me = useQuery({
     queryKey: ["customerMe"],
@@ -37,20 +39,23 @@ export function useCustomerAuth() {
   });
 
   useEffect(() => {
-    // Keep the cached value in sync so the UI doesn't keep thinking you're signed in.
     if (me.data?.phoneDigits) {
       saveCachedPhoneDigits(me.data.phoneDigits);
-      setCached(me.data.phoneDigits);
+      setCachedPhoneDigits(me.data.phoneDigits);
     }
-    if (me.isError) {
+    if (me.data && !me.data.phoneDigits) {
       saveCachedPhoneDigits("");
-      setCached("");
+      setCachedPhoneDigits("");
     }
-  }, [me.data?.phoneDigits, me.isError]);
+  }, [me.data?.phoneDigits, me.data]);
 
-  const phoneDigits = me.data?.phoneDigits || cached;
-  const isAuthed = Boolean(phoneDigits);
-  const ready = me.isFetched || me.isError;
+  const status: CustomerAuthStatus = useMemo(() => {
+    if (me.isPending) return "loading";
+    if (me.data?.phoneDigits) return "authed";
+    return "anon";
+  }, [me.isPending, me.data?.phoneDigits]);
+
+  const phoneDigits = me.data?.phoneDigits || "";
 
   async function refresh() {
     await qc.invalidateQueries({ queryKey: ["customerMe"] });
@@ -61,15 +66,16 @@ export function useCustomerAuth() {
       await api.customer.logout();
     } finally {
       saveCachedPhoneDigits("");
-      setCached("");
+      setCachedPhoneDigits("");
       qc.removeQueries({ queryKey: ["customerMe"] });
     }
   }
 
   return {
-    isAuthed,
+    status,
+    isAuthed: status === "authed",
     phoneDigits,
-    ready,
+    cachedPhoneDigits,
     me,
     refresh,
     logout
