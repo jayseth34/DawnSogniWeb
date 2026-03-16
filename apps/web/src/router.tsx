@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router-dom";
+﻿import { createBrowserRouter } from "react-router-dom";
 import { AppLayout } from "./ui/AppLayout";
 import { HomePage } from "./ui/HomePage";
 import { DropsPage } from "./ui/DropsPage";
@@ -6,6 +6,9 @@ import { CustomPage } from "./ui/CustomPage";
 import { BulkPage } from "./ui/BulkPage";
 import { CheckoutPage } from "./ui/CheckoutPage";
 import { OrdersPage } from "./ui/OrdersPage";
+import { ContactPage } from "./ui/ContactPage";
+import { ReturnsPage } from "./ui/ReturnsPage";
+import { SizeChartPage } from "./ui/SizeChartPage";
 import { AdminLayout } from "./ui/admin/AdminLayout";
 import { AdminLoginPage } from "./ui/admin/AdminLoginPage";
 import { AdminDropsPage } from "./ui/admin/AdminDropsPage";
@@ -23,7 +26,10 @@ export const router = createBrowserRouter([
       { path: "custom", element: <CustomPage /> },
       { path: "bulk", element: <BulkPage /> },
       { path: "checkout", element: <CheckoutPage /> },
-      { path: "orders", element: <OrdersPage /> }
+      { path: "orders", element: <OrdersPage /> },
+      { path: "contact", element: <ContactPage /> },
+      { path: "returns", element: <ReturnsPage /> },
+      { path: "size-chart", element: <SizeChartPage /> }
     ]
   },
   {

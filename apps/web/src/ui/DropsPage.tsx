@@ -1,76 +1,121 @@
-import { useMemo, useState } from "react";
+﻿import { useMemo } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { api, type DropDesign } from "../api";
-import { loadSession, saveSession, type CartItem } from "../storage";
+import { api } from "../api";
+import { useSessionApi } from "./useSession";
+import { formatRupees } from "./money";
 
-function rupees(cents: number) {
-  return `\u20B9${Math.round(cents / 100)}`;
+const categories = ["All", "Tee", "Shirt", "Oversized"] as const;
+
+type Category = (typeof categories)[number];
+
+function categoryFromParams(params: URLSearchParams): Category {
+  const raw = (params.get("category") || "All").trim();
+  return (categories.includes(raw as any) ? (raw as Category) : "All");
 }
 
 export function DropsPage() {
   const { data, isLoading, error } = useQuery({ queryKey: ["drops"], queryFn: api.drops });
-  const [session, setSession] = useState(loadSession());
+  const { cartCount, addDropToCart } = useSessionApi();
+  const [params, setParams] = useSearchParams();
 
-  const count = useMemo(() => session.cart.reduce((s, i) => s + i.quantity, 0), [session.cart]);
+  const category = categoryFromParams(params);
+  const q = (params.get("q") || "").trim();
+  const drops = data ?? [];
 
-  function add(drop: DropDesign) {
-    const existing = session.cart.find((c) => c.kind === "DROP" && c.dropDesignId === drop.id);
-    let nextCart: CartItem[];
-    if (existing) {
-      nextCart = session.cart.map((c) =>
-        c.kind === "DROP" && c.dropDesignId === drop.id ? { ...c, quantity: c.quantity + 1 } : c
-      );
-    } else {
-      nextCart = [
-        ...session.cart,
-        {
-          kind: "DROP",
-          dropDesignId: drop.id,
-          title: drop.title,
-          unitPriceCents: drop.priceCents,
-          quantity: 1,
-          imageUrl: drop.images[0]
-        }
-      ];
-    }
-    const next = { ...session, cart: nextCart };
-    setSession(next);
-    saveSession(next);
+  const filtered = useMemo(() => {
+    const query = q.toLowerCase();
+    return drops.filter((d) => {
+      const matchesCategory =
+        category === "All" ||
+        (d.category || "").toLowerCase() === category.toLowerCase() ||
+        d.title.toLowerCase().includes(category.toLowerCase());
+
+      const matchesQuery =
+        !query || d.title.toLowerCase().includes(query) || (d.description || "").toLowerCase().includes(query);
+      return matchesCategory && matchesQuery;
+    });
+  }, [drops, category, q]);
+
+  function setQuery(next: string) {
+    const nextParams = new URLSearchParams(params);
+    if (next.trim()) nextParams.set("q", next.trim());
+    else nextParams.delete("q");
+    setParams(nextParams, { replace: true });
+  }
+
+  function setCategory(next: Category) {
+    const nextParams = new URLSearchParams(params);
+    if (next !== "All") nextParams.set("category", next);
+    else nextParams.delete("category");
+    setParams(nextParams, { replace: true });
   }
 
   return (
-    <div style={{ paddingTop: 18 }}>
+    <div className="container page">
       <div className="row" style={{ justifyContent: "space-between" }}>
         <div>
-          <div className="h2">Drops</div>
-          <div className="muted">Your session is saved \u2014 cart stays even if you refresh.</div>
+          <div className="h2">Shop</div>
+          <div className="muted">Drops are limited. Cart is saved on this device.</div>
         </div>
-        <div className="pill">Cart items: {count}</div>
+        <Link className="pill" to="/checkout">
+          Cart items: {cartCount}
+        </Link>
       </div>
+
       <div style={{ height: 12 }} />
+
+      <div className="row" style={{ justifyContent: "space-between", gap: 10 }}>
+        <div className="row" style={{ gap: 10 }}>
+          {categories.map((c) => (
+            <button key={c} className={c === category ? "btn primary" : "btn"} onClick={() => setCategory(c)}>
+              {c}
+            </button>
+          ))}
+        </div>
+
+        <input
+          className="input"
+          style={{ width: 320, maxWidth: "100%" }}
+          placeholder="Search"
+          value={q}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+      </div>
+
+      <div style={{ height: 14 }} />
+
       {isLoading && <div className="muted">Loading...</div>}
       {error && <div className="muted">Failed to load drops.</div>}
-      <div className="grid cards">
-        {(data ?? []).map((d) => (
-          <div className="card compact" key={d.id}>
-            {d.images?.[0] ? <img className="img compact" src={d.images[0]} alt={d.title} /> : <div className="img compact" />}
-            <div className="p">
-              <div className="row" style={{ justifyContent: "space-between", alignItems: "flex-start" }}>
-                <div style={{ fontWeight: 800 }}>{d.title}</div>
-                <div className="tag">{rupees(d.priceCents)}</div>
+
+      <div className="productGrid">
+        {filtered.map((d) => (
+          <div className="productCard" key={d.id}>
+            {d.images?.[0] ? <img className="productImg" src={d.images[0]} alt={d.title} /> : <div className="productImg" />}
+            <div className="productMeta">
+              <div className="productNameRow">
+                <div className="productName clamp2" title={d.title}>
+                  {d.title}
+                </div>
               </div>
-              <div className="muted clamp2" style={{ marginTop: 6, fontSize: 13 }}>
-                {d.description ?? "\u2014"}
+              <div className="muted2 clamp2" style={{ marginTop: 6, fontSize: 13 }}>
+                {d.description ?? "—"}
               </div>
-              <div style={{ height: 10 }} />
-              <button className="btn primary" onClick={() => add(d)}>
-                Add
-              </button>
+              <div className="productPrice">{d.priceCents === 0 ? "Quote pending" : formatRupees(d.priceCents)}</div>
+              <div className="productActions">
+                <button className="btn primary" onClick={() => addDropToCart(d)}>
+                  Add
+                </button>
+                <Link className="btn" to="/checkout">
+                  Checkout
+                </Link>
+              </div>
             </div>
           </div>
         ))}
       </div>
-      {(data ?? []).length === 0 && !isLoading && <div className="muted">No drops yet. Add from admin \u2192 Drops.</div>}
+
+      {filtered.length === 0 && !isLoading && <div className="muted" style={{ paddingTop: 14 }}>No matching products.</div>}
     </div>
   );
 }

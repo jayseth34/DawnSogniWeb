@@ -1,6 +1,10 @@
-﻿import { useState } from "react";
+﻿import { useMemo, useState } from "react";
 import { api } from "../api";
 import { uploadToImageKit } from "../imagekitUpload";
+
+function normalizePhone(input: string) {
+  return input.replace(/[^0-9+]/g, "").slice(0, 16);
+}
 
 export function CustomPage() {
   const [customerName, setCustomerName] = useState("");
@@ -9,6 +13,9 @@ export function CustomPage() {
   const [referenceImages, setReferenceImages] = useState<string[]>([]);
   const [status, setStatus] = useState<string>("");
   const [uploading, setUploading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const phoneOk = useMemo(() => normalizePhone(phone).replace(/^\+/, "").length >= 6, [phone]);
 
   async function upload(files: FileList | null) {
     if (!files || files.length === 0) return;
@@ -35,9 +42,11 @@ export function CustomPage() {
   }
 
   async function submit() {
+    if (!customerName.trim() || !phoneOk) return;
     setStatus("");
+    setSubmitting(true);
     try {
-      await api.createCustomRequest({ customerName, phone, notes, referenceImages });
+      await api.createCustomRequest({ customerName: customerName.trim(), phone: normalizePhone(phone), notes, referenceImages });
       setCustomerName("");
       setPhone("");
       setNotes("");
@@ -45,28 +54,29 @@ export function CustomPage() {
       setStatus("Sent! We’ll review and get back with a quote.");
     } catch (e: any) {
       setStatus(`Failed: ${String(e?.message ?? e)}`);
+    } finally {
+      setSubmitting(false);
     }
   }
 
   return (
-    <div style={{ paddingTop: 18, maxWidth: 720 }}>
+    <div className="container page" style={{ maxWidth: 760 }}>
       <div className="h2">Custom design request</div>
-      <div className="muted">
-        Share your idea and any references. Pricing depends on complexity (approx ₹600–₹800 as a starting range).
-      </div>
+      <div className="muted">Share your idea and any references. Pricing depends on complexity (approx ₹600–₹800 to start).</div>
       <div className="hr" />
 
       <div className="label">Name</div>
       <input className="input" value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
 
       <div className="label">Phone</div>
-      <input className="input" value={phone} onChange={(e) => setPhone(e.target.value)} />
+      <input className="input" value={phone} onChange={(e) => setPhone(normalizePhone(e.target.value))} placeholder="e.g. +91xxxxxxxxxx" />
+      {!phoneOk && phone.trim() && <div className="muted2" style={{ fontSize: 12, marginTop: 6 }}>Enter a valid phone number.</div>}
 
       <div className="label">What do you want?</div>
       <textarea className="textarea" value={notes} onChange={(e) => setNotes(e.target.value)} />
 
       <div className="label">Upload reference images (ImageKit)</div>
-      <input className="input" type="file" multiple disabled={uploading} onChange={(e) => upload(e.currentTarget.files)} />
+      <input className="input" type="file" multiple disabled={uploading || submitting} onChange={(e) => upload(e.currentTarget.files)} />
       <div className="muted" style={{ marginTop: 8, fontSize: 12 }}>
         If ImageKit isn’t configured yet, uploads will fail — you can still paste image URLs below.
       </div>
@@ -75,6 +85,7 @@ export function CustomPage() {
       <input
         className="input"
         placeholder="Paste a public image URL and press Enter"
+        disabled={uploading || submitting}
         onKeyDown={(e) => {
           if (e.key === "Enter") {
             e.preventDefault();
@@ -94,8 +105,8 @@ export function CustomPage() {
       </div>
 
       <div style={{ height: 14 }} />
-      <button className="btn primary" onClick={submit} disabled={!customerName || !phone || uploading}>
-        Send request
+      <button className="btn primary" onClick={submit} disabled={!customerName.trim() || !phoneOk || uploading || submitting}>
+        {submitting ? "Sending..." : "Send request"}
       </button>
       {status && (
         <div className="muted" style={{ marginTop: 12 }}>

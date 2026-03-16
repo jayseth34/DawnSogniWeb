@@ -58,10 +58,20 @@ export type ImageKitAuth = {
   publicKey: string;
 };
 
-async function json<T>(res: Response): Promise<T> {
-  const data = (await res.json()) as T;
-  if (!res.ok) throw new Error((data as any)?.error ? JSON.stringify((data as any).error) : "Request failed");
-  return data;
+async function json<T = any>(res: Response): Promise<T> {
+  const raw = await res.text();
+  let data: any = null;
+  try {
+    data = raw ? JSON.parse(raw) : null;
+  } catch {
+    data = null;
+  }
+
+  if (!res.ok) {
+    const err = data?.error ? JSON.stringify(data.error) : raw || `Request failed (${res.status})`;
+    throw new Error(err);
+  }
+  return data as T;
 }
 
 export const api = {
@@ -206,3 +216,4 @@ export const api = {
     }
   }
 };
+

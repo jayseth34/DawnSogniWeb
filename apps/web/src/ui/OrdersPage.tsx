@@ -1,18 +1,15 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { api, type Order } from "../api";
-import { loadSession, saveSession } from "../storage";
-
-function rupees(cents: number) {
-  return `\u20B9${Math.round(cents / 100)}`;
-}
+import { useSessionApi } from "./useSession";
+import { formatRupees } from "./money";
 
 function totalText(order: Order) {
   if (order.totalCents === 0) return "Quote pending";
-  return rupees(order.totalCents);
+  return formatRupees(order.totalCents);
 }
 
 export function OrdersPage() {
-  const [session, setSession] = useState(loadSession());
+  const { session, persist } = useSessionApi();
   const [orders, setOrders] = useState<Order[]>([]);
   const [status, setStatus] = useState<string>("");
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
@@ -51,17 +48,15 @@ export function OrdersPage() {
   function addToken() {
     const t = newToken.trim();
     if (!t) return;
-    const next = {
+    persist({
       ...session,
       orderTokens: [t, ...(session.orderTokens ?? [])].filter((v, i, a) => a.indexOf(v) === i).slice(0, 50)
-    };
-    setSession(next);
-    saveSession(next);
+    });
     setNewToken("");
   }
 
   return (
-    <div style={{ paddingTop: 18 }}>
+    <div className="container page">
       <div className="row" style={{ justifyContent: "space-between" }}>
         <div>
           <div className="h2">Your Orders</div>
@@ -81,7 +76,7 @@ export function OrdersPage() {
           </div>
           <div className="row" style={{ marginTop: 10 }}>
             <input className="input" value={newToken} onChange={(e) => setNewToken(e.target.value)} placeholder="Order token" />
-            <button className="btn primary" onClick={addToken}>
+            <button className="btn primary" onClick={addToken} disabled={!newToken.trim()}>
               Add
             </button>
           </div>
@@ -100,10 +95,10 @@ export function OrdersPage() {
                 <div className="tag">{o.status}</div>
               </div>
               <div className="muted" style={{ marginTop: 8 }}>
-                Total {totalText(o)} \u00b7 COD \u00b7 {new Date(o.createdAt).toLocaleString()}
+                Total {totalText(o)} · COD · {new Date(o.createdAt).toLocaleString()}
               </div>
               <div className="muted" style={{ marginTop: 6, fontSize: 12 }}>
-                {o.items.map((i) => `${i.title} × ${i.quantity}`).join(" \u00b7 ")}
+                {o.items.map((i) => `${i.title} × ${i.quantity}`).join(" · ")}
               </div>
               <div className="muted" style={{ marginTop: 8, fontSize: 12 }}>
                 {expanded[o.id] ? "Hide tracking" : "Show tracking"}
@@ -111,7 +106,7 @@ export function OrdersPage() {
             </div>
 
             {expanded[o.id] && (
-              <div className="p" style={{ borderTop: "1px solid var(--line)" }}>
+              <div className="p" style={{ borderTop: "1px solid var(--line2)" }}>
                 <div className="row" style={{ justifyContent: "space-between" }}>
                   <div className="muted" style={{ fontSize: 12 }}>
                     Address: {o.addressLine1}
@@ -136,7 +131,7 @@ export function OrdersPage() {
                       <div>
                         <div style={{ fontWeight: 800 }}>{ev.type}</div>
                         <div className="muted" style={{ fontSize: 12 }}>
-                          {ev.message ?? "\u2014"}
+                          {ev.message ?? "—"}
                         </div>
                       </div>
                       <div className="muted" style={{ fontSize: 12 }}>
