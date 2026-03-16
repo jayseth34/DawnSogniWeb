@@ -2,7 +2,7 @@
 import { useSessionApi } from "./useSession";
 
 export function BulkPage() {
-  const { session, cartCount, addBulkToCart } = useSessionApi();
+  const { session, cartCount, addBulkToCart, canShop, requireLogin } = useSessionApi();
   const [productType, setProductType] = useState<"collar" | "round neck" | "oversized">("oversized");
   const [quantity, setQuantity] = useState(10);
   const [notes, setNotes] = useState("");
@@ -63,7 +63,7 @@ export function BulkPage() {
           <textarea className="textarea" value={notes} onChange={(e) => setNotes(e.target.value)} />
 
           <div style={{ height: 12 }} />
-          <button className="btn primary" onClick={add} disabled={session.cart.length > 120}>
+          <button className="btn primary" onClick={() => (canShop ? add() : requireLogin())} disabled={session.cart.length > 120}>
             Add to cart
           </button>
           <div className="muted" style={{ marginTop: 10, fontSize: 12 }}>
@@ -74,4 +74,5 @@ export function BulkPage() {
     </div>
   );
 }
+
 

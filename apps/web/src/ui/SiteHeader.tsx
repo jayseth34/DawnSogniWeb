@@ -1,6 +1,7 @@
 ﻿import { useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { IconBag, IconSearch, IconUser } from "./icons";
+import { useCustomerAuth } from "./useCustomerAuth";
 
 type LinkItem = { key: string; label: string; to: string };
 
@@ -31,6 +32,7 @@ function activeKeyFromLocation(loc: ReturnType<typeof useLocation>) {
 }
 
 export function SiteHeader(props: { cartCount: number }) {
+  const { isAuthed } = useCustomerAuth();
   const nav = useNavigate();
   const loc = useLocation();
   const [showSearch, setShowSearch] = useState(false);
@@ -44,6 +46,8 @@ export function SiteHeader(props: { cartCount: number }) {
     if (!query) return nav("/drops");
     nav(`/drops?q=${encodeURIComponent(query)}`);
   }
+
+  const cartLink = isAuthed ? "/checkout" : `/login?next=${encodeURIComponent("/checkout")}`;
 
   return (
     <header className="siteHeader">
@@ -70,9 +74,9 @@ export function SiteHeader(props: { cartCount: number }) {
             <Link className="iconBtn" aria-label="Account" to="/login">
               <IconUser width={20} height={20} />
             </Link>
-            <Link className="iconBtn cartBadge" aria-label="Cart" to="/checkout">
+            <Link className="iconBtn cartBadge" aria-label="Cart" to={cartLink}>
               <IconBag width={20} height={20} />
-              {props.cartCount > 0 && <span className="cartBadgeDot">{Math.min(props.cartCount, 99)}</span>}
+              {isAuthed && props.cartCount > 0 && <span className="cartBadgeDot">{Math.min(props.cartCount, 99)}</span>}
             </Link>
           </div>
         </div>
@@ -99,4 +103,3 @@ export function SiteHeader(props: { cartCount: number }) {
     </header>
   );
 }
-

@@ -1,5 +1,6 @@
 ﻿import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { api } from "../api";
 
 function normalizePhone(input: string) {
@@ -7,7 +8,11 @@ function normalizePhone(input: string) {
 }
 
 export function LoginPage() {
+  const qc = useQueryClient();
   const nav = useNavigate();
+  const [params] = useSearchParams();
+  const nextUrl = (params.get("next") || "/orders").trim() || "/orders";
+
   const [step, setStep] = useState<"start" | "verify">("start");
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
@@ -39,7 +44,8 @@ export function LoginPage() {
     setLoading(true);
     try {
       await api.customer.verifyLogin(normalizePhone(phone), code.trim());
-      nav("/orders");
+      await qc.invalidateQueries({ queryKey: ["customerMe"] });
+      nav(nextUrl);
     } catch (e: any) {
       setStatus(String(e?.message ?? e));
     } finally {
@@ -50,7 +56,7 @@ export function LoginPage() {
   return (
     <div className="container page" style={{ maxWidth: 560 }}>
       <div className="h2">Sign in</div>
-      <div className="muted">Use your phone number to view your full order history on any device.</div>
+      <div className="muted">Use your phone number to add items to cart and view your order history.</div>
       <div className="hr" />
 
       <div className="card">

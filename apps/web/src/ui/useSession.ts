@@ -1,11 +1,14 @@
 ﻿import { useEffect, useMemo, useState } from "react";
-import { loadSession, saveSession, type CartItem, type SessionState } from "../storage";
+import { loadSession, saveSession, sessionKeyForPhone, type CartItem, type SessionState } from "../storage";
 import type { DropDesign } from "../api";
+import { useCustomerAuth } from "./useCustomerAuth";
 
 export type SessionApi = {
   session: SessionState;
   persist: (next: SessionState) => void;
   cartCount: number;
+  canShop: boolean;
+  requireLogin: () => void;
   addDropToCart: (drop: DropDesign, opts?: { quantity?: number }) => void;
   addBulkToCart: (item: Omit<CartItem, "kind"> & { kind?: "BULK" }) => void;
   removeCartItem: (index: number) => void;
@@ -13,26 +16,43 @@ export type SessionApi = {
 };
 
 export function useSessionApi(): SessionApi {
-  const [session, setSession] = useState<SessionState>(() => loadSession());
+  const { isAuthed, phoneDigits } = useCustomerAuth();
+  const storageKey = useMemo(() => sessionKeyForPhone(isAuthed ? phoneDigits : ""), [isAuthed, phoneDigits]);
+
+  const [session, setSession] = useState<SessionState>(() => loadSession(storageKey));
+
+  useEffect(() => {
+    setSession(loadSession(storageKey));
+  }, [storageKey]);
 
   function persist(next: SessionState) {
     setSession(next);
-    saveSession(next);
+    saveSession(next, storageKey);
   }
 
   useEffect(() => {
     function onStorage(e: StorageEvent) {
       if (!e.key) return;
-      if (e.key !== "dawnsogni.session.v1") return;
-      setSession(loadSession());
+      if (e.key !== storageKey) return;
+      setSession(loadSession(storageKey));
     }
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
-  }, []);
+  }, [storageKey]);
 
-  const cartCount = useMemo(() => session.cart.reduce((s, i) => s + (Number.isFinite(i.quantity) ? i.quantity : 0), 0), [session.cart]);
+  const cartCount = useMemo(
+    () => session.cart.reduce((s, i) => s + (Number.isFinite(i.quantity) ? i.quantity : 0), 0),
+    [session.cart]
+  );
+
+  function requireLogin() {
+    const next = encodeURIComponent(window.location.pathname + window.location.search);
+    window.location.href = `/login?next=${next}`;
+  }
 
   function addDropToCart(drop: DropDesign, opts?: { quantity?: number }) {
+    if (!isAuthed) return requireLogin();
+
     const quantity = Math.max(1, Math.floor(opts?.quantity ?? 1));
     const existing = session.cart.find((c) => c.kind === "DROP" && c.dropDesignId === drop.id);
 
@@ -59,6 +79,8 @@ export function useSessionApi(): SessionApi {
   }
 
   function addBulkToCart(item: Omit<CartItem, "kind"> & { kind?: "BULK" }) {
+    if (!isAuthed) return requireLogin();
+
     const q = Math.max(1, Math.floor(Number(item.quantity) || 1));
     persist({
       ...session,
@@ -78,10 +100,12 @@ export function useSessionApi(): SessionApi {
   }
 
   function removeCartItem(index: number) {
+    if (!isAuthed) return requireLogin();
     persist({ ...session, cart: session.cart.filter((_, i) => i !== index) });
   }
 
   function updateCartQty(index: number, nextQty: number) {
+    if (!isAuthed) return requireLogin();
     const q = Math.max(1, Math.floor(Number(nextQty) || 1));
     persist({
       ...session,
@@ -93,6 +117,8 @@ export function useSessionApi(): SessionApi {
     session,
     persist,
     cartCount,
+    canShop: isAuthed,
+    requireLogin,
     addDropToCart,
     addBulkToCart,
     removeCartItem,

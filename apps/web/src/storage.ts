@@ -1,4 +1,10 @@
-const KEY = "dawnsogni.session.v1";
+﻿const KEY = "dawnsogni.session.v1";
+
+export function sessionKeyForPhone(phoneDigits?: string | null) {
+  const p = String(phoneDigits || "").trim();
+  if (!p) return KEY;
+  return `${KEY}.phone.${p}`;
+}
 
 export type CustomerDraft = {
   name: string;
@@ -28,10 +34,14 @@ export type SessionState = {
   orderTokens: string[];
 };
 
-export function loadSession(): SessionState {
+function empty(): SessionState {
+  return { cart: [], orderTokens: [] };
+}
+
+export function loadSession(key: string = KEY): SessionState {
   try {
-    const raw = localStorage.getItem(KEY);
-    if (!raw) return { cart: [], orderTokens: [] };
+    const raw = localStorage.getItem(key);
+    if (!raw) return empty();
     const parsed = JSON.parse(raw) as SessionState;
     return {
       customerDraft: parsed.customerDraft,
@@ -39,11 +49,10 @@ export function loadSession(): SessionState {
       orderTokens: parsed.orderTokens ?? []
     };
   } catch {
-    return { cart: [], orderTokens: [] };
+    return empty();
   }
 }
 
-export function saveSession(next: SessionState) {
-  localStorage.setItem(KEY, JSON.stringify(next));
+export function saveSession(next: SessionState, key: string = KEY) {
+  localStorage.setItem(key, JSON.stringify(next));
 }
-

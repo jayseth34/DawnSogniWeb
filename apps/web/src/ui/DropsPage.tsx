@@ -16,7 +16,7 @@ function categoryFromParams(params: URLSearchParams): Category {
 
 export function DropsPage() {
   const { data, isLoading, error } = useQuery({ queryKey: ["drops"], queryFn: api.drops });
-  const { cartCount, addDropToCart } = useSessionApi();
+  const { cartCount, addDropToCart, canShop, requireLogin } = useSessionApi();
   const [params, setParams] = useSearchParams();
 
   const category = categoryFromParams(params);
@@ -103,9 +103,7 @@ export function DropsPage() {
               </div>
               <div className="productPrice">{d.priceCents === 0 ? "Quote pending" : formatRupees(d.priceCents)}</div>
               <div className="productActions">
-                <button className="btn primary" onClick={() => addDropToCart(d)}>
-                  Add
-                </button>
+                <button className="btn primary" onClick={() => (canShop ? addDropToCart(d) : requireLogin())}>Add</button>
                 <Link className="btn" to="/checkout">
                   Checkout
                 </Link>
@@ -119,3 +117,4 @@ export function DropsPage() {
     </div>
   );
 }
+

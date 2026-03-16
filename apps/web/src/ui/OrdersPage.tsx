@@ -1,8 +1,9 @@
 ﻿import { useEffect, useMemo, useState } from "react";
-import { api, type Order } from "../api";
-import { useSessionApi } from "./useSession";
-import { formatRupees } from "./money";
 import { Link, useSearchParams } from "react-router-dom";
+import { api, type Order } from "../api";
+import { formatRupees } from "./money";
+import { useSessionApi } from "./useSession";
+import { useCustomerAuth } from "./useCustomerAuth";
 
 function totalText(order: Order) {
   if (order.totalCents === 0) return "Quote pending";
@@ -38,6 +39,8 @@ function mergeOrders(a: Order[], b: Order[]) {
 
 export function OrdersPage() {
   const { session, persist } = useSessionApi();
+  const { isAuthed, phoneDigits, logout: authLogout } = useCustomerAuth();
+
   const [orders, setOrders] = useState<Order[]>([]);
   const [status, setStatus] = useState<string>("");
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
@@ -45,7 +48,6 @@ export function OrdersPage() {
   const [uiToast, setUiToast] = useState("");
   const [params, setParams] = useSearchParams();
 
-  const [phoneDigits, setPhoneDigits] = useState<string>("");
   const [loadingPhoneOrders, setLoadingPhoneOrders] = useState(false);
 
   const tokens = useMemo(() => session.orderTokens ?? [], [session.orderTokens]);
@@ -78,33 +80,17 @@ export function OrdersPage() {
     }
   }
 
-  async function init() {
-    try {
-      const me = await api.customer.me();
-      if (me?.phoneDigits) {
-        setPhoneDigits(me.phoneDigits);
-      }
-    } catch {
-      setPhoneDigits("");
-    }
-  }
-
   useEffect(() => {
-    init();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (phoneDigits) {
+    if (isAuthed) {
       void loadFromPhone();
     } else {
       void loadFromTokens();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phoneDigits, tokens.join("|")]);
+  }, [isAuthed, phoneDigits, tokens.join("|")]);
 
   async function refreshOne(order: Order) {
-    if (phoneDigits) {
+    if (isAuthed) {
       await loadFromPhone();
       return;
     }
@@ -138,8 +124,7 @@ export function OrdersPage() {
   }
 
   async function logout() {
-    await api.customer.logout();
-    setPhoneDigits("");
+    await authLogout();
     setUiToast("Signed out");
     setTimeout(() => setUiToast(""), 1400);
   }
@@ -149,10 +134,10 @@ export function OrdersPage() {
       <div className="row" style={{ justifyContent: "space-between" }}>
         <div>
           <div className="h2">Your Orders</div>
-          <div className="muted">Saved to this device{phoneDigits ? ` · Signed in` : ""}.</div>
+          <div className="muted">Saved to this device{isAuthed ? " · Signed in" : ""}.</div>
         </div>
         <div className="row" style={{ gap: 10 }}>
-          {phoneDigits ? (
+          {isAuthed ? (
             <>
               <button className="btn" onClick={loadFromPhone} disabled={loadingPhoneOrders}>
                 {loadingPhoneOrders ? "Loading..." : "Refresh"}
@@ -163,7 +148,7 @@ export function OrdersPage() {
             </>
           ) : (
             <>
-              <Link className="btn primary" to="/login">
+              <Link className="btn primary" to={`/login?next=${encodeURIComponent("/orders")}`}>
                 Sign in
               </Link>
               <button className="btn" onClick={loadFromTokens}>
@@ -223,7 +208,7 @@ export function OrdersPage() {
         </div>
       )}
 
-      {!phoneDigits && (
+      {!isAuthed && (
         <>
           <div style={{ height: 12 }} />
           <div className="card">

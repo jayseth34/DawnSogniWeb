@@ -15,7 +15,7 @@ function pickImages(drops: DropDesign[], count: number): Array<string | null> {
 
 export function HomePage() {
   const { data, isLoading, error } = useQuery({ queryKey: ["drops"], queryFn: api.drops });
-  const { addDropToCart } = useSessionApi();
+  const { addDropToCart, canShop, requireLogin } = useSessionApi();
 
   const drops = data ?? [];
   const hero = useMemo(() => pickImages(drops, 4), [drops]);
@@ -80,9 +80,7 @@ export function HomePage() {
                 </div>
                 <div className="productPrice">{d.priceCents === 0 ? "Quote pending" : formatRupees(d.priceCents)}</div>
                 <div className="productActions">
-                  <button className="btn primary" onClick={() => addDropToCart(d)}>
-                    Add
-                  </button>
+                  <button className="btn primary" onClick={() => (canShop ? addDropToCart(d) : requireLogin())}>Add</button>
                   <Link className="btn" to="/checkout">
                     Checkout
                   </Link>
@@ -111,5 +109,6 @@ export function HomePage() {
     </div>
   );
 }
+
 
 

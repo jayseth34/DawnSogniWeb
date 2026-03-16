@@ -32,7 +32,7 @@ function validateDraft(d: CustomerDraft) {
 
 export function CheckoutPage() {
   const nav = useNavigate();
-  const { session, persist, removeCartItem, updateCartQty } = useSessionApi();
+  const { session, persist, removeCartItem, updateCartQty, canShop, requireLogin } = useSessionApi();
 
   const [draft, setDraft] = useState<CustomerDraft>(
     session.customerDraft ?? {
@@ -49,6 +49,19 @@ export function CheckoutPage() {
   const [status, setStatus] = useState<string>("");
   const [savedHint, setSavedHint] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
+
+  if (!canShop) {
+    return (
+      <div className="container page" style={{ maxWidth: 560 }}>
+        <div className="h2">Checkout</div>
+        <div className="muted">Sign in to add items to cart and place an order.</div>
+        <div className="hr" />
+        <button className="btn primary" onClick={requireLogin}>
+          Sign in
+        </button>
+      </div>
+    );
+  }
 
   const subtotal = useMemo(
     () => session.cart.reduce((s, i) => s + i.unitPriceCents * i.quantity, 0),
@@ -107,7 +120,7 @@ export function CheckoutPage() {
       try {
         await navigator.clipboard.writeText(order.accessToken);
       } catch {
-        // ignore clipboard failures
+        // ignore
       }
 
       nav(`/orders?placed=${encodeURIComponent(order.accessToken)}`);
@@ -138,7 +151,11 @@ export function CheckoutPage() {
 
             <div className="label">Name</div>
             <input className="input" value={draft.name} onChange={(e) => saveDraft({ ...draft, name: e.target.value })} />
-            {errors.name && <div className="muted2" style={{ fontSize: 12, marginTop: 6 }}>{errors.name}</div>}
+            {errors.name && (
+              <div className="muted2" style={{ fontSize: 12, marginTop: 6 }}>
+                {errors.name}
+              </div>
+            )}
 
             <div className="label">Phone</div>
             <input
@@ -147,11 +164,19 @@ export function CheckoutPage() {
               onChange={(e) => saveDraft({ ...draft, phone: normalizePhone(e.target.value) })}
               placeholder="e.g. +91xxxxxxxxxx"
             />
-            {errors.phone && <div className="muted2" style={{ fontSize: 12, marginTop: 6 }}>{errors.phone}</div>}
+            {errors.phone && (
+              <div className="muted2" style={{ fontSize: 12, marginTop: 6 }}>
+                {errors.phone}
+              </div>
+            )}
 
             <div className="label">Email (optional)</div>
             <input className="input" value={draft.email ?? ""} onChange={(e) => saveDraft({ ...draft, email: e.target.value })} />
-            {errors.email && <div className="muted2" style={{ fontSize: 12, marginTop: 6 }}>{errors.email}</div>}
+            {errors.email && (
+              <div className="muted2" style={{ fontSize: 12, marginTop: 6 }}>
+                {errors.email}
+              </div>
+            )}
 
             <div className="label">Address line 1</div>
             <input
@@ -159,7 +184,11 @@ export function CheckoutPage() {
               value={draft.addressLine1}
               onChange={(e) => saveDraft({ ...draft, addressLine1: e.target.value })}
             />
-            {errors.addressLine1 && <div className="muted2" style={{ fontSize: 12, marginTop: 6 }}>{errors.addressLine1}</div>}
+            {errors.addressLine1 && (
+              <div className="muted2" style={{ fontSize: 12, marginTop: 6 }}>
+                {errors.addressLine1}
+              </div>
+            )}
 
             <div className="label">Address line 2 (optional)</div>
             <input
@@ -172,12 +201,20 @@ export function CheckoutPage() {
               <div style={{ flex: 1 }}>
                 <div className="label">City</div>
                 <input className="input" value={draft.city} onChange={(e) => saveDraft({ ...draft, city: e.target.value })} />
-                {errors.city && <div className="muted2" style={{ fontSize: 12, marginTop: 6 }}>{errors.city}</div>}
+                {errors.city && (
+                  <div className="muted2" style={{ fontSize: 12, marginTop: 6 }}>
+                    {errors.city}
+                  </div>
+                )}
               </div>
               <div style={{ flex: 1 }}>
                 <div className="label">State</div>
                 <input className="input" value={draft.state} onChange={(e) => saveDraft({ ...draft, state: e.target.value })} />
-                {errors.state && <div className="muted2" style={{ fontSize: 12, marginTop: 6 }}>{errors.state}</div>}
+                {errors.state && (
+                  <div className="muted2" style={{ fontSize: 12, marginTop: 6 }}>
+                    {errors.state}
+                  </div>
+                )}
               </div>
               <div style={{ width: 160 }}>
                 <div className="label">Pincode</div>
@@ -186,7 +223,11 @@ export function CheckoutPage() {
                   value={draft.pincode}
                   onChange={(e) => saveDraft({ ...draft, pincode: normalizePin(e.target.value) })}
                 />
-                {errors.pincode && <div className="muted2" style={{ fontSize: 12, marginTop: 6 }}>{errors.pincode}</div>}
+                {errors.pincode && (
+                  <div className="muted2" style={{ fontSize: 12, marginTop: 6 }}>
+                    {errors.pincode}
+                  </div>
+                )}
               </div>
             </div>
           </div>
