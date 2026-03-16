@@ -67,7 +67,7 @@ export function SiteHeader(props: { cartCount: number }) {
             <button className="iconBtn" aria-label="Search" onClick={() => setShowSearch((s) => !s)}>
               <IconSearch width={20} height={20} />
             </button>
-            <Link className="iconBtn" aria-label="Your orders" to="/orders">
+            <Link className="iconBtn" aria-label="Account" to="/login">
               <IconUser width={20} height={20} />
             </Link>
             <Link className="iconBtn cartBadge" aria-label="Cart" to="/checkout">
@@ -99,3 +99,4 @@ export function SiteHeader(props: { cartCount: number }) {
     </header>
   );
 }
+

@@ -101,6 +101,38 @@ export const api = {
     const d = await json<{ order: Order }>(r);
     return d.order;
   },
+  customer: {
+    startLogin: async (phone: string): Promise<{ ok: true; code?: string }> => {
+      const r = await fetch("/api/customer/login/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ phone })
+      });
+      return json(r);
+    },
+    verifyLogin: async (phone: string, code: string): Promise<{ ok: true }> => {
+      const r = await fetch("/api/customer/login/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ phone, code })
+      });
+      return json(r);
+    },
+    me: async (): Promise<{ phoneDigits: string }> => {
+      const r = await fetch("/api/customer/me", { credentials: "include" });
+      return json(r);
+    },
+    logout: async (): Promise<{ ok: true }> => {
+      const r = await fetch("/api/customer/logout", { method: "POST", credentials: "include" });
+      return json(r);
+    },
+    orders: async (): Promise<{ orders: Order[] }> => {
+      const r = await fetch("/api/customer/orders", { credentials: "include" });
+      return json(r);
+    }
+  },
   imagekit: {
     publicAuth: async (): Promise<ImageKitAuth> => {
       const r = await fetch("/api/public/imagekit/auth", { method: "POST" });
@@ -216,4 +248,3 @@ export const api = {
     }
   }
 };
-

@@ -1,5 +1,8 @@
 ﻿import { nanoid } from "nanoid";
-import type pg from "pg";
+
+type DbClient = {
+  query: (text: string, params?: any[]) => Promise<any>;
+};
 
 export function createOrderNumber() {
   const d = new Date();
@@ -14,9 +17,10 @@ export function createAccessToken() {
   return nanoid(32);
 }
 
-export async function addOrderEvent(client: pg.PoolClient, params: { orderId: string; type: string; message?: string }) {
-  await client.query(
-    "insert into order_events (order_id, type, message) values ($1, $2, $3)",
-    [params.orderId, params.type, params.message ?? null]
-  );
+export async function addOrderEvent(client: DbClient, params: { orderId: string; type: string; message?: string }) {
+  await client.query("insert into order_events (order_id, type, message) values ($1, $2, $3)", [
+    params.orderId,
+    params.type,
+    params.message ?? null
+  ]);
 }

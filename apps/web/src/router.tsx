@@ -6,6 +6,7 @@ import { CustomPage } from "./ui/CustomPage";
 import { BulkPage } from "./ui/BulkPage";
 import { CheckoutPage } from "./ui/CheckoutPage";
 import { OrdersPage } from "./ui/OrdersPage";
+import { LoginPage } from "./ui/LoginPage";
 import { ContactPage } from "./ui/ContactPage";
 import { ReturnsPage } from "./ui/ReturnsPage";
 import { SizeChartPage } from "./ui/SizeChartPage";
@@ -27,6 +28,7 @@ export const router = createBrowserRouter([
       { path: "bulk", element: <BulkPage /> },
       { path: "checkout", element: <CheckoutPage /> },
       { path: "orders", element: <OrdersPage /> },
+      { path: "login", element: <LoginPage /> },
       { path: "contact", element: <ContactPage /> },
       { path: "returns", element: <ReturnsPage /> },
       { path: "size-chart", element: <SizeChartPage /> }

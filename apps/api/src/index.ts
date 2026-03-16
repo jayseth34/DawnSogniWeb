@@ -4,6 +4,7 @@ import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import { env } from "./env.js";
 import { clearAdminCookie, requireAdmin, setAdminCookie } from "./auth.js";
+import { clearCustomerCookie, requireCustomer, setCustomerCookie } from "./customerAuth.js";
 import { getImageKit } from "./imagekit.js";
 import {
   adminAddCustomDesignSchema,
@@ -12,11 +13,22 @@ import {
   adminUpdateCustomRequestSchema,
   adminUpsertDropSchema,
   createCustomRequestSchema,
-  createOrderSchema
+  createOrderSchema,
+  customerLoginStartSchema,
+  customerLoginVerifySchema
 } from "./validation.js";
 import { createAccessToken, createOrderNumber, addOrderEvent } from "./orders.js";
 import { healthcheck, pool, tx } from "./db.js";
-
+import {
+  canIssueOtp,
+  consumeOtp,
+  createOtp,
+  findActiveOtp,
+  generateOtpCode,
+  hashOtp,
+  incrementOtpAttempt,
+  normalizePhoneDigits
+} from "./customerOtp.js";
 const app = express();
 
 app.use(helmet());
@@ -278,6 +290,133 @@ app.post("/api/public/imagekit/auth", (_req, res) => {
   res.json({ ...ik.getAuthenticationParameters(), publicKey: env.IMAGEKIT_PUBLIC_KEY });
 });
 
+
+// -------- Customer auth + order history --------
+app.post("/api/customer/login/start", async (req, res) => {
+  const parsed = customerLoginStartSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+
+  const phoneDigits = normalizePhoneDigits(parsed.data.phone);
+  if (phoneDigits.length < 6) return res.status(400).json({ error: "Invalid phone" });
+
+  const allowed = await canIssueOtp(pool, phoneDigits);
+  if (!allowed) return res.status(429).json({ error: "Too many requests. Try again later." });
+
+  const code = generateOtpCode();
+  const codeHash = hashOtp(phoneDigits, code);
+  await createOtp(pool, phoneDigits, codeHash);
+
+  if (env.NODE_ENV !== "production") {
+    // eslint-disable-next-line no-console
+    console.log(`[dev] OTP for ${phoneDigits}: ${code}`);
+    return res.json({ ok: true, code });
+  }
+
+  // In production, integrate SMS/WhatsApp provider and do not return the code.
+  return res.json({ ok: true });
+});
+
+app.post("/api/customer/login/verify", async (req, res) => {
+  const parsed = customerLoginVerifySchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+
+  const phoneDigits = normalizePhoneDigits(parsed.data.phone);
+  const code = String(parsed.data.code).trim();
+  if (phoneDigits.length < 6) return res.status(400).json({ error: "Invalid phone" });
+
+  const active = await findActiveOtp(pool, phoneDigits);
+  if (!active) return res.status(400).json({ error: "Code expired. Request a new code." });
+  if ((active.attempts ?? 0) >= 5) return res.status(429).json({ error: "Too many attempts. Request a new code." });
+
+  const expected = hashOtp(phoneDigits, code);
+  if (expected !== active.codeHash) {
+    await incrementOtpAttempt(pool, active.id);
+    return res.status(400).json({ error: "Invalid code" });
+  }
+
+  await consumeOtp(pool, active.id);
+  setCustomerCookie(res, phoneDigits);
+  return res.json({ ok: true });
+});
+
+app.post("/api/customer/logout", (_req, res) => {
+  clearCustomerCookie(res);
+  res.json({ ok: true });
+});
+
+app.get("/api/customer/me", requireCustomer, (req, res) => {
+  res.json({ phoneDigits: String((req as any).customerPhone || "") });
+});
+
+app.get("/api/customer/orders", requireCustomer, async (req, res) => {
+  const phoneDigits = String((req as any).customerPhone || "");
+  if (!phoneDigits) return res.status(401).json({ error: "Not authenticated" });
+
+  const ordersR = await pool.query(
+    `select
+      id,
+      order_number as "orderNumber",
+      access_token as "accessToken",
+      order_type as "orderType",
+      status,
+      payment_method as "paymentMethod",
+      customer_name as "customerName",
+      phone,
+      address_line1 as "addressLine1",
+      address_line2 as "addressLine2",
+      city,
+      state,
+      pincode,
+      total_cents as "totalCents",
+      created_at as "createdAt"
+     from orders
+     where regexp_replace(phone, '[^0-9]', '', 'g') = $1
+     order by created_at desc
+     limit 100`,
+    [phoneDigits]
+  );
+
+  const orders = ordersR.rows as any[];
+  if (orders.length === 0) return res.json({ orders: [] });
+
+  const orderIds = orders.map((o) => o.id);
+
+  const itemsR = await pool.query(
+    `select
+      id,
+      order_id as "orderId",
+      quantity,
+      unit_price_cents as "unitPriceCents",
+      title,
+      variant,
+      size,
+      image_url as "imageUrl",
+      created_at as "createdAt"
+     from order_items
+     where order_id = any($1)
+     order by created_at asc`,
+    [orderIds]
+  );
+
+  const eventsR = await pool.query(
+    `select id, order_id as "orderId", type, message, created_at as "createdAt"
+     from order_events
+     where order_id = any($1)
+     order by created_at asc`,
+    [orderIds]
+  );
+
+  const itemsBy = groupBy(itemsR.rows as any[], "orderId");
+  const eventsBy = groupBy(eventsR.rows as any[], "orderId");
+
+  const hydrated = orders.map((o) => ({
+    ...o,
+    items: itemsBy.get(String(o.id)) ?? [],
+    events: eventsBy.get(String(o.id)) ?? []
+  }));
+
+  res.json({ orders: hydrated });
+});
 // -------- Admin --------
 app.post("/api/admin/login", (req, res) => {
   const parsed = adminLoginSchema.safeParse(req.body);
@@ -731,3 +870,10 @@ app.listen(port, () => {
   // eslint-disable-next-line no-console
   console.log(`API listening on http://localhost:${port}`);
 });
+
+
+
+
+
+
+

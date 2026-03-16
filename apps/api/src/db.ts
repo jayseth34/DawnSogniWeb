@@ -3,6 +3,11 @@ import { env } from "./env.js";
 
 const { Pool } = pg;
 
+type DbClient = {
+  query: (text: string, params?: any[]) => Promise<any>;
+  release?: () => void;
+};
+
 export const pool = new Pool({
   connectionString: env.DATABASE_URL,
   ssl: env.DB_SSL ? { rejectUnauthorized: false } : undefined
@@ -13,8 +18,8 @@ export async function healthcheck() {
   return r.rows[0]?.ok === 1;
 }
 
-export async function tx<T>(fn: (client: pg.PoolClient) => Promise<T>): Promise<T> {
-  const client = await pool.connect();
+export async function tx<T>(fn: (client: DbClient) => Promise<T>): Promise<T> {
+  const client = (await pool.connect()) as DbClient;
   try {
     await client.query("BEGIN");
     const result = await fn(client);
@@ -28,6 +33,10 @@ export async function tx<T>(fn: (client: pg.PoolClient) => Promise<T>): Promise<
     }
     throw e;
   } finally {
-    client.release();
+    try {
+      client.release?.();
+    } catch {
+      // ignore
+    }
   }
 }

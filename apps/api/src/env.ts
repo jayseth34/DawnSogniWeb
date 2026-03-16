@@ -39,6 +39,8 @@ const envSchema = z.object({
   ADMIN_PASSCODE: z.string().min(1),
   ADMIN_JWT_SECRET: z.string().min(10),
 
+  CUSTOMER_JWT_SECRET: z.string().min(10),
+
   IMAGEKIT_PUBLIC_KEY: z.string().optional().default(""),
   IMAGEKIT_PRIVATE_KEY: z.string().optional().default(""),
   IMAGEKIT_URL_ENDPOINT: z.string().optional().default(""),

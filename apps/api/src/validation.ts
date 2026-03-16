@@ -1,6 +1,12 @@
-import { z } from "zod";
+﻿import { z } from "zod";
 
 export const moneyCents = z.number().int().nonnegative();
+
+const phoneRawSchema = z.string().min(6).max(24);
+
+export function normalizePhoneDigits(input: string) {
+  return input.replace(/[^0-9]/g, "").slice(0, 15);
+}
 
 export const orderItemSchema = z.object({
   title: z.string().min(1),
@@ -17,7 +23,7 @@ export const createOrderSchema = z.object({
   orderType: z.enum(["DROP", "CUSTOM", "BULK"]),
   customer: z.object({
     name: z.string().min(1),
-    phone: z.string().min(6),
+    phone: phoneRawSchema,
     email: z.string().email().optional(),
     addressLine1: z.string().min(1),
     addressLine2: z.string().optional(),
@@ -31,7 +37,7 @@ export const createOrderSchema = z.object({
 
 export const createCustomRequestSchema = z.object({
   customerName: z.string().min(1),
-  phone: z.string().min(6),
+  phone: phoneRawSchema,
   notes: z.string().optional(),
   referenceImages: z.array(z.string().url()).default([])
 });
@@ -50,9 +56,7 @@ export const adminUpsertDropSchema = z.object({
 });
 
 export const adminUpdateCustomRequestSchema = z.object({
-  status: z
-    .enum(["REQUESTED", "IN_PROGRESS", "QUOTED", "ACCEPTED", "DECLINED", "COMPLETED"])
-    .optional(),
+  status: z.enum(["REQUESTED", "IN_PROGRESS", "QUOTED", "ACCEPTED", "DECLINED", "COMPLETED"]).optional(),
   quotedPriceCents: moneyCents.optional(),
   notes: z.string().optional()
 });
@@ -66,3 +70,11 @@ export const adminRequestPartialSchema = z.object({
   amountCents: moneyCents
 });
 
+export const customerLoginStartSchema = z.object({
+  phone: phoneRawSchema
+});
+
+export const customerLoginVerifySchema = z.object({
+  phone: phoneRawSchema,
+  code: z.string().min(4).max(12)
+});

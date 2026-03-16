@@ -2,7 +2,7 @@
 import { api, type Order } from "../api";
 import { useSessionApi } from "./useSession";
 import { formatRupees } from "./money";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 function totalText(order: Order) {
   if (order.totalCents === 0) return "Quote pending";
@@ -29,6 +29,13 @@ async function copyToClipboard(label: string, value: string, onStatus: (msg: str
   }
 }
 
+function mergeOrders(a: Order[], b: Order[]) {
+  const map = new Map<string, Order>();
+  for (const o of a) map.set(o.id, o);
+  for (const o of b) map.set(o.id, o);
+  return Array.from(map.values()).sort((x, y) => +new Date(y.createdAt) - +new Date(x.createdAt));
+}
+
 export function OrdersPage() {
   const { session, persist } = useSessionApi();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -38,10 +45,13 @@ export function OrdersPage() {
   const [uiToast, setUiToast] = useState("");
   const [params, setParams] = useSearchParams();
 
+  const [phoneDigits, setPhoneDigits] = useState<string>("");
+  const [loadingPhoneOrders, setLoadingPhoneOrders] = useState(false);
+
   const tokens = useMemo(() => session.orderTokens ?? [], [session.orderTokens]);
   const placedToken = (params.get("placed") || "").trim();
 
-  async function fetchAll() {
+  async function loadFromTokens() {
     setStatus("");
     try {
       const list: Order[] = [];
@@ -55,12 +65,49 @@ export function OrdersPage() {
     }
   }
 
+  async function loadFromPhone() {
+    setStatus("");
+    setLoadingPhoneOrders(true);
+    try {
+      const d = await api.customer.orders();
+      setOrders((prev) => mergeOrders(prev, d.orders ?? []));
+    } catch (e: any) {
+      setStatus(`Failed: ${String(e?.message ?? e)}`);
+    } finally {
+      setLoadingPhoneOrders(false);
+    }
+  }
+
+  async function init() {
+    try {
+      const me = await api.customer.me();
+      if (me?.phoneDigits) {
+        setPhoneDigits(me.phoneDigits);
+      }
+    } catch {
+      setPhoneDigits("");
+    }
+  }
+
   useEffect(() => {
-    fetchAll();
+    init();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tokens.join("|")]);
+  }, []);
+
+  useEffect(() => {
+    if (phoneDigits) {
+      void loadFromPhone();
+    } else {
+      void loadFromTokens();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phoneDigits, tokens.join("|")]);
 
   async function refreshOne(order: Order) {
+    if (phoneDigits) {
+      await loadFromPhone();
+      return;
+    }
     const fresh = await api.getOrderByToken(order.accessToken);
     setOrders((prev) => prev.map((p) => (p.id === fresh.id ? fresh : p)));
   }
@@ -90,16 +137,41 @@ export function OrdersPage() {
     setParams(next, { replace: true });
   }
 
+  async function logout() {
+    await api.customer.logout();
+    setPhoneDigits("");
+    setUiToast("Signed out");
+    setTimeout(() => setUiToast(""), 1400);
+  }
+
   return (
     <div className="container page">
       <div className="row" style={{ justifyContent: "space-between" }}>
         <div>
           <div className="h2">Your Orders</div>
-          <div className="muted">Saved to this device.</div>
+          <div className="muted">Saved to this device{phoneDigits ? ` · Signed in` : ""}.</div>
         </div>
-        <button className="btn" onClick={fetchAll}>
-          Refresh
-        </button>
+        <div className="row" style={{ gap: 10 }}>
+          {phoneDigits ? (
+            <>
+              <button className="btn" onClick={loadFromPhone} disabled={loadingPhoneOrders}>
+                {loadingPhoneOrders ? "Loading..." : "Refresh"}
+              </button>
+              <button className="btn" onClick={logout}>
+                Sign out
+              </button>
+            </>
+          ) : (
+            <>
+              <Link className="btn primary" to="/login">
+                Sign in
+              </Link>
+              <button className="btn" onClick={loadFromTokens}>
+                Refresh
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {uiToast && (
@@ -151,21 +223,25 @@ export function OrdersPage() {
         </div>
       )}
 
-      <div style={{ height: 12 }} />
-      <div className="card">
-        <div className="p">
-          <div style={{ fontWeight: 800 }}>Add an order token</div>
-          <div className="muted" style={{ marginTop: 6, fontSize: 12 }}>
-            Paste a tracking token to add an order to this device.
+      {!phoneDigits && (
+        <>
+          <div style={{ height: 12 }} />
+          <div className="card">
+            <div className="p">
+              <div style={{ fontWeight: 800 }}>Add an order token</div>
+              <div className="muted" style={{ marginTop: 6, fontSize: 12 }}>
+                Paste a tracking token to add an order to this device.
+              </div>
+              <div className="row" style={{ marginTop: 10 }}>
+                <input className="input" value={newToken} onChange={(e) => setNewToken(e.target.value)} placeholder="Tracking token" />
+                <button className="btn primary" onClick={addToken} disabled={!newToken.trim()}>
+                  Add
+                </button>
+              </div>
+            </div>
           </div>
-          <div className="row" style={{ marginTop: 10 }}>
-            <input className="input" value={newToken} onChange={(e) => setNewToken(e.target.value)} placeholder="Tracking token" />
-            <button className="btn primary" onClick={addToken} disabled={!newToken.trim()}>
-              Add
-            </button>
-          </div>
-        </div>
-      </div>
+        </>
+      )}
 
       <div className="hr" />
       {status && <div className="muted">{status}</div>}
@@ -257,7 +333,7 @@ export function OrdersPage() {
             )}
           </div>
         ))}
-        {orders.length === 0 && <div className="muted">No orders on this device yet.</div>}
+        {orders.length === 0 && <div className="muted">No orders yet.</div>}
       </div>
     </div>
   );

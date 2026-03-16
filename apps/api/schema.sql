@@ -42,8 +42,19 @@ CREATE TABLE IF NOT EXISTS custom_designs (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
--- Orders
-CREATE TABLE IF NOT EXISTS orders (
+
+-- Customer phone login (OTP)
+CREATE TABLE IF NOT EXISTS customer_phone_otps (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  phone_digits text NOT NULL,
+  code_hash text NOT NULL,
+  attempts integer NOT NULL DEFAULT 0,
+  expires_at timestamptz NOT NULL,
+  consumed_at timestamptz,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_customer_phone_otps_phone_created_at ON customer_phone_otps(phone_digits, created_at desc);\n\n-- Orders\nCREATE TABLE IF NOT EXISTS orders (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   order_number text NOT NULL UNIQUE,
   access_token text NOT NULL UNIQUE,
@@ -137,3 +148,4 @@ CREATE INDEX IF NOT EXISTS idx_order_events_order_id ON order_events(order_id);
 CREATE INDEX IF NOT EXISTS idx_owner_notifications_order_id ON owner_notifications(order_id);
 
 COMMIT;
+
