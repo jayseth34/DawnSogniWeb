@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo } from "react";
+﻿import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api";
 
@@ -27,6 +27,7 @@ export function cacheCustomerPhoneDigits(phoneDigits: string) {
 
 export function useCustomerAuth() {
   const qc = useQueryClient();
+  const [cached, setCached] = useState(() => loadCachedPhoneDigits());
 
   const me = useQuery({
     queryKey: ["customerMe"],
@@ -35,15 +36,21 @@ export function useCustomerAuth() {
     staleTime: 30_000
   });
 
-  const cached = useMemo(() => loadCachedPhoneDigits(), []);
+  useEffect(() => {
+    // Keep the cached value in sync so the UI doesn't keep thinking you're signed in.
+    if (me.data?.phoneDigits) {
+      saveCachedPhoneDigits(me.data.phoneDigits);
+      setCached(me.data.phoneDigits);
+    }
+    if (me.isError) {
+      saveCachedPhoneDigits("");
+      setCached("");
+    }
+  }, [me.data?.phoneDigits, me.isError]);
+
   const phoneDigits = me.data?.phoneDigits || cached;
   const isAuthed = Boolean(phoneDigits);
   const ready = me.isFetched || me.isError;
-
-  useEffect(() => {
-    if (me.data?.phoneDigits) saveCachedPhoneDigits(me.data.phoneDigits);
-    if (me.isError) saveCachedPhoneDigits("");
-  }, [me.data?.phoneDigits, me.isError]);
 
   async function refresh() {
     await qc.invalidateQueries({ queryKey: ["customerMe"] });
@@ -54,6 +61,7 @@ export function useCustomerAuth() {
       await api.customer.logout();
     } finally {
       saveCachedPhoneDigits("");
+      setCached("");
       qc.removeQueries({ queryKey: ["customerMe"] });
     }
   }
