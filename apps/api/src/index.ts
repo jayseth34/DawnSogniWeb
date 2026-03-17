@@ -2,6 +2,9 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
+import { existsSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { env } from "./env.js";
 import { clearAdminCookie, requireAdmin, setAdminCookie } from "./auth.js";
 import { clearCustomerCookie, requireCustomer, setCustomerCookie } from "./customerAuth.js";
@@ -17,7 +20,8 @@ import {
   createCustomRequestSchema,
   createOrderSchema,
   customerLoginStartSchema,
-  customerLoginVerifySchema
+  customerLoginVerifySchema,
+  publicUpdateCustomRequestSchema
 } from "./validation.js";
 import { createAccessToken, createOrderNumber, addOrderEvent } from "./orders.js";
 import { healthcheck, pool, tx } from "./db.js";

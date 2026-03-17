@@ -58,7 +58,8 @@ export const adminUpsertDropSchema = z.object({
 export const adminUpdateCustomRequestSchema = z.object({
   status: z.enum(["REQUESTED", "IN_PROGRESS", "QUOTED", "ACCEPTED", "DECLINED", "COMPLETED"]).optional(),
   quotedPriceCents: moneyCents.optional(),
-  notes: z.string().optional()
+  notes: z.string().optional(),
+  referenceImages: z.array(z.string().url()).optional()
 });
 
 export const adminAddCustomDesignSchema = z.object({
