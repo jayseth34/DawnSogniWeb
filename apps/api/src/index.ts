@@ -85,6 +85,8 @@ app.get("/api/drops", async (_req, res) => {
     order by created_at desc`
   );
   res.json({ drops: r.rows });
+});
+
 app.get("/api/drops/:id", async (req, res) => {
   const id = req.params.id;
   const r = await pool.query(
@@ -105,7 +107,6 @@ app.get("/api/drops/:id", async (req, res) => {
   const drop = r.rows[0];
   if (!drop) return res.status(404).json({ error: "Not found" });
   res.json({ drop });
-});
 });
 
 app.post("/api/custom-requests", async (req, res) => {
@@ -213,7 +214,9 @@ app.patch("/api/custom-requests/by-token/:token", async (req, res) => {
   );
 
   res.json({ customRequest: { ...customRequest, designs: designsR.rows } });
-});app.post("/api/orders", async (req, res) => {
+});
+
+app.post("/api/orders", async (req, res) => {
   const parsed = createOrderSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
 
@@ -1047,12 +1050,27 @@ app.post("/api/admin/orders/:id/mark-delivered", requireAdmin, async (req, res) 
   res.json({ order: updated });
 });
 
+
+// ===== SERVE FRONTEND (production) =====
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const frontendPath = path.join(__dirname, "../../web/dist");
+
+if (existsSync(frontendPath)) {
+  app.use(express.static(frontendPath, { index: false }));
+  app.get(/^\/(?!api\/).*/, (_req, res) => {
+    res.sendFile(path.join(frontendPath, "index.html"));
+  });
+} else {
+  // eslint-disable-next-line no-console
+  console.warn("[warn] Frontend build not found at:", frontendPath);
+}
 process.on("SIGINT", async () => {
   await pool.end();
   process.exit(0);
 });
 
-const port = 4000;
+const port = Number(process.env.PORT || 4000);
 app.listen(port, () => {
   // eslint-disable-next-line no-console
   console.log(`API listening on http://localhost:${port}`);
