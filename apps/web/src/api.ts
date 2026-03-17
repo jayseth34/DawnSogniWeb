@@ -11,6 +11,7 @@ export type DropDesign = {
 
 export type CustomRequest = {
   id: string;
+  accessToken?: string;
   customerName: string;
   phone: string;
   notes: string | null;
