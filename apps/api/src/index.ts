@@ -37,7 +37,27 @@ import {
 } from "./customerOtp.js";
 const app = express();
 
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        connectSrc: [
+          "'self'",
+          "https://upload.imagekit.io",
+          "https://api.imagekit.io"
+        ],
+        imgSrc: [
+          "'self'",
+          "data:",
+          "https://ik.imagekit.io"
+        ],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'"]
+      }
+    }
+  })
+);
 app.use(
   cors({
     origin: env.WEB_ORIGIN,
