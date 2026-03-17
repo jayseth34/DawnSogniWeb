@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { IconBag, IconSearch, IconUser } from "./icons";
 import { useCustomerAuth } from "./useCustomerAuth";

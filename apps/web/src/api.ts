@@ -1,4 +1,4 @@
-﻿export type DropDesign = {
+export type DropDesign = {
   id: string;
   title: string;
   description: string | null;
@@ -80,7 +80,25 @@ export const api = {
     const d = await json<{ drops: DropDesign[] }>(r);
     return d.drops;
   },
-  createCustomRequest: async (payload: { customerName: string; phone: string; notes?: string; referenceImages: string[] }) => {
+  drop: async (id: string): Promise<DropDesign> => {
+    const r = await fetch(`/api/drops/${encodeURIComponent(id)}`);
+    const d = await json<{ drop: DropDesign }>(r);
+    return d.drop;
+  },
+    getCustomRequestByToken: async (token: string): Promise<CustomRequest> => {
+    const r = await fetch(`/api/custom-requests/by-token/${encodeURIComponent(token)}`);
+    const d = await json<{ customRequest: CustomRequest }>(r);
+    return d.customRequest;
+  },
+  updateCustomRequestByToken: async (token: string, payload: { referenceImages?: string[]; notes?: string }): Promise<CustomRequest> => {
+    const r = await fetch(`/api/custom-requests/by-token/${encodeURIComponent(token)}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const d = await json<{ customRequest: CustomRequest }>(r);
+    return d.customRequest;
+  },createCustomRequest: async (payload: { customerName: string; phone: string; notes?: string; referenceImages: string[] }) => {
     const r = await fetch("/api/custom-requests", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -221,29 +239,58 @@ export const api = {
       const r = await fetch(`/api/admin/orders/${id}`, { credentials: "include" });
       return json(r);
     },
-    acceptOrder: async (id: string) => {
-      const r = await fetch(`/api/admin/orders/${id}/accept`, { method: "POST", credentials: "include" });
+    acceptOrder: async (id: string, note?: string) => {
+      const r = await fetch(`/api/admin/orders/${id}/accept`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(note ? { note } : {})
+      });
       return json(r);
     },
-    requestPartial: async (id: string, amountCents: number) => {
+    requestPartial: async (id: string, amountCents: number, note?: string) => {
       const r = await fetch(`/api/admin/orders/${id}/request-partial`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ amountCents })
+        body: JSON.stringify(note ? { amountCents, note } : { amountCents })
       });
       return json(r);
     },
-    markPartialPaid: async (id: string) => {
-      const r = await fetch(`/api/admin/orders/${id}/mark-partial-paid`, { method: "POST", credentials: "include" });
+    markPartialPaid: async (id: string, note?: string) => {
+      const r = await fetch(`/api/admin/orders/${id}/mark-partial-paid`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(note ? { note } : {})
+      });
       return json(r);
     },
-    markShipped: async (id: string) => {
-      const r = await fetch(`/api/admin/orders/${id}/mark-shipped`, { method: "POST", credentials: "include" });
+    markShipped: async (id: string, note?: string) => {
+      const r = await fetch(`/api/admin/orders/${id}/mark-shipped`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(note ? { note } : {})
+      });
       return json(r);
     },
-    markDelivered: async (id: string) => {
-      const r = await fetch(`/api/admin/orders/${id}/mark-delivered`, { method: "POST", credentials: "include" });
+    markDelivered: async (id: string, note?: string) => {
+      const r = await fetch(`/api/admin/orders/${id}/mark-delivered`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(note ? { note } : {})
+      });
+      return json(r);
+    },
+    cancelOrder: async (id: string, reason: string) => {
+      const r = await fetch(`/api/admin/orders/${id}/cancel`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ reason })
+      });
       return json(r);
     }
   }

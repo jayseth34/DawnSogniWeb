@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { loadSession, saveSession, PENDING_SESSION_KEY, sessionKeyForPhone, type CartItem, type SessionState } from "../storage";
 import type { DropDesign } from "../api";
 import { useCustomerAuth } from "./useCustomerAuth";

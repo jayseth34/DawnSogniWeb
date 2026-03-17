@@ -1,4 +1,4 @@
-﻿type ImageKitAuth = {
+type ImageKitAuth = {
   token: string;
   expire: number;
   signature: string;

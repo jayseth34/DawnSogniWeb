@@ -1,4 +1,4 @@
-﻿const KEY = "dawnsogni.session.v1";
+const KEY = "dawnsogni.session.v1";
 
 export function sessionKeyForPhone(phoneDigits?: string | null) {
   const p = String(phoneDigits || "").trim();
@@ -34,10 +34,11 @@ export type SessionState = {
   customerDraft?: CustomerDraft;
   cart: CartItem[];
   orderTokens: string[];
+  customRequestTokens: string[];
 };
 
 function empty(): SessionState {
-  return { cart: [], orderTokens: [] };
+  return { cart: [], orderTokens: [], customRequestTokens: [] };
 }
 
 export function loadSession(key: string = KEY): SessionState {
@@ -48,7 +49,8 @@ export function loadSession(key: string = KEY): SessionState {
     return {
       customerDraft: parsed.customerDraft,
       cart: parsed.cart ?? [],
-      orderTokens: parsed.orderTokens ?? []
+      orderTokens: parsed.orderTokens ?? [],
+      customRequestTokens: (parsed as any).customRequestTokens ?? []
     };
   } catch {
     return empty();

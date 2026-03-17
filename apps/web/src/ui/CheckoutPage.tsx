@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api";
 import { type CartItem, type CustomerDraft } from "../storage";
@@ -247,19 +247,19 @@ export function CheckoutPage() {
             )}
             <div className="grid" style={{ gap: 10 }}>
               {session.cart.map((c, idx) => (
-                <div key={`${c.title}-${idx}`} className="pill" style={{ justifyContent: "space-between", width: "100%" }}>
-                  <div style={{ minWidth: 220 }}>
-                    <div style={{ fontWeight: 800 }}>{c.title}</div>
-                    <div className="muted2" style={{ fontSize: 12, marginTop: 2 }}>
+                <div key={`${c.title}-${idx}`} className="cartItem">
+                  {c.imageUrl ? <img className="cartItemImg" src={c.imageUrl} alt="" /> : <div className="cartItemImg" />}
+
+                  <div className="cartItemInfo">
+                    <div className="cartItemTitle">{c.title}</div>
+                    <div className="cartItemSub">
                       {c.kind}
                       {c.variant ? ` · ${c.variant}` : ""}
                     </div>
-                    <div className="muted2" style={{ fontSize: 12, marginTop: 2 }}>
-                      Line: {linePriceText(c)}
-                    </div>
+                    <div className="cartItemSub">Line: {linePriceText(c)}</div>
                   </div>
 
-                  <div className="row">
+                  <div className="cartItemActions">
                     <button className="btn" onClick={() => updateCartQty(idx, c.quantity - 1)} disabled={submitting}>
                       -
                     </button>
@@ -275,7 +275,7 @@ export function CheckoutPage() {
               ))}
             </div>
             <div style={{ height: 14 }} />
-            <button className="btn primary" onClick={placeOrder} disabled={!canPlace}>
+            <button className="btn primary checkoutPlaceBtn" onClick={placeOrder} disabled={!canPlace}>
               {submitting ? "Placing order..." : "Place order"}
             </button>
             {status && (

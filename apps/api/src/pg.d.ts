@@ -1,4 +1,4 @@
-﻿declare module "pg" {
+declare module "pg" {
   const pg: any;
   export default pg;
 }

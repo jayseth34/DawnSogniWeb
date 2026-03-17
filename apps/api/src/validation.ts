@@ -1,4 +1,4 @@
-﻿import { z } from "zod";
+import { z } from "zod";
 
 export const moneyCents = z.number().int().nonnegative();
 
@@ -66,8 +66,17 @@ export const adminAddCustomDesignSchema = z.object({
   notes: z.string().optional()
 });
 
+export const adminOrderNoteSchema = z.object({
+  note: z.string().max(500).optional()
+});
+
 export const adminRequestPartialSchema = z.object({
-  amountCents: moneyCents
+  amountCents: moneyCents,
+  note: z.string().max(500).optional()
+});
+
+export const adminCancelOrderSchema = z.object({
+  reason: z.string().min(1).max(500)
 });
 
 export const customerLoginStartSchema = z.object({
@@ -77,4 +86,9 @@ export const customerLoginStartSchema = z.object({
 export const customerLoginVerifySchema = z.object({
   phone: phoneRawSchema,
   code: z.string().min(4).max(12)
+});
+
+export const publicUpdateCustomRequestSchema = z.object({
+  referenceImages: z.array(z.string().url()).optional(),
+  notes: z.string().optional()
 });

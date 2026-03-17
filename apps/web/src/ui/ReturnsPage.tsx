@@ -1,4 +1,4 @@
-﻿export function ReturnsPage() {
+export function ReturnsPage() {
   return (
     <div className="container page" style={{ maxWidth: 820 }}>
       <div className="h2">Returns & Exchanges</div>

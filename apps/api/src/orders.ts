@@ -1,4 +1,4 @@
-﻿import { nanoid } from "nanoid";
+import { nanoid } from "nanoid";
 
 type DbClient = {
   query: (text: string, params?: any[]) => Promise<any>;

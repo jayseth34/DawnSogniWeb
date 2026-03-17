@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { api, type CustomRequest } from "../../api";
 import { uploadToImageKit } from "../../imagekitUpload";
 import { formatRupees } from "../money";

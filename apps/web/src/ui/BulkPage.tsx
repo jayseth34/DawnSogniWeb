@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useSessionApi } from "./useSession";
 
 export function BulkPage() {

@@ -1,4 +1,4 @@
-﻿import express from "express";
+import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
@@ -8,7 +8,9 @@ import { clearCustomerCookie, requireCustomer, setCustomerCookie } from "./custo
 import { getImageKit } from "./imagekit.js";
 import {
   adminAddCustomDesignSchema,
+  adminCancelOrderSchema,
   adminLoginSchema,
+  adminOrderNoteSchema,
   adminRequestPartialSchema,
   adminUpdateCustomRequestSchema,
   adminUpsertDropSchema,
@@ -79,6 +81,27 @@ app.get("/api/drops", async (_req, res) => {
     order by created_at desc`
   );
   res.json({ drops: r.rows });
+app.get("/api/drops/:id", async (req, res) => {
+  const id = req.params.id;
+  const r = await pool.query(
+    `select
+      id,
+      title,
+      description,
+      price_cents as "priceCents",
+      category,
+      images,
+      is_active as "isActive",
+      created_at as "createdAt",
+      updated_at as "updatedAt"
+    from drop_designs
+    where id = $1 and is_active = true`,
+    [id]
+  );
+  const drop = r.rows[0];
+  if (!drop) return res.status(404).json({ error: "Not found" });
+  res.json({ drop });
+});
 });
 
 app.post("/api/custom-requests", async (req, res) => {
@@ -90,6 +113,7 @@ app.post("/api/custom-requests", async (req, res) => {
      values ($1, $2, $3, $4)
      returning
       id,
+      access_token as "accessToken",
       customer_name as "customerName",
       phone,
       notes,
@@ -111,7 +135,81 @@ app.post("/api/custom-requests", async (req, res) => {
   res.json({ customRequest: r.rows[0] });
 });
 
-app.post("/api/orders", async (req, res) => {
+
+app.get("/api/custom-requests/by-token/:token", async (req, res) => {
+  const token = req.params.token;
+  const r = await pool.query(
+    `select
+      id,
+      access_token as "accessToken",
+      customer_name as "customerName",
+      phone,
+      notes,
+      reference_images as "referenceImages",
+      status,
+      approx_price_low as "approxPriceLow",
+      approx_price_high as "approxPriceHigh",
+      quoted_price_cents as "quotedPriceCents",
+      created_at as "createdAt",
+      updated_at as "updatedAt"
+     from custom_requests
+     where access_token = $1`,
+    [token]
+  );
+  const customRequest = r.rows[0];
+  if (!customRequest) return res.status(404).json({ error: "Not found" });
+
+  const designsR = await pool.query(
+    `select id, custom_request_id as "customRequestId", images, notes, created_at as "createdAt"
+     from custom_designs
+     where custom_request_id = $1
+     order by created_at desc`,
+    [customRequest.id]
+  );
+
+  res.json({ customRequest: { ...customRequest, designs: designsR.rows } });
+});
+
+app.patch("/api/custom-requests/by-token/:token", async (req, res) => {
+  const token = req.params.token;
+  const parsed = publicUpdateCustomRequestSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+
+  const up = await pool.query(
+    `update custom_requests
+     set
+      reference_images = coalesce($2, reference_images),
+      notes = coalesce($3, notes)
+     where access_token = $1
+     returning
+      id,
+      access_token as "accessToken",
+      customer_name as "customerName",
+      phone,
+      notes,
+      reference_images as "referenceImages",
+      status,
+      approx_price_low as "approxPriceLow",
+      approx_price_high as "approxPriceHigh",
+      quoted_price_cents as "quotedPriceCents",
+      created_at as "createdAt",
+      updated_at as "updatedAt"`,
+    [token, parsed.data.referenceImages ?? null, parsed.data.notes ?? null]
+  );
+
+  const customRequest = up.rows[0];
+  if (!customRequest) return res.status(404).json({ error: "Not found" });
+
+  const designsR = await pool.query(
+    `select id, custom_request_id as "customRequestId", images, notes, created_at as "createdAt"
+     from custom_designs
+     where custom_request_id = $1
+     order by created_at desc`,
+    [customRequest.id]
+  );
+
+  res.json({ customRequest: { ...customRequest, designs: designsR.rows } });
+});app.post("/api/orders", async (req, res) => {
   const parsed = createOrderSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
 
@@ -576,7 +674,7 @@ app.patch("/api/admin/custom-requests/:id", requireAdmin, async (req, res) => {
      set
       status = coalesce($2, status),
       quoted_price_cents = coalesce($3, quoted_price_cents),
-      notes = coalesce($4, notes)
+      notes = coalesce($4, notes),\n      reference_images = coalesce($5, reference_images)
      where id = $1
      returning
       id,
@@ -590,7 +688,7 @@ app.patch("/api/admin/custom-requests/:id", requireAdmin, async (req, res) => {
       quoted_price_cents as "quotedPriceCents",
       created_at as "createdAt",
       updated_at as "updatedAt"`,
-    [req.params.id, parsed.data.status ?? null, parsed.data.quotedPriceCents ?? null, parsed.data.notes ?? null]
+    [req.params.id, parsed.data.status ?? null, parsed.data.quotedPriceCents ?? null, parsed.data.notes ?? null, parsed.data.referenceImages ?? null]
   );
 
   const customRequest = r.rows[0];
@@ -750,6 +848,10 @@ app.get("/api/admin/orders/:id", requireAdmin, async (req, res) => {
 });
 
 app.post("/api/admin/orders/:id/accept", requireAdmin, async (req, res) => {
+  const parsedNote = adminOrderNoteSchema.safeParse(req.body && typeof req.body === "object" ? req.body : {});
+  if (!parsedNote.success) return res.status(400).json({ error: parsedNote.error.flatten() });
+  const note = String(parsedNote.data.note ?? "").trim();
+
   const updated = await tx(async (client) => {
     const upR = await client.query(
       `update orders set status='ADMIN_ACCEPTED' where id=$1
@@ -762,7 +864,7 @@ app.post("/api/admin/orders/:id/accept", requireAdmin, async (req, res) => {
     await addOrderEvent(client, {
       orderId: o.id,
       type: "ADMIN_ACCEPTED",
-      message: "Admin accepted the order. Ask for partial payment for acceptance."
+      message: note ? `Admin accepted the order. Note: ${note}` : "Admin accepted the order."
     });
 
     const to = env.OWNER_NOTIFY_TO || "owner";
@@ -777,7 +879,8 @@ app.post("/api/admin/orders/:id/accept", requireAdmin, async (req, res) => {
           kind: "ORDER_ACCEPTED",
           orderNumber: o.orderNumber,
           phone: o.phone,
-          customerName: o.customerName
+          customerName: o.customerName,
+          note: note || undefined
         }
       ]
     );
@@ -789,9 +892,65 @@ app.post("/api/admin/orders/:id/accept", requireAdmin, async (req, res) => {
   res.json({ order: updated });
 });
 
+app.post("/api/admin/orders/:id/cancel", requireAdmin, async (req, res) => {
+  const parsed = adminCancelOrderSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+  const reason = String(parsed.data.reason).trim();
+
+  const updated = await tx(async (client) => {
+    const curR = await client.query(
+      `select id, status, order_number as "orderNumber", customer_name as "customerName", phone
+       from orders where id=$1`,
+      [req.params.id]
+    );
+    const cur = curR.rows[0];
+    if (!cur) return { kind: "not_found" as const };
+    if (cur.status === "DELIVERED") return { kind: "invalid" as const, error: "Cannot cancel a delivered order" };
+
+    await client.query(`update orders set status='CANCELLED' where id=$1`, [req.params.id]);
+
+    await addOrderEvent(client, {
+      orderId: req.params.id,
+      type: "CANCELLED",
+      message: `Order cancelled by admin. Reason: ${reason}`
+    });
+
+    const to = env.OWNER_NOTIFY_TO || "owner";
+    await client.query(
+      `insert into owner_notifications (order_id, channel, to_address, payload)
+       values ($1,$2,$3,$4)`,
+      [
+        req.params.id,
+        "OWNER_MESSAGE",
+        to,
+        {
+          kind: "ORDER_CANCELLED",
+          orderNumber: cur.orderNumber,
+          phone: cur.phone,
+          customerName: cur.customerName,
+          reason
+        }
+      ]
+    );
+
+    return { kind: "ok" as const };
+  });
+
+  if ((updated as any)?.kind === "not_found") return res.status(404).json({ error: "Order not found" });
+  if ((updated as any)?.kind === "invalid") return res.status(400).json({ error: (updated as any).error });
+  res.json({ ok: true });
+});
+
 app.post("/api/admin/orders/:id/request-partial", requireAdmin, async (req, res) => {
   const parsed = adminRequestPartialSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+
+  const note = String(parsed.data.note ?? "").trim();
+  const rupees = Math.round(parsed.data.amountCents / 100);
+  const amountText = rupees.toLocaleString("en-IN");
+  const msg = note
+    ? `Requested partial payment: Rs ${amountText}. Note: ${note}`
+    : `Requested partial payment: Rs ${amountText}.`;
 
   const updated = await tx(async (client) => {
     const upR = await client.query(
@@ -807,7 +966,7 @@ app.post("/api/admin/orders/:id/request-partial", requireAdmin, async (req, res)
     await addOrderEvent(client, {
       orderId: req.params.id,
       type: "PARTIAL_REQUESTED",
-      message: `Requested partial payment: ₹${Math.round(parsed.data.amountCents / 100)}`
+      message: msg
     });
 
     return o;
@@ -818,6 +977,10 @@ app.post("/api/admin/orders/:id/request-partial", requireAdmin, async (req, res)
 });
 
 app.post("/api/admin/orders/:id/mark-partial-paid", requireAdmin, async (req, res) => {
+  const parsedNote = adminOrderNoteSchema.safeParse(req.body && typeof req.body === "object" ? req.body : {});
+  if (!parsedNote.success) return res.status(400).json({ error: parsedNote.error.flatten() });
+  const note = String(parsedNote.data.note ?? "").trim();
+
   const updated = await tx(async (client) => {
     const upR = await client.query(
       `update orders set status='PARTIAL_PAID' where id=$1 returning id`,
@@ -826,7 +989,11 @@ app.post("/api/admin/orders/:id/mark-partial-paid", requireAdmin, async (req, re
     const o = upR.rows[0];
     if (!o) return null;
 
-    await addOrderEvent(client, { orderId: req.params.id, type: "PARTIAL_PAID", message: "Partial payment marked as received." });
+    await addOrderEvent(client, {
+      orderId: req.params.id,
+      type: "PARTIAL_PAID",
+      message: note ? `Partial payment marked as received. Note: ${note}` : "Partial payment marked as received."
+    });
     return o;
   });
 
@@ -835,11 +1002,19 @@ app.post("/api/admin/orders/:id/mark-partial-paid", requireAdmin, async (req, re
 });
 
 app.post("/api/admin/orders/:id/mark-shipped", requireAdmin, async (req, res) => {
+  const parsedNote = adminOrderNoteSchema.safeParse(req.body && typeof req.body === "object" ? req.body : {});
+  if (!parsedNote.success) return res.status(400).json({ error: parsedNote.error.flatten() });
+  const note = String(parsedNote.data.note ?? "").trim();
+
   const updated = await tx(async (client) => {
     const upR = await client.query(`update orders set status='SHIPPED' where id=$1 returning id`, [req.params.id]);
     const o = upR.rows[0];
     if (!o) return null;
-    await addOrderEvent(client, { orderId: req.params.id, type: "SHIPPED", message: "Order shipped." });
+    await addOrderEvent(client, {
+      orderId: req.params.id,
+      type: "SHIPPED",
+      message: note ? `Order shipped. Note: ${note}` : "Order shipped."
+    });
     return o;
   });
 
@@ -848,11 +1023,19 @@ app.post("/api/admin/orders/:id/mark-shipped", requireAdmin, async (req, res) =>
 });
 
 app.post("/api/admin/orders/:id/mark-delivered", requireAdmin, async (req, res) => {
+  const parsedNote = adminOrderNoteSchema.safeParse(req.body && typeof req.body === "object" ? req.body : {});
+  if (!parsedNote.success) return res.status(400).json({ error: parsedNote.error.flatten() });
+  const note = String(parsedNote.data.note ?? "").trim();
+
   const updated = await tx(async (client) => {
     const upR = await client.query(`update orders set status='DELIVERED' where id=$1 returning id`, [req.params.id]);
     const o = upR.rows[0];
     if (!o) return null;
-    await addOrderEvent(client, { orderId: req.params.id, type: "DELIVERED", message: "Order delivered." });
+    await addOrderEvent(client, {
+      orderId: req.params.id,
+      type: "DELIVERED",
+      message: note ? `Order delivered. Note: ${note}` : "Order delivered."
+    });
     return o;
   });
 

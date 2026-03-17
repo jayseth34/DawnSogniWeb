@@ -1,4 +1,4 @@
-﻿export function SizeChartPage() {
+export function SizeChartPage() {
   return (
     <div className="container page" style={{ maxWidth: 820 }}>
       <div className="h2">Size Chart</div>

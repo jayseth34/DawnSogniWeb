@@ -1,13 +1,20 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { api, type DropDesign } from "../../api";
 import { uploadToImageKit } from "../../imagekitUpload";
 import { formatRupees } from "../money";
+
+const CATEGORY_OPTIONS = ["Oversized", "Round Neck", "Collar", "Tee", "Shirt", "Other"] as const;
+type CategoryOption = (typeof CATEGORY_OPTIONS)[number];
 
 function parseCsv(csv: string) {
   return csv
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean);
+}
+
+function removeAt<T>(arr: T[], idx: number) {
+  return arr.filter((_, i) => i !== idx);
 }
 
 export function AdminDropsPage() {
@@ -20,12 +27,17 @@ export function AdminDropsPage() {
     title: "",
     description: "",
     priceCents: 69900,
-    category: "Oversized",
+    categoryOption: "Oversized" as CategoryOption,
+    categoryOther: "",
     imagesCsv: "",
     isActive: true
   });
 
   const imageUrls = useMemo(() => parseCsv(form.imagesCsv), [form.imagesCsv]);
+  const categoryValue = form.categoryOption === "Other" ? form.categoryOther.trim() : form.categoryOption;
+
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState<{ images: string[]; category: string; description: string } | null>(null);
 
   async function load() {
     setStatus("");
@@ -37,7 +49,7 @@ export function AdminDropsPage() {
     load().catch((e) => setStatus(String(e?.message ?? e)));
   }, []);
 
-  async function upload(files: FileList | null) {
+  async function upload(files: FileList | null, target: "create" | "edit") {
     if (!files || files.length === 0) return;
     setStatus("");
     setUploading(true);
@@ -53,8 +65,17 @@ export function AdminDropsPage() {
         });
         urls.push(r.url);
       }
-      const next = [...imageUrls, ...urls].join(", ");
-      setForm((prev) => ({ ...prev, imagesCsv: next }));
+
+      if (target === "create") {
+        const next = [...imageUrls, ...urls].join(", ");
+        setForm((prev) => ({ ...prev, imagesCsv: next }));
+      } else {
+        setEditDraft((prev) => ({
+          images: [...(prev?.images ?? []), ...urls],
+          category: prev?.category ?? "",
+          description: prev?.description ?? ""
+        }));
+      }
     } catch (e: any) {
       setStatus(`Upload failed: ${String(e?.message ?? e)}`);
     } finally {
@@ -71,7 +92,7 @@ export function AdminDropsPage() {
         title: form.title.trim(),
         description: form.description.trim() ? form.description.trim() : undefined,
         priceCents: Number(form.priceCents),
-        category: form.category.trim() || undefined,
+        category: categoryValue || undefined,
         images: imageUrls,
         isActive: form.isActive
       });
@@ -96,6 +117,36 @@ export function AdminDropsPage() {
     await load();
   }
 
+  function startEdit(d: DropDesign) {
+    setEditingId(d.id);
+    setEditDraft({
+      images: Array.isArray(d.images) ? d.images : [],
+      category: d.category ?? "",
+      description: d.description ?? ""
+    });
+  }
+
+  async function saveEdit(d: DropDesign) {
+    if (!editDraft) return;
+    setStatus("");
+    setSaving(true);
+    try {
+      await api.admin.updateDrop(d.id, {
+        ...d,
+        images: editDraft.images,
+        category: editDraft.category || undefined,
+        description: editDraft.description || undefined
+      });
+      setEditingId(null);
+      setEditDraft(null);
+      await load();
+    } catch (e: any) {
+      setStatus(`Update failed: ${String(e?.message ?? e)}`);
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <div>
       <div className="adminPageTitle">
@@ -118,7 +169,7 @@ export function AdminDropsPage() {
               <input className="input" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
             </div>
             <div style={{ width: 180, minWidth: 180 }}>
-              <div className="label">Price (₹)</div>
+              <div className="label">Price (INR)</div>
               <input
                 className="input"
                 type="number"
@@ -126,9 +177,28 @@ export function AdminDropsPage() {
                 onChange={(e) => setForm({ ...form, priceCents: Number(e.target.value) * 100 })}
               />
             </div>
-            <div style={{ width: 220, minWidth: 220 }}>
+            <div style={{ width: 260, minWidth: 260 }}>
               <div className="label">Category</div>
-              <input className="input" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} />
+              <select
+                className="input"
+                value={form.categoryOption}
+                onChange={(e) => setForm({ ...form, categoryOption: e.target.value as CategoryOption })}
+              >
+                {CATEGORY_OPTIONS.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+              {form.categoryOption === "Other" && (
+                <input
+                  className="input"
+                  style={{ marginTop: 10 }}
+                  value={form.categoryOther}
+                  onChange={(e) => setForm({ ...form, categoryOther: e.target.value })}
+                  placeholder="Custom category"
+                />
+              )}
             </div>
           </div>
 
@@ -138,7 +208,7 @@ export function AdminDropsPage() {
           <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
             <div style={{ flex: 1 }}>
               <div className="label">Upload images</div>
-              <input className="input" type="file" multiple disabled={uploading || saving} onChange={(e) => upload(e.currentTarget.files)} />
+              <input className="input" type="file" multiple disabled={uploading || saving} onChange={(e) => upload(e.currentTarget.files, "create")} />
             </div>
             <div style={{ display: "flex", alignItems: "flex-end", gap: 10 }}>
               <button className={form.isActive ? "btn primary" : "btn"} onClick={() => setForm({ ...form, isActive: !form.isActive })}>
@@ -150,52 +220,112 @@ export function AdminDropsPage() {
             </div>
           </div>
 
-          <div className="label">Image URLs (comma-separated)</div>
-          <input className="input" value={form.imagesCsv} onChange={(e) => setForm({ ...form, imagesCsv: e.target.value })} />
-
           {imageUrls.length > 0 && (
-            <div className="row" style={{ marginTop: 12, gap: 10 }}>
-              {imageUrls.slice(0, 6).map((u) => (
-                <a key={u} href={u} target="_blank" rel="noreferrer">
-                  <img className="adminThumbSm" src={u} alt="" />
-                </a>
+            <div className="row" style={{ marginTop: 12, gap: 10, alignItems: "flex-end" }}>
+              {imageUrls.map((u, idx) => (
+                <div key={u} style={{ display: "grid", gap: 6, justifyItems: "center" }}>
+                  <a href={u} target="_blank" rel="noreferrer">
+                    <img className="adminThumbSm" src={u} alt="" />
+                  </a>
+                  <button
+                    className="btn danger"
+                    style={{ padding: "6px 10px", borderRadius: 10 }}
+                    disabled={uploading || saving}
+                    onClick={() => {
+                      const next = removeAt(imageUrls, idx).join(", ");
+                      setForm((prev) => ({ ...prev, imagesCsv: next }));
+                    }}
+                  >
+                    Remove
+                  </button>
+                </div>
               ))}
-              {imageUrls.length > 6 && <span className="muted2">+{imageUrls.length - 6} more</span>}
             </div>
           )}
 
-          {status && <div className="muted" style={{ marginTop: 12 }}>{status}</div>}
+          {status && (
+            <div className="muted" style={{ marginTop: 12 }}>
+              {status}
+            </div>
+          )}
         </div>
       </div>
 
       <div style={{ height: 14 }} />
 
       <div className="adminList">
-        {drops.map((d) => (
-          <div className="adminItem" key={d.id}>
-            <div className="adminItemInner">
-              {d.images?.[0] ? <img className="adminThumb" src={d.images[0]} alt={d.title} /> : <div className="adminThumb" />}
+        {drops.map((d) => {
+          const isEditing = editingId === d.id;
+          return (
+            <div className="adminItem" key={d.id}>
+              <div className="adminItemInner">
+                {d.images?.[0] ? <img className="adminThumb" src={d.images[0]} alt={d.title} /> : <div className="adminThumb" />}
 
-              <div className="adminMeta">
-                <div className="adminMetaTitle clamp2" title={d.title}>
-                  {d.title}
+                <div className="adminMeta">
+                  <div className="adminMetaTitle clamp2" title={d.title}>
+                    {d.title}
+                  </div>
+                  <div className="adminMetaSub">
+                    {formatRupees(d.priceCents)} · {d.category || "-"} · {d.isActive ? "Active" : "Inactive"}
+                  </div>
                 </div>
-                <div className="adminMetaSub">
-                  {formatRupees(d.priceCents)} · {d.category || "—"} · {d.isActive ? "Active" : "Inactive"}
+
+                <div className="row" style={{ justifyContent: "flex-end" }}>
+                  <button className="btn" onClick={() => toggleActive(d)}>
+                    {d.isActive ? "Deactivate" : "Activate"}
+                  </button>
+                  <button className="btn" onClick={() => (isEditing ? (setEditingId(null), setEditDraft(null)) : startEdit(d))}>
+                    {isEditing ? "Close" : "Edit"}
+                  </button>
+                  <button className="btn danger" onClick={() => removeDrop(d)}>
+                    Delete
+                  </button>
                 </div>
               </div>
 
-              <div className="row" style={{ justifyContent: "flex-end" }}>
-                <button className="btn" onClick={() => toggleActive(d)}>
-                  {d.isActive ? "Deactivate" : "Activate"}
-                </button>
-                <button className="btn danger" onClick={() => removeDrop(d)}>
-                  Delete
-                </button>
-              </div>
+              {isEditing && editDraft && (
+                <div className="p" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+                  <div className="row" style={{ alignItems: "flex-end", justifyContent: "space-between" }}>
+                    <div style={{ flex: 1 }}>
+                      <div className="label">Category</div>
+                      <input className="input" value={editDraft.category} onChange={(e) => setEditDraft({ ...editDraft, category: e.target.value })} />
+                    </div>
+                    <div style={{ width: 240 }}>
+                      <div className="label">Upload more images</div>
+                      <input className="input" type="file" multiple disabled={uploading || saving} onChange={(e) => upload(e.currentTarget.files, "edit")} />
+                    </div>
+                    <button className="btn primary" disabled={saving} onClick={() => saveEdit(d)}>
+                      {saving ? "Saving..." : "Save"}
+                    </button>
+                  </div>
+
+                  <div className="label">Description</div>
+                  <textarea className="textarea" value={editDraft.description} onChange={(e) => setEditDraft({ ...editDraft, description: e.target.value })} />
+
+                  <div className="label">Images</div>
+                  <div className="row" style={{ gap: 10, alignItems: "flex-end" }}>
+                    {editDraft.images.map((u, idx) => (
+                      <div key={u} style={{ display: "grid", gap: 6, justifyItems: "center" }}>
+                        <a href={u} target="_blank" rel="noreferrer">
+                          <img className="adminThumbSm" src={u} alt="" />
+                        </a>
+                        <button
+                          className="btn danger"
+                          style={{ padding: "6px 10px", borderRadius: 10 }}
+                          disabled={saving}
+                          onClick={() => setEditDraft({ ...editDraft, images: removeAt(editDraft.images, idx) })}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                    {editDraft.images.length === 0 && <div className="muted2">No images</div>}
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         {drops.length === 0 && <div className="muted">No products yet.</div>}
       </div>

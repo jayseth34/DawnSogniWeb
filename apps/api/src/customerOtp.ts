@@ -1,4 +1,4 @@
-﻿import { createHmac, randomInt } from "node:crypto";
+import { createHmac, randomInt } from "node:crypto";
 import { env } from "./env.js";
 
 type DbClient = {

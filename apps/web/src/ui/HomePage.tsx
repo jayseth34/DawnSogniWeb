@@ -1,16 +1,11 @@
-﻿import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { api, type DropDesign } from "../api";
+import { api } from "../api";
 import { useSessionApi } from "./useSession";
 import { formatRupees } from "./money";
 
-function pickImages(drops: DropDesign[], count: number): Array<string | null> {
-  const imgs = drops.flatMap((d) => (d.images?.length ? [d.images[0]] : []));
-  if (imgs.length === 0) return Array.from({ length: count }, () => null);
-  const out: Array<string | null> = [];
-  for (let i = 0; i < count; i++) out.push(imgs[i % imgs.length] ?? null);
-  return out;
+function dropHref(dropId: string) {
+  return `/drops/${encodeURIComponent(dropId)}`;
 }
 
 export function HomePage() {
@@ -18,37 +13,52 @@ export function HomePage() {
   const { addDropToCart, canShop, requireLogin } = useSessionApi();
 
   const drops = data ?? [];
-  const hero = useMemo(() => pickImages(drops, 4), [drops]);
   const newArrivals = drops.slice(0, 8);
 
   return (
     <div>
       <div className="heroWrap">
-        <div className="heroGrid">
-          <div className="heroTile heroLeft">{hero[0] ? <img src={hero[0]} alt="" /> : null}</div>
-          <div className="heroTile heroMid">{hero[1] ? <img src={hero[1]} alt="" /> : null}</div>
-          <div className="heroTile heroRight">{hero[2] ? <img src={hero[2]} alt="" /> : null}</div>
-          <div className="heroTile heroBottom">{hero[3] ? <img src={hero[3]} alt="" /> : null}</div>
+        <div className="heroSplit" role="banner" aria-label="Dawn Sogni">
+          <div className="heroHalf heroHalfLeft" aria-hidden="true">
+            <div className="heroWord">DAWN</div>
+          </div>
+          <div className="heroHalf heroHalfRight" aria-hidden="true">
+            <div className="heroWord">SOGNI</div>
+          </div>
+          <div className="heroOverlay">
+            <div className="heroSlogan">First thought in the morning</div>
+            <div className="heroActions">
+              <Link className="btn primary" to="/drops">
+                Shop drops
+              </Link>
+              <Link className="btn" to="/custom">
+                Custom order
+              </Link>
+              {/* <Link className="btn" to="/bulk">
+                Bulk order
+              </Link> */}
+            </div>
+          </div>
         </div>
       </div>
 
       <div className="marqueeBar" aria-hidden="true">
         <div className="marqueeTrack">
           {[
-            "Free Shipping Across India",
+            // "Free Shipping Across India",
             "COD Available",
-            "Exchanges Available",
-            "5000+ Trusted Customers",
+            // "Exchanges Available",
             "Premium Fabric",
-            "Limited Drops"
+            "Limited Drops",
+            "Custom Designs"
           ]
             .concat([
-              "Free Shipping Across India",
+              // "Free Shipping Across India",
               "COD Available",
-              "Exchanges Available",
-              "5000+ Trusted Customers",
+              // "Exchanges Available",
               "Premium Fabric",
-              "Limited Drops"
+              "Limited Drops",
+              "Custom Designs"
             ])
             .map((t, idx) => (
               <div key={`${t}-${idx}`} className="marqueeItem">
@@ -61,7 +71,11 @@ export function HomePage() {
       <section className="section">
         <div className="sectionTitle">New Arrivals</div>
 
-        {isLoading && <div className="muted" style={{ textAlign: "center", padding: 18 }}>Loading...</div>}
+        {isLoading && (
+          <div className="muted" style={{ textAlign: "center", padding: 18 }}>
+            Loading...
+          </div>
+        )}
         {error && (
           <div className="muted" style={{ textAlign: "center", padding: 18 }}>
             Failed to load products.
@@ -71,7 +85,9 @@ export function HomePage() {
         <div className="productGrid">
           {newArrivals.map((d) => (
             <div className="productCard" key={d.id}>
-              {d.images?.[0] ? <img className="productImg" src={d.images[0]} alt={d.title} /> : <div className="productImg" />}
+              <Link to={dropHref(d.id)} aria-label={d.title}>
+                {d.images?.[0] ? <img className="productImg" src={d.images[0]} alt={d.title} /> : <div className="productImg" />}
+              </Link>
               <div className="productMeta">
                 <div className="productNameRow">
                   <div className="productName clamp2" title={d.title}>
@@ -80,9 +96,11 @@ export function HomePage() {
                 </div>
                 <div className="productPrice">{d.priceCents === 0 ? "Quote pending" : formatRupees(d.priceCents)}</div>
                 <div className="productActions">
-                  <button className="btn primary" onClick={() => (canShop ? addDropToCart(d) : requireLogin())}>Add</button>
-                  <Link className="btn" to="/checkout">
-                    Checkout
+                  <button className="btn primary" onClick={() => (canShop ? addDropToCart(d) : requireLogin())}>
+                    Add
+                  </button>
+                  <Link className="btn" to={dropHref(d.id)}>
+                    View
                   </Link>
                 </div>
               </div>
@@ -109,6 +127,3 @@ export function HomePage() {
     </div>
   );
 }
-
-
-

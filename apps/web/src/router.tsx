@@ -1,7 +1,8 @@
-﻿import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter } from "react-router-dom";
 import { AppLayout } from "./ui/AppLayout";
 import { HomePage } from "./ui/HomePage";
 import { DropsPage } from "./ui/DropsPage";
+import { DropDetailPage } from "./ui/DropDetailPage";
 import { CustomPage } from "./ui/CustomPage";
 import { BulkPage } from "./ui/BulkPage";
 import { CheckoutPage } from "./ui/CheckoutPage";
@@ -24,6 +25,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <HomePage /> },
       { path: "drops", element: <DropsPage /> },
+      { path: "drops/:id", element: <DropDetailPage /> },
       { path: "custom", element: <CustomPage /> },
       { path: "bulk", element: <BulkPage /> },
       { path: "checkout", element: <CheckoutPage /> },

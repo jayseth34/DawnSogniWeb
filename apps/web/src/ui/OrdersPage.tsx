@@ -1,9 +1,25 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { api, type Order } from "../api";
 import { formatRupees } from "./money";
 import { useSessionApi } from "./useSession";
 import { useCustomerAuth } from "./useCustomerAuth";
+
+function fixMojibake(input: string) {
+  let out = input;
+  for (let i = 0; i < 3; i++) {
+    if (!/[\u00C3\u00E2]/.test(out)) break;
+    try {
+      const next = decodeURIComponent(escape(out));
+      if (next === out) break;
+      out = next;
+    } catch {
+      break;
+    }
+  }
+  return out;
+}
+
 
 function totalText(order: Order) {
   if (order.totalCents === 0) return "Quote pending";
@@ -11,9 +27,9 @@ function totalText(order: Order) {
 }
 
 function maskToken(token: string) {
-  if (!token) return "—";
+  if (!token) return "-";
   if (token.length <= 10) return token;
-  return `${token.slice(0, 4)}…${token.slice(-4)}`;
+  return `${token.slice(0, 4)}...${token.slice(-4)}`;
 }
 
 async function copyToClipboard(label: string, value: string, onStatus: (msg: string) => void) {
@@ -134,7 +150,7 @@ export function OrdersPage() {
       <div className="row" style={{ justifyContent: "space-between" }}>
         <div>
           <div className="h2">Your Orders</div>
-          <div className="muted">Saved to this device{isAuthed ? " · Signed in" : ""}.</div>
+          <div className="muted">Saved to this device{isAuthed ? " | Signed in" : ""}.</div>
         </div>
         <div className="row" style={{ gap: 10 }}>
           {isAuthed ? (
@@ -240,7 +256,7 @@ export function OrdersPage() {
                 <div className="tag">{o.status}</div>
               </div>
               <div className="muted" style={{ marginTop: 8 }}>
-                Total {totalText(o)} · COD · {new Date(o.createdAt).toLocaleString()}
+                Total {totalText(o)} | COD | {new Date(o.createdAt).toLocaleString()}
               </div>
 
               <div className="row" style={{ justifyContent: "space-between", marginTop: 10, gap: 10 }}>
@@ -304,7 +320,7 @@ export function OrdersPage() {
                       <div>
                         <div style={{ fontWeight: 800 }}>{ev.type}</div>
                         <div className="muted" style={{ fontSize: 12 }}>
-                          {ev.message ?? "—"}
+                          {ev.message ? fixMojibake(String(ev.message)) : "-"}
                         </div>
                       </div>
                       <div className="muted" style={{ fontSize: 12 }}>

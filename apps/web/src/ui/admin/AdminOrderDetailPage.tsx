@@ -1,12 +1,27 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { api } from "../../api";
 import { formatRupees } from "../money";
 
 function moneyText(cents: number | null | undefined) {
-  if (cents == null) return "—";
+  if (cents == null) return "-";
   if (cents === 0) return "Quote pending";
   return formatRupees(cents);
+}
+
+function fixMojibake(input: string) {
+  let out = input;
+  for (let i = 0; i < 3; i++) {
+    if (!/[\u00C3\u00E2]/.test(out)) break;
+    try {
+      const next = decodeURIComponent(escape(out));
+      if (next === out) break;
+      out = next;
+    } catch {
+      break;
+    }
+  }
+  return out;
 }
 
 export function AdminOrderDetailPage() {
@@ -14,6 +29,8 @@ export function AdminOrderDetailPage() {
   const [data, setData] = useState<any>(null);
   const [status, setStatus] = useState("");
   const [partial, setPartial] = useState(20000);
+  const [stageNote, setStageNote] = useState("");
+  const [cancelReason, setCancelReason] = useState("");
   const [saving, setSaving] = useState(false);
 
   async function load() {
@@ -26,14 +43,19 @@ export function AdminOrderDetailPage() {
     load().catch((e) => setStatus(String(e?.message ?? e)));
   }, [id]);
 
-  const itemsText = useMemo(() => (data?.items ?? []).map((i: any) => `${i.title} × ${i.quantity}`).join(" · "), [data]);
+  const itemsText = useMemo(
+    () => (data?.items ?? []).map((i: any) => `${i.title} x ${i.quantity}`).join(" | "),
+    [data]
+  );
 
   if (!data)
     return (
       <div className="muted" style={{ paddingTop: 18 }}>
-        Loading…
+        Loading...
       </div>
     );
+
+  const disableUpdates = saving || data.status === "CANCELLED" || data.status === "DELIVERED";
 
   async function act(fn: () => Promise<any>) {
     setStatus("");
@@ -54,7 +76,7 @@ export function AdminOrderDetailPage() {
         <div>
           <div className="h2">{data.orderNumber}</div>
           <div className="muted">
-            {data.customerName} · {data.phone} · {data.paymentMethod}
+            {data.customerName} | {data.phone} | {data.paymentMethod}
           </div>
         </div>
         <div className="tag">{data.status}</div>
@@ -67,7 +89,7 @@ export function AdminOrderDetailPage() {
           <div className="p">
             <div style={{ fontWeight: 900 }}>Order</div>
             <div className="muted" style={{ marginTop: 8 }}>
-              Total {moneyText(data.totalCents)} · Items: {itemsText || "—"}
+              Total {moneyText(data.totalCents)} | Items: {itemsText || "-"}
             </div>
             <div className="muted" style={{ marginTop: 8 }}>
               Address: {data.addressLine1}
@@ -75,14 +97,50 @@ export function AdminOrderDetailPage() {
             </div>
 
             <div style={{ height: 12 }} />
+            <div className="label">Stage note (optional)</div>
+            <textarea
+              className="textarea"
+              value={stageNote}
+              onChange={(e) => setStageNote(e.target.value)}
+              placeholder="Example: UPI/Bank details, tracking id, timeline, etc"
+            />
+
+            <div style={{ height: 10 }} />
             <div className="row">
-              <button className="btn primary" onClick={() => act(() => api.admin.acceptOrder(data.id))} disabled={saving}>
+              <button
+                className="btn primary"
+                onClick={() =>
+                  act(async () => {
+                    await api.admin.acceptOrder(data.id, stageNote.trim() || undefined);
+                    setStageNote("");
+                  })
+                }
+                disabled={disableUpdates}
+              >
                 Accept
               </button>
-              <button className="btn" onClick={() => act(() => api.admin.markShipped(data.id))} disabled={saving}>
+              <button
+                className="btn"
+                onClick={() =>
+                  act(async () => {
+                    await api.admin.markShipped(data.id, stageNote.trim() || undefined);
+                    setStageNote("");
+                  })
+                }
+                disabled={disableUpdates}
+              >
                 Mark shipped
               </button>
-              <button className="btn" onClick={() => act(() => api.admin.markDelivered(data.id))} disabled={saving}>
+              <button
+                className="btn"
+                onClick={() =>
+                  act(async () => {
+                    await api.admin.markDelivered(data.id, stageNote.trim() || undefined);
+                    setStageNote("");
+                  })
+                }
+                disabled={disableUpdates}
+              >
                 Mark delivered
               </button>
             </div>
@@ -90,7 +148,7 @@ export function AdminOrderDetailPage() {
             <div className="hr" />
             <div style={{ fontWeight: 900 }}>Partial payment</div>
             <div className="muted" style={{ marginTop: 8 }}>Requested: {moneyText(data.partialAmountCents)}</div>
-            <div className="row" style={{ marginTop: 10 }}>
+            <div className="row" style={{ marginTop: 10, flexWrap: "wrap" }}>
               <input
                 className="input"
                 style={{ width: 160 }}
@@ -98,13 +156,60 @@ export function AdminOrderDetailPage() {
                 value={Math.round(partial / 100)}
                 onChange={(e) => setPartial(Number(e.target.value) * 100)}
               />
-              <button className="btn" onClick={() => act(() => api.admin.requestPartial(data.id, partial))} disabled={saving}>
+              <button
+                className="btn"
+                onClick={() =>
+                  act(async () => {
+                    await api.admin.requestPartial(data.id, partial, stageNote.trim() || undefined);
+                    setStageNote("");
+                  })
+                }
+                disabled={disableUpdates}
+              >
                 Request
               </button>
-              <button className="btn" onClick={() => act(() => api.admin.markPartialPaid(data.id))} disabled={saving}>
+              <button
+                className="btn"
+                onClick={() =>
+                  act(async () => {
+                    await api.admin.markPartialPaid(data.id, stageNote.trim() || undefined);
+                    setStageNote("");
+                  })
+                }
+                disabled={disableUpdates}
+              >
                 Mark paid
               </button>
             </div>
+
+            <div className="hr" />
+            <div style={{ fontWeight: 900 }}>Reject / cancel</div>
+            <div className="muted" style={{ marginTop: 8, fontSize: 12 }}>
+              This will update status to CANCELLED and show the reason to the customer.
+            </div>
+            <div style={{ height: 8 }} />
+            <textarea
+              className="textarea"
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              placeholder="Reason (required)"
+            />
+            <div style={{ height: 10 }} />
+            <button
+              className="btn"
+              onClick={() => {
+                const reason = cancelReason.trim();
+                if (!reason) return;
+                if (!window.confirm("Cancel this order?")) return;
+                void act(async () => {
+                  await api.admin.cancelOrder(data.id, reason);
+                  setCancelReason("");
+                });
+              }}
+              disabled={disableUpdates || !cancelReason.trim()}
+            >
+              Cancel order
+            </button>
           </div>
         </div>
 
@@ -117,7 +222,7 @@ export function AdminOrderDetailPage() {
                 <div className="pill" key={e.id} style={{ width: "100%", justifyContent: "space-between" }}>
                   <div>
                     <div style={{ fontWeight: 800 }}>{e.type}</div>
-                    <div className="muted" style={{ fontSize: 12 }}>{e.message ?? "—"}</div>
+                    <div className="muted" style={{ fontSize: 12 }}>{e.message ? fixMojibake(String(e.message)) : "-"}</div>
                   </div>
                   <div className="muted" style={{ fontSize: 12 }}>{new Date(e.createdAt).toLocaleString()}</div>
                 </div>
@@ -133,7 +238,7 @@ export function AdminOrderDetailPage() {
                   <div>
                     <div style={{ fontWeight: 800 }}>{n.status}</div>
                     <div className="muted" style={{ fontSize: 12 }}>
-                      {n.channel} → {n.to}
+                      {n.channel} {"\u2192"} {n.to}
                     </div>
                   </div>
                   <div className="muted" style={{ fontSize: 12 }}>{new Date(n.createdAt).toLocaleString()}</div>

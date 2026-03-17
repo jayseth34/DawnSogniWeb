@@ -1,4 +1,4 @@
-﻿import { useMemo } from "react";
+import { useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api";
@@ -12,6 +12,10 @@ type Category = (typeof categories)[number];
 function categoryFromParams(params: URLSearchParams): Category {
   const raw = (params.get("category") || "All").trim();
   return (categories.includes(raw as any) ? (raw as Category) : "All");
+}
+
+function dropHref(dropId: string) {
+  return `/drops/${encodeURIComponent(dropId)}`;
 }
 
 export function DropsPage() {
@@ -91,7 +95,9 @@ export function DropsPage() {
       <div className="productGrid">
         {filtered.map((d) => (
           <div className="productCard" key={d.id}>
-            {d.images?.[0] ? <img className="productImg" src={d.images[0]} alt={d.title} /> : <div className="productImg" />}
+            <Link to={dropHref(d.id)} aria-label={d.title}>
+              {d.images?.[0] ? <img className="productImg" src={d.images[0]} alt={d.title} /> : <div className="productImg" />}
+            </Link>
             <div className="productMeta">
               <div className="productNameRow">
                 <div className="productName clamp2" title={d.title}>
@@ -99,13 +105,15 @@ export function DropsPage() {
                 </div>
               </div>
               <div className="muted2 clamp2" style={{ marginTop: 6, fontSize: 13 }}>
-                {d.description ?? "—"}
+                {d.description || "-"}
               </div>
               <div className="productPrice">{d.priceCents === 0 ? "Quote pending" : formatRupees(d.priceCents)}</div>
               <div className="productActions">
-                <button className="btn primary" onClick={() => (canShop ? addDropToCart(d) : requireLogin())}>Add</button>
-                <Link className="btn" to="/checkout">
-                  Checkout
+                <button className="btn primary" onClick={() => (canShop ? addDropToCart(d) : requireLogin())}>
+                  Add
+                </button>
+                <Link className="btn" to={dropHref(d.id)}>
+                  View
                 </Link>
               </div>
             </div>
@@ -117,4 +125,3 @@ export function DropsPage() {
     </div>
   );
 }
-
