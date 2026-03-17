@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "concurrently -n API,WEB -c cyan,magenta \"npm -w apps/api run dev\" \"npm -w apps/web run dev\"",
     "build": "npm -w apps/api run build && npm -w apps/web run build",
+    "start": "npm -w apps/api run start",
     "lint": "npm -w apps/api run lint && npm -w apps/web run lint",
     "format": "prettier -w ."
   },
@@ -15,4 +16,3 @@
     "prettier": "^3.6.2"
   }
 }
-
