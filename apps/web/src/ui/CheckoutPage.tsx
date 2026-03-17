@@ -216,7 +216,7 @@ export function CheckoutPage() {
                   </div>
                 )}
               </div>
-              <div style={{ width: 160 }}>
+              <div className="checkoutPinCol">
                 <div className="label">Pincode</div>
                 <input
                   className="input"
@@ -254,7 +254,7 @@ export function CheckoutPage() {
                     <div className="cartItemTitle">{c.title}</div>
                     <div className="cartItemSub">
                       {c.kind}
-                      {c.variant ? ` · ${c.variant}` : ""}
+                      {c.variant ? ` Â· ${c.variant}` : ""}
                     </div>
                     <div className="cartItemSub">Line: {linePriceText(c)}</div>
                   </div>

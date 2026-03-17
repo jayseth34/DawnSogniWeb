@@ -97,7 +97,7 @@ export function DropDetailPage() {
 
               <div style={{ height: 16 }} />
               <div className="label">Quantity</div>
-              <div className="row">
+              <div className="row productDetailQty">
                 <button className="btn" onClick={() => setQty((q) => Math.max(1, q - 1))}>
                   -
                 </button>
@@ -108,16 +108,17 @@ export function DropDetailPage() {
               </div>
 
               <div style={{ height: 16 }} />
-              <button
-                className="btn primary"
-                onClick={() => (canShop ? addDropToCart(drop, { quantity: qty }) : requireLogin())}
-              >
-                Add to cart
-              </button>
-              <div style={{ height: 10 }} />
-              <Link className="btn" to="/checkout">
-                Go to checkout
-              </Link>
+              <div className="productDetailCtas">
+                <button
+                  className="btn primary"
+                  onClick={() => (canShop ? addDropToCart(drop, { quantity: qty }) : requireLogin())}
+                >
+                  Add to cart
+                </button>
+                <Link className="btn" to="/checkout">
+                  Go to checkout
+                </Link>
+              </div>
               {!canShop && (
                 <div className="muted2" style={{ marginTop: 10, fontSize: 12 }}>
                   Login is required to add to cart.

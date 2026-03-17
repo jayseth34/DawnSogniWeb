@@ -393,6 +393,20 @@ textarea {
   align-items: start;
 }
 
+.productDetailQty {
+  align-items: center;
+}
+.productDetailCtas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+@media (max-width: 520px) {
+  .productDetailCtas {
+    grid-template-columns: 1fr;
+  }
+}
 @media (max-width: 900px) {
   .productDetailGrid {
     grid-template-columns: 1fr;
@@ -463,11 +477,33 @@ textarea {
   width: 100%;
 }
 
+.checkoutPinCol {
+  width: 160px;
+}
+
 @media (max-width: 520px) {
+  .checkoutPinCol {
+    width: 100%;
+  }
   .cartItem {
     grid-template-columns: 56px 1fr;
     align-items: start;
   }
+  .cartItemImg {
+    width: 56px;
+    height: 56px;
+  }
+  .cartItemActions {
+    grid-column: 1 / -1;
+    justify-content: space-between;
+  }
+  .cartItemActions .btn {
+    padding: 8px 10px;
+  }
+  .cartItemActions .pill {
+    padding: 8px 10px;
+  }
+}
   .cartItemImg {
     width: 56px;
     height: 56px;

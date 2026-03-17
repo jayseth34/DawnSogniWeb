@@ -54,7 +54,9 @@ CREATE TABLE IF NOT EXISTS customer_phone_otps (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE INDEX IF NOT EXISTS idx_customer_phone_otps_phone_created_at ON customer_phone_otps(phone_digits, created_at desc);\n\n-- Orders\nCREATE TABLE IF NOT EXISTS orders (
+CREATE INDEX IF NOT EXISTS idx_customer_phone_otps_phone_created_at ON customer_phone_otps(phone_digits, created_at desc);
+
+CREATE TABLE IF NOT EXISTS orders (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   order_number text NOT NULL UNIQUE,
   access_token text NOT NULL UNIQUE,
