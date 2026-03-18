@@ -31,21 +31,26 @@ export function DropProductCard(props: {
   }
 
   return (
-    <div className="productCard revealItem" key={drop.id}>
-      <div className="productGallery">
+    <article className="productCard premiumProductCard revealItem">
+      <div className="productGallery premiumProductGallery">
+        <div className="premiumCardBadgeRow">
+          <span className="premiumCardBadge">{drop.category || "Drop"}</span>
+          {images.length > 1 && <span className="premiumCardBadge mutedBadge">{images.length} views</span>}
+        </div>
+
         <Link to={dropHref(drop.id)} aria-label={drop.title}>
-          {activeImage ? <img className="productImg" src={activeImage} alt={drop.title} /> : <div className="productImg" />}
+          {activeImage ? <img className="productImg premiumProductImg" src={activeImage} alt={drop.title} /> : <div className="productImg premiumProductImg" />}
         </Link>
 
         {images.length > 1 && (
           <>
-            <button type="button" className="galleryNav galleryNavPrev" onClick={prevImage} aria-label="Previous image">
+            <button type="button" className="galleryNav galleryNavPrev premiumGalleryNav" onClick={prevImage} aria-label="Previous image">
               <span>{"<"}</span>
             </button>
-            <button type="button" className="galleryNav galleryNavNext" onClick={nextImage} aria-label="Next image">
+            <button type="button" className="galleryNav galleryNavNext premiumGalleryNav" onClick={nextImage} aria-label="Next image">
               <span>{">"}</span>
             </button>
-            <div className="galleryThumbs" aria-label="Product images">
+            <div className="galleryThumbs premiumGalleryThumbs" aria-label="Product images">
               {images.map((image, index) => (
                 <button
                   key={image}
@@ -62,27 +67,29 @@ export function DropProductCard(props: {
         )}
       </div>
 
-      <div className="productMeta">
-        <div className="productNameRow">
-          <div className="productName clamp2" title={drop.title}>
-            {drop.title}
+      <div className="productMeta premiumProductMeta">
+        <div className="productNameRow premiumProductNameRow">
+          <div>
+            <div className="productName clamp2 premiumProductName" title={drop.title}>
+              {drop.title}
+            </div>
+            <div className="productPrice premiumProductPrice">{drop.priceCents === 0 ? "Quote pending" : formatRupees(drop.priceCents)}</div>
           </div>
         </div>
         {showDescription && (
-          <div className="muted2 clamp2" style={{ marginTop: 6, fontSize: 13 }}>
-            {drop.description || "-"}
+          <div className="muted2 clamp2 premiumProductDesc">
+            {drop.description || "Signature Dawn Sogni design language."}
           </div>
         )}
-        <div className="productPrice">{drop.priceCents === 0 ? "Quote pending" : formatRupees(drop.priceCents)}</div>
-        <div className="productActions">
+        <div className="productActions premiumProductActions">
           <button className="btn primary" onClick={() => (canShop ? onAdd() : onRequireLogin())}>
-            Add
+            Add to cart
           </button>
           <Link className="btn" to={dropHref(drop.id)}>
-            View
+            View piece
           </Link>
         </div>
       </div>
-    </div>
+    </article>
   );
 }

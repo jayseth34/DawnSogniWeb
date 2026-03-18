@@ -4,112 +4,173 @@ import { api } from "../api";
 import { useSessionApi } from "./useSession";
 import { DropProductCard } from "./DropProductCard";
 
+const moodWords = ["Morning dream", "Limited drop language", "Custom-built graphics", "Oversized | Round neck | Collar"];
+
 export function HomePage() {
   const { data, isLoading, error } = useQuery({ queryKey: ["drops"], queryFn: api.drops });
   const { addDropToCart, canShop, requireLogin } = useSessionApi();
 
   const drops = data ?? [];
-  const newArrivals = drops.slice(0, 8);
+  const newArrivals = drops.slice(0, 6);
 
   return (
-    <div>
-      <div className="heroWrap revealSection">
-        <div className="heroSplit" role="banner" aria-label="Dawn Sogni">
-          <div className="heroHalf heroHalfLeft" aria-hidden="true">
-            <div className="heroWord">DAWN</div>
-          </div>
-          <div className="heroHalf heroHalfRight" aria-hidden="true">
-            <div className="heroWord">SOGNI</div>
-          </div>
-          <div className="heroOverlay">
-            <div className="heroKicker">Morning dreamwear</div>
-            <div className="heroSlogan">First thought in the morning</div>
-            <div className="heroDesc">
-              Dawn Sogni means the morning dream. We release original drops, create custom design pieces, and handle
-              bulk t-shirt orders in round neck, collar, and oversized fits.
-            </div>
-            <div className="heroActions">
-              <Link className="btn primary" to="/drops">
-                Shop drops
-              </Link>
-              <Link className="btn" to="/custom">
-                Custom order
-              </Link>
-              <Link className="btn" to="/bulk">
-                Bulk order
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="premiumHome">
+      <section className="heroWrap revealSection">
+        <div className="premiumHero">
+          <div className="premiumHeroBackdrop premiumBackdropLeft" aria-hidden="true" />
+          <div className="premiumHeroBackdrop premiumBackdropRight" aria-hidden="true" />
 
-      <div className="marqueeBar" aria-hidden="true">
-        <div className="marqueeTrack">
-          {["COD Available", "Premium Fabric", "Limited Drops", "Custom Designs"]
-            .concat(["COD Available", "Premium Fabric", "Limited Drops", "Custom Designs"])
-            .map((t, idx) => (
-              <div key={`${t}-${idx}`} className="marqueeItem">
-                {t}
+          <div className="premiumHeroGrid">
+            <div className="premiumHeroLead">
+              <div className="heroPillRow">
+                <span className="heroPill">DAWN SOGNI</span>
+                <span className="heroPill">First thought in the morning</span>
               </div>
-            ))}
-        </div>
-      </div>
 
-      <section className="section revealSection">
-        <div className="homeInfoGrid">
-          <article className="infoCard infoCardStory revealItem">
-            <div className="infoEyebrow">About the brand</div>
-            <h2 className="infoTitle">Streetwear drops, custom design work, and bulk apparel under one label.</h2>
-            <p className="infoText">
-              Dawn Sogni is for people who want clothing with a point of view. Some pieces come from our own drop
-              language, some begin from your references and ideas, and some are produced in quantity for events,
-              creators, communities, or teams.
+              <div className="premiumHeroTitleWrap">
+                <div className="premiumHeroTitleLine">DAWN</div>
+                <div className="premiumHeroTitleLine premiumHeroTitleShift">SOGNI</div>
+              </div>
+
+              <p className="premiumHeroText">
+                Dawn Sogni is a premium streetwear label built around the feeling of a morning dream — original drops,
+                custom-designed pieces, and bulk apparel produced with a sharper visual identity.
+              </p>
+
+              <div className="premiumHeroActions">
+                <Link className="btn primary premiumBtn" to="/drops">
+                  Explore the drop
+                </Link>
+                <Link className="btn premiumBtnGhost" to="/custom">
+                  Start custom work
+                </Link>
+              </div>
+
+              <div className="premiumHeroStats">
+                <div className="premiumStatCard revealItem">
+                  <div className="premiumStatValue">Drops</div>
+                  <div className="premiumStatLabel">Original Dawn Sogni releases with ready-to-order pricing.</div>
+                </div>
+                <div className="premiumStatCard revealItem">
+                  <div className="premiumStatValue">Custom</div>
+                  <div className="premiumStatLabel">Reference-led design work with admin updates and quoted pricing.</div>
+                </div>
+                <div className="premiumStatCard revealItem">
+                  <div className="premiumStatValue">Bulk</div>
+                  <div className="premiumStatLabel">Oversized, collar, and round neck orders for teams and brands.</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="premiumHeroVisual">
+              <div className="premiumEditorialCard premiumEditorialMain revealItem">
+                <div className="premiumEditorialKicker">Brand language</div>
+                <div className="premiumEditorialTitle">A darker luxury mood with graphic streetwear energy.</div>
+                <div className="premiumEditorialText">
+                  We are shaping every page around contrast, texture, atmosphere, and a more premium editorial rhythm.
+                </div>
+              </div>
+
+              <div className="premiumEditorialStack">
+                <div className="premiumEditorialMini premiumMiniOne revealItem">
+                  <span className="premiumMiniIndex">01</span>
+                  <div>
+                    <div className="premiumMiniTitle">COD-first orders</div>
+                    <div className="premiumMiniText">Admin can accept, request partial payment, update, or cancel with notes.</div>
+                  </div>
+                </div>
+                <div className="premiumEditorialMini premiumMiniTwo revealItem">
+                  <span className="premiumMiniIndex">02</span>
+                  <div>
+                    <div className="premiumMiniTitle">Image-led custom flow</div>
+                    <div className="premiumMiniText">Upload references, receive design previews, and track progress in one place.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="premiumTicker" aria-hidden="true">
+            <div className="premiumTickerTrack">
+              {moodWords.concat(moodWords).map((word, index) => (
+                <span key={`${word}-${index}`} className="premiumTickerItem">
+                  {word}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="section revealSection premiumSectionShell">
+        <div className="premiumSplitStory">
+          <article className="premiumStoryCard premiumStoryLarge revealItem">
+            <div className="infoEyebrow">The concept</div>
+            <h2 className="premiumSectionTitle">We are not building a generic tee store. We are building a label mood.</h2>
+            <p className="premiumSectionText">
+              The name Dawn Sogni translates to morning dream, so the interface should feel cinematic, layered, and
+              intentional. That same idea extends into your drops, custom artwork, and bulk production requests.
             </p>
           </article>
 
-          <article className="infoCard infoCardOfferings revealItem">
-            <div className="infoEyebrow">What we offer</div>
-            <div className="offerList">
-              <div className="offerItem">
-                <div className="offerTitle">Drop designs</div>
-                <div className="offerText">Ready-to-order releases from Dawn Sogni collections.</div>
-              </div>
-              <div className="offerItem">
-                <div className="offerTitle">Custom designs</div>
-                <div className="offerText">Share your brief and references, and we quote the design personally.</div>
-              </div>
-              <div className="offerItem">
-                <div className="offerTitle">Bulk t-shirts</div>
-                <div className="offerText">Round neck, collar, and oversized options for larger quantities.</div>
-              </div>
-            </div>
+          <article className="premiumStoryCard premiumStoryQuote revealItem">
+            <div className="premiumQuoteMark">“</div>
+            <p className="premiumQuoteText">
+              Premium is not only fabric or price. It is the way the brand feels before the first order is placed.
+            </p>
           </article>
         </div>
       </section>
 
-      <section className="section editorialSection revealSection">
-        <div className="sectionTitle">How It Works</div>
-        <div className="stepsGrid">
-          <article className="stepCard stepCardOne revealItem">
-            <div className="stepNumber">01</div>
-            <div className="stepTitle">Choose your path</div>
-            <div className="stepText">Pick a live drop, request a custom piece, or place a bulk apparel requirement.</div>
+      <section className="section revealSection premiumSectionShell">
+        <div className="premiumCollectionHeader">
+          <div>
+            <div className="infoEyebrow">Offerings</div>
+            <div className="sectionTitle premiumSectionHeading">Three ways to order</div>
+          </div>
+          <Link className="btn premiumBtnGhost" to="/orders">
+            Track your order
+          </Link>
+        </div>
+
+        <div className="premiumOfferGrid">
+          <article className="premiumOfferCard revealItem">
+            <div className="premiumOfferNumber">01</div>
+            <div className="premiumOfferTitle">Own drops</div>
+            <div className="premiumOfferText">Ready pieces from the Dawn Sogni catalogue with direct checkout and saved cart flow.</div>
+            <Link className="premiumInlineLink" to="/drops">
+              Browse drops
+            </Link>
           </article>
-          <article className="stepCard stepCardTwo revealItem">
-            <div className="stepNumber">02</div>
-            <div className="stepTitle">Approve the order</div>
-            <div className="stepText">Orders begin on COD. Custom work gets a personal quote before the final yes.</div>
+          <article className="premiumOfferCard revealItem">
+            <div className="premiumOfferNumber">02</div>
+            <div className="premiumOfferTitle">Custom design orders</div>
+            <div className="premiumOfferText">Upload reference images, receive previews, and get a personal quote based on the brief.</div>
+            <Link className="premiumInlineLink" to="/custom">
+              Start custom
+            </Link>
           </article>
-          <article className="stepCard stepCardThree revealItem">
-            <div className="stepNumber">03</div>
-            <div className="stepTitle">Track every update</div>
-            <div className="stepText">Acceptance, partial payment, shipping, delivery, and notes remain visible.</div>
+          <article className="premiumOfferCard revealItem">
+            <div className="premiumOfferNumber">03</div>
+            <div className="premiumOfferTitle">Bulk apparel</div>
+            <div className="premiumOfferText">Round neck, collar, and oversized runs for creators, events, communities, and labels.</div>
+            <Link className="premiumInlineLink" to="/bulk">
+              Request bulk
+            </Link>
           </article>
         </div>
       </section>
 
-      <section className="section revealSection">
-        <div className="sectionTitle">New Arrivals</div>
+      <section className="section revealSection premiumSectionShell">
+        <div className="premiumCollectionHeader">
+          <div>
+            <div className="infoEyebrow">Live now</div>
+            <div className="sectionTitle premiumSectionHeading">Selected arrivals</div>
+          </div>
+          <Link className="btn premiumBtnGhost" to="/drops">
+            View full catalog
+          </Link>
+        </div>
 
         {isLoading && (
           <div className="muted" style={{ textAlign: "center", padding: 18 }}>
@@ -122,7 +183,7 @@ export function HomePage() {
           </div>
         )}
 
-        <div className="productGrid">
+        <div className="productGrid premiumProductGrid">
           {newArrivals.map((drop) => (
             <DropProductCard
               key={drop.id}
@@ -130,6 +191,7 @@ export function HomePage() {
               canShop={canShop}
               onAdd={() => addDropToCart(drop)}
               onRequireLogin={requireLogin}
+              showDescription
             />
           ))}
         </div>
@@ -139,16 +201,6 @@ export function HomePage() {
             No products available right now. Check back soon.
           </div>
         )}
-
-        <div style={{ height: 22 }} />
-        <div style={{ display: "flex", justifyContent: "center", gap: 12, flexWrap: "wrap" }}>
-          <Link className="btn primary" to="/drops">
-            Shop all
-          </Link>
-          <Link className="btn" to="/custom">
-            Request custom
-          </Link>
-        </div>
       </section>
     </div>
   );

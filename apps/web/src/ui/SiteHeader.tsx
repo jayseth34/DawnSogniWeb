@@ -10,11 +10,8 @@ const links: LinkItem[] = [
   { key: "tees", label: "Tees", to: "/drops?category=Tee" },
   { key: "shirts", label: "Shirts", to: "/drops?category=Shirt" },
   { key: "shop", label: "Shop", to: "/drops" },
-  // { key: "orders", label: "Track Orders", to: "/orders" },
-  // { key: "contact", label: "Contact", to: "/contact" },
-  // { key: "returns", label: "Returns & Exchanges", to: "/returns" },
   { key: "size", label: "Size Chart", to: "/size-chart" },
-  {key:"Custom Order", label: "Custom Order", to:"/custom"}
+  { key: "custom", label: "Custom", to: "/custom" }
 ];
 
 function activeKeyFromLocation(loc: ReturnType<typeof useLocation>) {
@@ -51,17 +48,16 @@ export function SiteHeader(props: { cartCount: number }) {
     nav(`/drops?q=${encodeURIComponent(query)}`);
   }
 
-  const ordersLink = "/orders";
   const accountLink = isAuthed ? "/orders" : `/login?next=${encodeURIComponent("/orders")}`;
   const cartLink = isAuthed ? "/checkout" : `/login?next=${encodeURIComponent("/checkout")}`;
 
   return (
-    <header className="siteHeader">
-      <div className="siteHeaderInner">
-        <div className="topNotice">Shop our latest arrivals!</div>
+    <header className="siteHeader premiumHeaderShell">
+      <div className="siteHeaderInner premiumHeaderInner">
+        <div className="topNotice premiumTopNotice">Dawn Sogni | Limited drops, custom design pieces, and bulk orders</div>
 
-        <div className="headerMain">
-          <nav className="headerLinks" aria-label="Primary">
+        <div className="headerMain premiumHeaderMain">
+          <nav className="headerLinks premiumHeaderLinks" aria-label="Primary">
             {links.map((l) => (
               <Link key={l.key} className={l.key === activeKey ? "headerLink active" : "headerLink"} to={l.to}>
                 {l.label}
@@ -69,26 +65,27 @@ export function SiteHeader(props: { cartCount: number }) {
             ))}
           </nav>
 
-          <Link className="brandMark" to="/" aria-label="Dawn Sogni">
-            DAWN SOGNI
+          <Link className="brandMark premiumBrandMark" to="/" aria-label="Dawn Sogni">
+            <span className="premiumBrandTop">DAWN</span>
+            <span className="premiumBrandBottom">SOGNI</span>
           </Link>
 
-          <div className="headerRight">
-            <button className="iconBtn" aria-label="Search" onClick={() => setShowSearch((s) => !s)}>
-              <IconSearch width={20} height={20} />
+          <div className="headerRight premiumHeaderRight">
+            <button className="iconBtn premiumIconBtn" aria-label="Search" onClick={() => setShowSearch((s) => !s)}>
+              <IconSearch width={18} height={18} />
             </button>
-            <Link className="iconBtn" aria-label={isAuthed ? "My orders" : "Sign in"} to={accountLink}>
-              <IconUser width={20} height={20} />
+            <Link className="iconBtn premiumIconBtn" aria-label={isAuthed ? "My orders" : "Sign in"} to={accountLink}>
+              <IconUser width={18} height={18} />
             </Link>
-            <Link className="iconBtn cartBadge" aria-label="Cart" to={cartLink}>
-              <IconBag width={20} height={20} />
+            <Link className="iconBtn cartBadge premiumIconBtn" aria-label="Cart" to={cartLink}>
+              <IconBag width={18} height={18} />
               {isAuthed && props.cartCount > 0 && <span className="cartBadgeDot">{Math.min(props.cartCount, 99)}</span>}
             </Link>
           </div>
         </div>
 
         {showSearch && (
-          <div className="headerSearchRow">
+          <div className="headerSearchRow premiumSearchRow">
             <input
               className="input"
               value={q}
