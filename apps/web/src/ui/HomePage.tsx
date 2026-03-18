@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+ï»¿import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api";
 import { useSessionApi } from "./useSession";
@@ -23,7 +23,6 @@ export function HomePage() {
           <div className="premiumHeroGrid">
             <div className="premiumHeroLead">
               <div className="heroPillRow">
-                <span className="heroPill">DAWN SOGNI</span>
                 <span className="heroPill">First thought in the morning</span>
               </div>
 
@@ -33,7 +32,7 @@ export function HomePage() {
               </div>
 
               <p className="premiumHeroText">
-                Dawn Sogni is a premium streetwear label built around the feeling of a morning dream — original drops,
+                Dawn Sogni is a premium streetwear label built around the feeling of a morning dream ï¿½ original drops,
                 custom-designed pieces, and bulk apparel produced with a sharper visual identity.
               </p>
 
@@ -114,7 +113,7 @@ export function HomePage() {
           </article>
 
           <article className="premiumStoryCard premiumStoryQuote revealItem">
-            <div className="premiumQuoteMark">“</div>
+            <div className="premiumQuoteMark">ï¿½</div>
             <p className="premiumQuoteText">
               Premium is not only fabric or price. It is the way the brand feels before the first order is placed.
             </p>
