@@ -1,4 +1,4 @@
-﻿import { Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api";
 import { useSessionApi } from "./useSession";
@@ -11,7 +11,7 @@ export function HomePage() {
   const { addDropToCart, canShop, requireLogin } = useSessionApi();
 
   const drops = data ?? [];
-  const newArrivals = drops.slice(0, 6);
+  const newArrivals = drops.slice(0, 5);
 
   return (
     <div className="premiumHome">
@@ -32,7 +32,7 @@ export function HomePage() {
               </div>
 
               <p className="premiumHeroText">
-                Dawn Sogni is a premium streetwear label built around the feeling of a morning dream � original drops,
+                Dawn Sogni is a premium streetwear label built around the feeling of a morning dream ? original drops,
                 custom-designed pieces, and bulk apparel produced with a sharper visual identity.
               </p>
 
@@ -113,7 +113,7 @@ export function HomePage() {
           </article>
 
           <article className="premiumStoryCard premiumStoryQuote revealItem">
-            <div className="premiumQuoteMark">�</div>
+            <div className="premiumQuoteMark">?</div>
             <p className="premiumQuoteText">
               Premium is not only fabric or price. It is the way the brand feels before the first order is placed.
             </p>
@@ -204,3 +204,4 @@ export function HomePage() {
     </div>
   );
 }
+
