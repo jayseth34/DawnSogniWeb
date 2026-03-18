@@ -11,6 +11,12 @@ function uniq(arr: string[]) {
   return arr.filter((v, i) => arr.indexOf(v) === i);
 }
 
+function quoteText(cr?: CustomRequest) {
+  if (!cr) return "Loading...";
+  if (cr.quotedPriceCents) return `Quoted: INR ${Math.round(cr.quotedPriceCents / 100)}`;
+  return `Approx: INR ${cr.approxPriceLow ?? 600} - ${cr.approxPriceHigh ?? 800}`;
+}
+
 export function CustomPage() {
   const [customerName, setCustomerName] = useState("");
   const [phone, setPhone] = useState("");
@@ -42,8 +48,7 @@ export function CustomPage() {
   }
 
   useEffect(() => {
-    refreshTracked(customTokens);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    void refreshTracked(customTokens);
   }, [customTokens.join("|")]);
 
   function persistTokens(nextTokens: string[]) {
@@ -115,15 +120,29 @@ export function CustomPage() {
   }
 
   return (
-    <div className="container page" style={{ maxWidth: 900 }}>
-      <div className="h2">Custom order</div>
-      <div className="muted">Upload references, tell us your idea, and we will update status and share designs here.</div>
+    <div className="container page publicPageShell" style={{ maxWidth: 1180 }}>
+      <div className="publicPageIntro revealSection sectionGlow">
+        <div className="infoEyebrow">Custom design desk</div>
+        <div className="h2">Share your idea, references, and fit preference</div>
+        <div className="muted">
+          We accept one-off custom design requests and bulk custom clothing. You can upload references now, and we will update the same request with status,
+          quotes, and design previews.
+        </div>
+      </div>
       <div className="hr" />
 
-      <div className="grid" style={{ gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-        <div className="card">
+      <div className="grid customSplitGrid">
+        <div className="card revealSection sectionGlow">
           <div className="p">
-            <div style={{ fontWeight: 900 }}>Create request</div>
+            <div className="row" style={{ justifyContent: "space-between" }}>
+              <div>
+                <div style={{ fontWeight: 900 }}>Create request</div>
+                <div className="muted2" style={{ marginTop: 6, fontSize: 12 }}>
+                  Approx starting range: INR 600 - 800 for custom work before final quote.
+                </div>
+              </div>
+              <span className="glassBadge active">ImageKit upload</span>
+            </div>
 
             <div className="label">Name</div>
             <input className="input" value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
@@ -138,18 +157,16 @@ export function CustomPage() {
             {!phoneOk && phone.trim() && <div className="muted2" style={{ fontSize: 12, marginTop: 6 }}>Enter a valid phone number.</div>}
 
             <div className="label">What do you want?</div>
-            <textarea className="textarea" value={notes} onChange={(e) => setNotes(e.target.value)} />
+            <textarea className="textarea" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Tell us the concept, colour, fit, print style, and deadline." />
 
-            <div className="label">Upload reference images (ImageKit)</div>
+            <div className="label">Upload reference images</div>
             <input className="input" type="file" multiple disabled={uploading || submitting} onChange={(e) => upload(e.currentTarget.files)} />
 
             {referenceImages.length > 0 && (
-              <div className="row" style={{ marginTop: 12, gap: 10, alignItems: "flex-end" }}>
+              <div className="customThumbGrid" style={{ marginTop: 14 }}>
                 {referenceImages.map((u) => (
-                  <div key={u} style={{ display: "grid", gap: 6, justifyItems: "center" }}>
-                    <a href={u} target="_blank" rel="noreferrer">
-                      <img className="adminThumbSm" src={u} alt="" />
-                    </a>
+                  <div key={u} className="miniImageCard">
+                    <img className="adminThumbSm customThumbPreview" src={u} alt="Reference" />
                     <button className="btn danger" style={{ padding: "6px 10px", borderRadius: 10 }} onClick={() => setReferenceImages((prev) => prev.filter((x) => x !== u))}>
                       Remove
                     </button>
@@ -166,62 +183,70 @@ export function CustomPage() {
           </div>
         </div>
 
-        <div className="card">
+        <div className="card revealSection sectionGlow">
           <div className="p">
             <div className="row" style={{ justifyContent: "space-between" }}>
-              <div style={{ fontWeight: 900 }}>Your custom orders</div>
+              <div>
+                <div style={{ fontWeight: 900 }}>Your custom orders</div>
+                <div className="muted2" style={{ marginTop: 6, fontSize: 12 }}>
+                  Saved on this device. Admin updates and uploaded designs appear here.
+                </div>
+              </div>
               <button className="btn" onClick={() => refreshTracked(customTokens)}>
                 Refresh
               </button>
-            </div>
-            <div className="muted2" style={{ marginTop: 6, fontSize: 12 }}>
-              Saved on this device. Admin status updates will appear here.
             </div>
 
             <div style={{ height: 12 }} />
             {customTokens.length === 0 && <div className="muted">No custom orders yet.</div>}
 
-            <div className="grid" style={{ gap: 10 }}>
+            <div className="stackList">
               {customTokens.map((t) => {
                 const cr = tracked[t];
                 return (
-                  <div key={t} className="pill" style={{ width: "100%", justifyContent: "space-between" }}>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontWeight: 800 }}>{cr ? cr.customerName : "Custom request"}</div>
-                      <div className="muted2" style={{ fontSize: 12, marginTop: 2 }}>
-                        Status: {cr?.status ?? "Loading..."}
-                        {cr?.quotedPriceCents ? ` | Quote: INR ${Math.round(cr.quotedPriceCents / 100)}` : ""}
+                  <div key={t} className="statusCard">
+                    <div className="row" style={{ justifyContent: "space-between", alignItems: "flex-start" }}>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontWeight: 800 }}>{cr ? cr.customerName : "Custom request"}</div>
+                        <div className="muted2" style={{ fontSize: 12, marginTop: 4 }}>
+                          Status: {cr?.status ?? "Loading..."} | {quoteText(cr)}
+                        </div>
                       </div>
+                      <button className="btn danger" onClick={() => persistTokens(customTokens.filter((x) => x !== t))}>
+                        Delete
+                      </button>
+                    </div>
 
-                      {cr?.referenceImages?.length ? (
-                        <div className="row" style={{ marginTop: 10, gap: 10, alignItems: "flex-end" }}>
+                    {cr?.notes ? <div className="muted" style={{ marginTop: 10 }}>{cr.notes}</div> : null}
+
+                    {cr?.referenceImages?.length ? (
+                      <>
+                        <div className="label">Your uploaded references</div>
+                        <div className="customThumbGrid">
                           {cr.referenceImages.map((u) => (
-                            <div key={u} style={{ display: "grid", gap: 6, justifyItems: "center" }}>
-                              <a href={u} target="_blank" rel="noreferrer">
-                                <img className="adminThumbSm" src={u} alt="" />
-                              </a>
+                            <div key={u} className="miniImageCard">
+                              <img className="adminThumbSm customThumbPreview" src={u} alt="Uploaded reference" />
                               <button className="btn danger" style={{ padding: "6px 10px", borderRadius: 10 }} onClick={() => removeTrackedImage(t, u)}>
                                 Remove
                               </button>
                             </div>
                           ))}
                         </div>
-                      ) : null}
+                      </>
+                    ) : null}
 
-                      {cr?.designs?.length ? (
-                        <div className="row" style={{ marginTop: 10, gap: 10 }}>
+                    {cr?.designs?.length ? (
+                      <>
+                        <div className="label">Admin design previews</div>
+                        <div className="customThumbGrid">
                           {cr.designs.flatMap((d) => d.images).map((u) => (
-                            <a key={u} href={u} target="_blank" rel="noreferrer">
-                              <img className="adminThumbSm" src={u} alt="" />
-                            </a>
+                            <div key={u} className="miniImageCard">
+                              <img className="adminThumbSm customThumbPreview" src={u} alt="Design preview" />
+                            </div>
                           ))}
                         </div>
-                      ) : null}
-                    </div>
-
-                    <button className="btn danger" onClick={() => persistTokens(customTokens.filter((x) => x !== t))}>
-                      Delete
-                    </button>
+                      </>
+                    ) : null}
                   </div>
                 );
               })}

@@ -64,25 +64,30 @@ export function LoginPage() {
 
   if (auth.status === "authed") {
     return (
-      <div className="container page" style={{ maxWidth: 560 }}>
-        <div className="h2">Account</div>
-        <div className="muted">You’re already signed in.</div>
+      <div className="container page publicPageShell" style={{ maxWidth: 720 }}>
+        <div className="publicPageIntro revealSection sectionGlow">
+          <div className="infoEyebrow">Customer access</div>
+          <div className="h2">You are already signed in</div>
+          <div className="muted">Your phone session is active on this device, so you can go straight to your orders or cart.</div>
+        </div>
         <div className="hr" />
-        <div className="card">
+
+        <div className="card revealSection authCard">
           <div className="p">
-            <div className="row" style={{ justifyContent: "space-between" }}>
+            <div className="authStatRow">
               <div>
-                <div style={{ fontWeight: 800 }}>Phone</div>
+                <div style={{ fontWeight: 800 }}>Signed in phone</div>
                 <div className="muted2" style={{ marginTop: 6 }}>{auth.phoneDigits}</div>
               </div>
-              <Link className="btn primary" to={nextUrl}>
-                Continue
-              </Link>
+              <div className="row" style={{ gap: 10 }}>
+                <Link className="btn primary" to={nextUrl}>
+                  Continue
+                </Link>
+                <button className="btn" onClick={auth.logout}>
+                  Sign out
+                </button>
+              </div>
             </div>
-            <div style={{ height: 12 }} />
-            <button className="btn" onClick={auth.logout}>
-              Sign out
-            </button>
           </div>
         </div>
       </div>
@@ -90,13 +95,23 @@ export function LoginPage() {
   }
 
   return (
-    <div className="container page" style={{ maxWidth: 560 }}>
-      <div className="h2">Sign in</div>
-      <div className="muted">Use your phone number to add items to cart and view your order history.</div>
+    <div className="container page publicPageShell" style={{ maxWidth: 720 }}>
+      <div className="publicPageIntro revealSection sectionGlow">
+        <div className="infoEyebrow">Customer login</div>
+        <div className="h2">Sign in to keep your order history</div>
+        <div className="muted">
+          Use your phone number once, then we keep your session on this device so you do not need to fill details again and again.
+        </div>
+      </div>
       <div className="hr" />
 
-      <div className="card">
+      <div className="card revealSection authCard">
         <div className="p">
+          <div className="authStepRow">
+            <span className={step === "start" ? "glassBadge active" : "glassBadge"}>1. Phone</span>
+            <span className={step === "verify" ? "glassBadge active" : "glassBadge"}>2. Verify</span>
+          </div>
+
           <div className="label">Phone</div>
           <input
             className="input"

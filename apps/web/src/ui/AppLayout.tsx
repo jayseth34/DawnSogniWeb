@@ -1,4 +1,4 @@
-﻿import { Outlet, useLocation } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { SiteHeader } from "./SiteHeader";
 import { useSessionApi } from "./useSession";
 
@@ -10,7 +10,7 @@ export function AppLayout() {
   if (isAdmin) return <Outlet />;
 
   return (
-    <div>
+    <div className="publicApp">
       <SiteHeader cartCount={cartCount} />
       <Outlet />
       <footer className="container siteFooter">

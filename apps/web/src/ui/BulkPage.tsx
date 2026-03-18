@@ -18,17 +18,19 @@ export function BulkPage() {
   }
 
   return (
-    <div className="container page" style={{ maxWidth: 760 }}>
-      <div className="row" style={{ justifyContent: "space-between" }}>
-        <div>
-          <div className="h2">Bulk orders</div>
-          <div className="muted">Collar, round neck, oversized. COD only for now (pricing confirmed after order).</div>
+    <div className="container page publicPageShell" style={{ maxWidth: 760 }}>
+      <div className="publicPageIntro revealSection">
+        <div className="row" style={{ justifyContent: "space-between" }}>
+          <div>
+            <div className="h2">Bulk orders</div>
+            <div className="muted">Collar, round neck, and oversized fits. COD for now, with pricing confirmed after review.</div>
+          </div>
+          <div className="pill">Cart items: {computedCount}</div>
         </div>
-        <div className="pill">Cart items: {computedCount}</div>
       </div>
       <div className="hr" />
 
-      <div className="card">
+      <div className="card revealSection">
         <div className="p">
           <div style={{ fontWeight: 800 }}>Create a bulk item</div>
 
@@ -67,12 +69,10 @@ export function BulkPage() {
             Add to cart
           </button>
           <div className="muted" style={{ marginTop: 10, fontSize: 12 }}>
-            You can track status in “Your Orders” after placing.
+            You can track status in "Your Orders" after placing it.
           </div>
         </div>
       </div>
     </div>
   );
 }
-
-

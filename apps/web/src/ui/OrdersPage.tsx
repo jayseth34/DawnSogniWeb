@@ -20,7 +20,6 @@ function fixMojibake(input: string) {
   return out;
 }
 
-
 function totalText(order: Order) {
   if (order.totalCents === 0) return "Quote pending";
   return formatRupees(order.totalCents);
@@ -48,8 +47,8 @@ async function copyToClipboard(label: string, value: string, onStatus: (msg: str
 
 function mergeOrders(a: Order[], b: Order[]) {
   const map = new Map<string, Order>();
-  for (const o of a) map.set(o.id, o);
-  for (const o of b) map.set(o.id, o);
+  for (const order of a) map.set(order.id, order);
+  for (const order of b) map.set(order.id, order);
   return Array.from(map.values()).sort((x, y) => +new Date(y.createdAt) - +new Date(x.createdAt));
 }
 
@@ -63,7 +62,6 @@ export function OrdersPage() {
   const [newToken, setNewToken] = useState("");
   const [uiToast, setUiToast] = useState("");
   const [params, setParams] = useSearchParams();
-
   const [loadingPhoneOrders, setLoadingPhoneOrders] = useState(false);
 
   const tokens = useMemo(() => session.orderTokens ?? [], [session.orderTokens]);
@@ -73,9 +71,9 @@ export function OrdersPage() {
     setStatus("");
     try {
       const list: Order[] = [];
-      for (const t of tokens) {
-        const o = await api.getOrderByToken(t);
-        list.push(o);
+      for (const token of tokens) {
+        const order = await api.getOrderByToken(token);
+        list.push(order);
       }
       setOrders(list);
     } catch (e: any) {
@@ -87,8 +85,8 @@ export function OrdersPage() {
     setStatus("");
     setLoadingPhoneOrders(true);
     try {
-      const d = await api.customer.orders();
-      setOrders((prev) => mergeOrders(prev, d.orders ?? []));
+      const data = await api.customer.orders();
+      setOrders((prev) => mergeOrders(prev, data.orders ?? []));
     } catch (e: any) {
       setStatus(`Failed: ${String(e?.message ?? e)}`);
     } finally {
@@ -102,7 +100,6 @@ export function OrdersPage() {
     } else {
       void loadFromTokens();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthed, phoneDigits, tokens.join("|")]);
 
   async function refreshOne(order: Order) {
@@ -111,26 +108,26 @@ export function OrdersPage() {
       return;
     }
     const fresh = await api.getOrderByToken(order.accessToken);
-    setOrders((prev) => prev.map((p) => (p.id === fresh.id ? fresh : p)));
+    setOrders((prev) => prev.map((item) => (item.id === fresh.id ? fresh : item)));
   }
 
   function toggle(id: string) {
-    setExpanded((p) => ({ ...p, [id]: !p[id] }));
+    setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
   }
 
   function addToken() {
-    const t = newToken.trim();
-    if (!t) return;
+    const token = newToken.trim();
+    if (!token) return;
     persist({
       ...session,
-      orderTokens: [t, ...(session.orderTokens ?? [])].filter((v, i, a) => a.indexOf(v) === i).slice(0, 50)
+      orderTokens: [token, ...(session.orderTokens ?? [])].filter((value, index, arr) => arr.indexOf(value) === index).slice(0, 50)
     });
     setNewToken("");
   }
 
   const placedOrder = useMemo(() => {
     if (!placedToken) return null;
-    return orders.find((o) => o.accessToken === placedToken) ?? null;
+    return orders.find((order) => order.accessToken === placedToken) ?? null;
   }, [orders, placedToken]);
 
   function dismissPlaced() {
@@ -146,43 +143,42 @@ export function OrdersPage() {
   }
 
   return (
-    <div className="container page">
-      <div className="row" style={{ justifyContent: "space-between" }}>
-        <div>
-          <div className="h2">Your Orders</div>
-          <div className="muted">Saved to this device{isAuthed ? " | Signed in" : ""}.</div>
-        </div>
-        <div className="row" style={{ gap: 10 }}>
-          {isAuthed ? (
-            <>
-              <button className="btn" onClick={loadFromPhone} disabled={loadingPhoneOrders}>
-                {loadingPhoneOrders ? "Loading..." : "Refresh"}
-              </button>
-              <button className="btn" onClick={logout}>
-                Sign out
-              </button>
-            </>
-          ) : (
-            <>
-              <Link className="btn primary" to={`/login?next=${encodeURIComponent("/orders")}`}>
-                Sign in
-              </Link>
-              <button className="btn" onClick={loadFromTokens}>
-                Refresh
-              </button>
-            </>
-          )}
+    <div className="container page publicPageShell">
+      <div className="publicPageIntro revealSection sectionGlow">
+        <div className="row" style={{ justifyContent: "space-between" }}>
+          <div>
+            <div className="infoEyebrow">Order desk</div>
+            <div className="h2">Track every stage of your Dawn Sogni order</div>
+            <div className="muted">Saved to this device{isAuthed ? " and linked to your signed-in phone" : ""}.</div>
+          </div>
+          <div className="row" style={{ gap: 10 }}>
+            {isAuthed ? (
+              <>
+                <button className="btn" onClick={loadFromPhone} disabled={loadingPhoneOrders}>
+                  {loadingPhoneOrders ? "Loading..." : "Refresh"}
+                </button>
+                <button className="btn" onClick={logout}>
+                  Sign out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link className="btn primary" to={`/login?next=${encodeURIComponent("/orders")}`}>
+                  Sign in
+                </Link>
+                <button className="btn" onClick={loadFromTokens}>
+                  Refresh
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
-      {uiToast && (
-        <div className="muted" style={{ marginTop: 10 }}>
-          {uiToast}
-        </div>
-      )}
+      {uiToast && <div className="muted" style={{ marginTop: 10 }}>{uiToast}</div>}
 
       {placedToken && (
-        <div className="card" style={{ marginTop: 14 }}>
+        <div className="card revealSection sectionGlow" style={{ marginTop: 14 }}>
           <div className="p">
             <div className="row" style={{ justifyContent: "space-between" }}>
               <div style={{ fontWeight: 900 }}>Order placed</div>
@@ -217,57 +213,51 @@ export function OrdersPage() {
                 )}
               </div>
             </div>
-            <div className="muted2" style={{ marginTop: 10, fontSize: 12 }}>
-              Keep the token safe. You can use it to track this order on any device.
-            </div>
           </div>
         </div>
       )}
 
       {!isAuthed && (
-        <>
-          <div style={{ height: 12 }} />
-          <div className="card">
-            <div className="p">
-              <div style={{ fontWeight: 800 }}>Add an order token</div>
-              <div className="muted" style={{ marginTop: 6, fontSize: 12 }}>
-                Paste a tracking token to add an order to this device.
-              </div>
-              <div className="row" style={{ marginTop: 10 }}>
-                <input className="input" value={newToken} onChange={(e) => setNewToken(e.target.value)} placeholder="Tracking token" />
-                <button className="btn primary" onClick={addToken} disabled={!newToken.trim()}>
-                  Add
-                </button>
-              </div>
+        <div className="card revealSection sectionGlow" style={{ marginTop: 14 }}>
+          <div className="p">
+            <div style={{ fontWeight: 800 }}>Add an order token</div>
+            <div className="muted" style={{ marginTop: 6, fontSize: 12 }}>
+              Paste a tracking token to attach an order to this device.
+            </div>
+            <div className="row" style={{ marginTop: 10 }}>
+              <input className="input" value={newToken} onChange={(e) => setNewToken(e.target.value)} placeholder="Tracking token" />
+              <button className="btn primary" onClick={addToken} disabled={!newToken.trim()}>
+                Add
+              </button>
             </div>
           </div>
-        </>
+        </div>
       )}
 
       <div className="hr" />
       {status && <div className="muted">{status}</div>}
 
-      <div className="grid">
-        {orders.map((o) => (
-          <div className="card" key={o.id}>
-            <div className="p" style={{ cursor: "pointer" }} onClick={() => toggle(o.id)}>
+      <div className="stackList revealSection">
+        {orders.map((order) => (
+          <div className="card sectionGlow" key={order.id}>
+            <div className="p" style={{ cursor: "pointer" }} onClick={() => toggle(order.id)}>
               <div className="row" style={{ justifyContent: "space-between" }}>
-                <div style={{ fontWeight: 900 }}>{o.orderNumber}</div>
-                <div className="tag">{o.status}</div>
+                <div style={{ fontWeight: 900 }}>{order.orderNumber}</div>
+                <div className="glassBadge active">{order.status}</div>
               </div>
               <div className="muted" style={{ marginTop: 8 }}>
-                Total {totalText(o)} | COD | {new Date(o.createdAt).toLocaleString()}
+                Total {totalText(order)} | COD | {new Date(order.createdAt).toLocaleString()}
               </div>
 
               <div className="row" style={{ justifyContent: "space-between", marginTop: 10, gap: 10 }}>
                 <div className="muted2" style={{ fontSize: 12 }}>
-                  Order ID: <b>{o.id}</b>
+                  Order ID: <b>{order.id}</b>
                 </div>
                 <button
                   className="btn"
                   onClick={(e) => {
                     e.stopPropagation();
-                    void copyToClipboard("order id", o.id, setUiToast);
+                    void copyToClipboard("order id", order.id, setUiToast);
                   }}
                 >
                   Copy
@@ -276,13 +266,13 @@ export function OrdersPage() {
 
               <div className="row" style={{ justifyContent: "space-between", marginTop: 10, gap: 10 }}>
                 <div className="muted2" style={{ fontSize: 12 }}>
-                  Token: <b>{maskToken(o.accessToken)}</b>
+                  Token: <b>{maskToken(order.accessToken)}</b>
                 </div>
                 <button
                   className="btn"
                   onClick={(e) => {
                     e.stopPropagation();
-                    void copyToClipboard("tracking token", o.accessToken, setUiToast);
+                    void copyToClipboard("tracking token", order.accessToken, setUiToast);
                   }}
                 >
                   Copy
@@ -290,22 +280,22 @@ export function OrdersPage() {
               </div>
 
               <div className="muted" style={{ marginTop: 10, fontSize: 12 }}>
-                {expanded[o.id] ? "Hide tracking" : "Show tracking"}
+                {expanded[order.id] ? "Hide tracking" : "Show tracking"}
               </div>
             </div>
 
-            {expanded[o.id] && (
+            {expanded[order.id] && (
               <div className="p" style={{ borderTop: "1px solid var(--line2)" }}>
                 <div className="row" style={{ justifyContent: "space-between" }}>
                   <div className="muted" style={{ fontSize: 12 }}>
-                    Address: {o.addressLine1}
-                    {o.addressLine2 ? `, ${o.addressLine2}` : ""}, {o.city}, {o.state} - {o.pincode}
+                    Address: {order.addressLine1}
+                    {order.addressLine2 ? `, ${order.addressLine2}` : ""}, {order.city}, {order.state} - {order.pincode}
                   </div>
                   <button
                     className="btn"
                     onClick={async (e) => {
                       e.stopPropagation();
-                      await refreshOne(o);
+                      await refreshOne(order);
                     }}
                   >
                     Refresh status
@@ -314,21 +304,21 @@ export function OrdersPage() {
 
                 <div style={{ height: 12 }} />
                 <div style={{ fontWeight: 800 }}>Status timeline</div>
-                <div className="grid" style={{ gap: 10, marginTop: 10 }}>
-                  {(o.events ?? []).map((ev) => (
-                    <div key={ev.id} className="pill" style={{ width: "100%", justifyContent: "space-between" }}>
+                <div className="timelineList">
+                  {(order.events ?? []).map((event) => (
+                    <div key={event.id} className="timelineItem">
                       <div>
-                        <div style={{ fontWeight: 800 }}>{ev.type}</div>
+                        <div className="timelineItemType">{event.type}</div>
                         <div className="muted" style={{ fontSize: 12 }}>
-                          {ev.message ? fixMojibake(String(ev.message)) : "-"}
+                          {event.message ? fixMojibake(String(event.message)) : "-"}
                         </div>
                       </div>
                       <div className="muted" style={{ fontSize: 12 }}>
-                        {new Date(ev.createdAt).toLocaleString()}
+                        {new Date(event.createdAt).toLocaleString()}
                       </div>
                     </div>
                   ))}
-                  {(o.events ?? []).length === 0 && <div className="muted">No status updates yet.</div>}
+                  {(order.events ?? []).length === 0 && <div className="muted">No status updates yet.</div>}
                 </div>
               </div>
             )}

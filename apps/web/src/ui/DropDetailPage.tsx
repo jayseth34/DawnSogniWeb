@@ -32,17 +32,21 @@ export function DropDetailPage() {
   const mainImg = selectedImg;
 
   return (
-    <div className="container page" style={{ maxWidth: 1100 }}>
-      <div className="row" style={{ justifyContent: "space-between" }}>
-        <div className="row" style={{ gap: 10 }}>
-          <Link className="pill" to="/drops">
-            Back
-          </Link>
-          {drop?.category ? <span className="tag">{drop.category}</span> : null}
+    <div className="container page publicPageShell" style={{ maxWidth: 1180 }}>
+      <div className="publicPageIntro revealSection sectionGlow">
+        <div className="row" style={{ justifyContent: "space-between" }}>
+          <div>
+            <div className="infoEyebrow">Product view</div>
+            <div className="h2" style={{ marginBottom: 0 }}>{drop?.title ?? "View product"}</div>
+            <div className="muted">Browse the full artwork, switch between images, and add your quantity directly from here.</div>
+          </div>
+          <div className="row" style={{ gap: 10 }}>
+            <Link className="pill" to="/drops">
+              Back to drops
+            </Link>
+            {drop?.category ? <span className="tag">{drop.category}</span> : null}
+          </div>
         </div>
-        <button className="btn" onClick={() => refetch()}>
-          Refresh
-        </button>
       </div>
 
       <div className="hr" />
@@ -50,7 +54,7 @@ export function DropDetailPage() {
       {isLoading && <div className="muted">Loading...</div>}
       {error && (
         <div className="muted">
-          Failed to load product.{' '}
+          Failed to load product.{" "}
           <button className="btn" onClick={() => refetch()}>
             Try again
           </button>
@@ -59,43 +63,40 @@ export function DropDetailPage() {
 
       {drop && (
         <div className="grid productDetailGrid">
-          <div className="card">
+          <div className="card revealSection detailFrame">
             {mainImg ? (
               <img className="productImg productImgDetail" src={mainImg} alt={drop.title} />
             ) : (
               <div className="productImg productImgDetail" />
             )}
             {drop.images?.length > 1 && (
-              <div className="p" style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                {drop.images.map((u) => (
+              <div className="galleryThumbs detailThumbRow" aria-label="Product images">
+                {drop.images.map((u, index) => (
                   <button
                     key={u}
                     type="button"
-                    className={"thumbBtn" + (u === mainImg ? " active" : "")}
+                    className={u === mainImg ? "galleryThumb active" : "galleryThumb"}
                     onClick={() => setSelectedImg(u)}
-                    aria-label="View image"
+                    aria-label={`View image ${index + 1}`}
                   >
-                    <img className="adminThumbSm" src={u} alt="" />
+                    <img src={u} alt="" />
                   </button>
                 ))}
               </div>
             )}
           </div>
 
-          <div className="card">
+          <div className="card revealSection productDetailPanel">
             <div className="p">
-              <div className="h2" style={{ marginTop: 0 }}>
-                {drop.title}
-              </div>
-              <div className="muted" style={{ marginTop: 8 }}>
-                {drop.description || "-"}
-              </div>
-              <div style={{ height: 14 }} />
-              <div className="tag">
-                {drop.priceCents === 0 ? "Quote pending" : formatRupees(drop.priceCents)}
+              <div className="row" style={{ justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div>
+                  <div className="h2" style={{ marginTop: 0 }}>{drop.title}</div>
+                  <div className="muted" style={{ marginTop: 8 }}>{drop.description || "Fresh Dawn Sogni drop."}</div>
+                </div>
+                <span className="glassBadge active">{drop.priceCents === 0 ? "Quote pending" : formatRupees(drop.priceCents)}</span>
               </div>
 
-              <div style={{ height: 16 }} />
+              <div className="hr" />
               <div className="label">Quantity</div>
               <div className="row productDetailQty">
                 <button className="btn" onClick={() => setQty((q) => Math.max(1, q - 1))}>
@@ -119,6 +120,13 @@ export function DropDetailPage() {
                   Go to checkout
                 </Link>
               </div>
+
+              <div className="detailHighlights">
+                <div className="glassBadge">COD at checkout</div>
+                <div className="glassBadge">Session saved on device</div>
+                <div className="glassBadge">Track status later</div>
+              </div>
+
               {!canShop && (
                 <div className="muted2" style={{ marginTop: 10, fontSize: 12 }}>
                   Login is required to add to cart.

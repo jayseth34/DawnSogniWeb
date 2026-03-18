@@ -3,7 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api";
 import { useSessionApi } from "./useSession";
-import { formatRupees } from "./money";
+import { DropProductCard } from "./DropProductCard";
 
 const categories = ["All", "Tee", "Shirt", "Oversized"] as const;
 
@@ -11,11 +11,7 @@ type Category = (typeof categories)[number];
 
 function categoryFromParams(params: URLSearchParams): Category {
   const raw = (params.get("category") || "All").trim();
-  return (categories.includes(raw as any) ? (raw as Category) : "All");
-}
-
-function dropHref(dropId: string) {
-  return `/drops/${encodeURIComponent(dropId)}`;
+  return categories.includes(raw as Category) ? (raw as Category) : "All";
 }
 
 export function DropsPage() {
@@ -56,35 +52,37 @@ export function DropsPage() {
   }
 
   return (
-    <div className="container page">
-      <div className="row" style={{ justifyContent: "space-between" }}>
-        <div>
-          <div className="h2">Shop</div>
-          <div className="muted">Drops are limited. Cart is saved on this device.</div>
-        </div>
-        <Link className="pill" to="/checkout">
-          Cart items: {cartCount}
-        </Link>
-      </div>
-
-      <div style={{ height: 12 }} />
-
-      <div className="row" style={{ justifyContent: "space-between", gap: 10 }}>
-        <div className="row" style={{ gap: 10 }}>
-          {categories.map((c) => (
-            <button key={c} className={c === category ? "btn primary" : "btn"} onClick={() => setCategory(c)}>
-              {c}
-            </button>
-          ))}
+    <div className="container page publicPageShell">
+      <div className="publicPageIntro revealSection">
+        <div className="row" style={{ justifyContent: "space-between" }}>
+          <div>
+            <div className="h2">Shop</div>
+            <div className="muted">Limited drops, saved cart on this device, and a fuller gallery right from the grid.</div>
+          </div>
+          <Link className="pill" to="/checkout">
+            Cart items: {cartCount}
+          </Link>
         </div>
 
-        <input
-          className="input"
-          style={{ width: 320, maxWidth: "100%" }}
-          placeholder="Search"
-          value={q}
-          onChange={(e) => setQuery(e.target.value)}
-        />
+        <div style={{ height: 12 }} />
+
+        <div className="row" style={{ justifyContent: "space-between", gap: 10 }}>
+          <div className="row" style={{ gap: 10 }}>
+            {categories.map((c) => (
+              <button key={c} className={c === category ? "btn primary" : "btn"} onClick={() => setCategory(c)}>
+                {c}
+              </button>
+            ))}
+          </div>
+
+          <input
+            className="input"
+            style={{ width: 320, maxWidth: "100%" }}
+            placeholder="Search"
+            value={q}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </div>
       </div>
 
       <div style={{ height: 14 }} />
@@ -92,32 +90,16 @@ export function DropsPage() {
       {isLoading && <div className="muted">Loading...</div>}
       {error && <div className="muted">Failed to load drops.</div>}
 
-      <div className="productGrid">
-        {filtered.map((d) => (
-          <div className="productCard" key={d.id}>
-            <Link to={dropHref(d.id)} aria-label={d.title}>
-              {d.images?.[0] ? <img className="productImg" src={d.images[0]} alt={d.title} /> : <div className="productImg" />}
-            </Link>
-            <div className="productMeta">
-              <div className="productNameRow">
-                <div className="productName clamp2" title={d.title}>
-                  {d.title}
-                </div>
-              </div>
-              <div className="muted2 clamp2" style={{ marginTop: 6, fontSize: 13 }}>
-                {d.description || "-"}
-              </div>
-              <div className="productPrice">{d.priceCents === 0 ? "Quote pending" : formatRupees(d.priceCents)}</div>
-              <div className="productActions">
-                <button className="btn primary" onClick={() => (canShop ? addDropToCart(d) : requireLogin())}>
-                  Add
-                </button>
-                <Link className="btn" to={dropHref(d.id)}>
-                  View
-                </Link>
-              </div>
-            </div>
-          </div>
+      <div className="productGrid revealSection">
+        {filtered.map((drop) => (
+          <DropProductCard
+            key={drop.id}
+            drop={drop}
+            canShop={canShop}
+            onAdd={() => addDropToCart(drop)}
+            onRequireLogin={requireLogin}
+            showDescription
+          />
         ))}
       </div>
 

@@ -1,12 +1,8 @@
-﻿import { Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api";
 import { useSessionApi } from "./useSession";
-import { formatRupees } from "./money";
-
-function dropHref(dropId: string) {
-  return `/drops/${encodeURIComponent(dropId)}`;
-}
+import { DropProductCard } from "./DropProductCard";
 
 export function HomePage() {
   const { data, isLoading, error } = useQuery({ queryKey: ["drops"], queryFn: api.drops });
@@ -14,11 +10,10 @@ export function HomePage() {
 
   const drops = data ?? [];
   const newArrivals = drops.slice(0, 8);
-  const spotlightDrops = drops.slice(0, 3);
 
   return (
     <div>
-      <div className="heroWrap">
+      <div className="heroWrap revealSection">
         <div className="heroSplit" role="banner" aria-label="Dawn Sogni">
           <div className="heroHalf heroHalfLeft" aria-hidden="true">
             <div className="heroWord">DAWN</div>
@@ -27,11 +22,11 @@ export function HomePage() {
             <div className="heroWord">SOGNI</div>
           </div>
           <div className="heroOverlay">
-            {/* <div className="heroKicker">Dawn Sogni</div> */}
+            <div className="heroKicker">Morning dreamwear</div>
             <div className="heroSlogan">First thought in the morning</div>
             <div className="heroDesc">
-              Dawn Sogni means the morning dream. We release original drop designs, take custom design requests,
-              and handle bulk t-shirt orders in round neck, collar, and oversized fits.
+              Dawn Sogni means the morning dream. We release original drops, create custom design pieces, and handle
+              bulk t-shirt orders in round neck, collar, and oversized fits.
             </div>
             <div className="heroActions">
               <Link className="btn primary" to="/drops">
@@ -40,9 +35,9 @@ export function HomePage() {
               <Link className="btn" to="/custom">
                 Custom order
               </Link>
-              {/* <Link className="btn" to="/bulk">
+              <Link className="btn" to="/bulk">
                 Bulk order
-              </Link> */}
+              </Link>
             </div>
           </div>
         </div>
@@ -60,19 +55,19 @@ export function HomePage() {
         </div>
       </div>
 
-      <section className="section">
+      <section className="section revealSection">
         <div className="homeInfoGrid">
-          <article className="infoCard infoCardStory">
+          <article className="infoCard infoCardStory revealItem">
             <div className="infoEyebrow">About the brand</div>
-            <h2 className="infoTitle">Streetwear drops, custom design work, and bulk orders under one label.</h2>
+            <h2 className="infoTitle">Streetwear drops, custom design work, and bulk apparel under one label.</h2>
             <p className="infoText">
-              Dawn Sogni is built for people who want wearable pieces with a distinct identity. Some orders come from
-              our own drop collections, some begin from your idea, and some are produced in quantity for events,
-              teams, or brands.
+              Dawn Sogni is for people who want clothing with a point of view. Some pieces come from our own drop
+              language, some begin from your references and ideas, and some are produced in quantity for events,
+              creators, communities, or teams.
             </p>
           </article>
 
-          <article className="infoCard">
+          <article className="infoCard infoCardOfferings revealItem">
             <div className="infoEyebrow">What we offer</div>
             <div className="offerList">
               <div className="offerItem">
@@ -81,59 +76,39 @@ export function HomePage() {
               </div>
               <div className="offerItem">
                 <div className="offerTitle">Custom designs</div>
-                <div className="offerText">Share your brief and references, and we will create and quote it personally.</div>
+                <div className="offerText">Share your brief and references, and we quote the design personally.</div>
               </div>
               <div className="offerItem">
                 <div className="offerTitle">Bulk t-shirts</div>
-                <div className="offerText">Round neck, collar, and oversized options for larger order quantities.</div>
+                <div className="offerText">Round neck, collar, and oversized options for larger quantities.</div>
               </div>
             </div>
           </article>
         </div>
       </section>
 
-      <section className="section">
+      <section className="section editorialSection revealSection">
         <div className="sectionTitle">How It Works</div>
         <div className="stepsGrid">
-          <article className="stepCard">
+          <article className="stepCard stepCardOne revealItem">
             <div className="stepNumber">01</div>
-            <div className="stepTitle">Choose your order type</div>
-            <div className="stepText">Shop a live drop, request a custom design, or place a bulk apparel requirement.</div>
+            <div className="stepTitle">Choose your path</div>
+            <div className="stepText">Pick a live drop, request a custom piece, or place a bulk apparel requirement.</div>
           </article>
-          <article className="stepCard">
+          <article className="stepCard stepCardTwo revealItem">
             <div className="stepNumber">02</div>
-            <div className="stepTitle">Confirm and approve</div>
-            <div className="stepText">Orders begin on COD. Custom orders get a personal quote before the final approval step.</div>
+            <div className="stepTitle">Approve the order</div>
+            <div className="stepText">Orders begin on COD. Custom work gets a personal quote before the final yes.</div>
           </article>
-          <article className="stepCard">
+          <article className="stepCard stepCardThree revealItem">
             <div className="stepNumber">03</div>
             <div className="stepTitle">Track every update</div>
-            <div className="stepText">Acceptance, partial payment, shipping, delivery, and notes stay visible in order history.</div>
+            <div className="stepText">Acceptance, partial payment, shipping, delivery, and notes remain visible.</div>
           </article>
         </div>
       </section>
 
-      {spotlightDrops.length > 0 && (
-        <section className="section">
-          <div className="sectionTitle">Dawn Sogni Promise</div>
-          <div className="benefitGrid">
-            {spotlightDrops.map((drop, index) => (
-              <article key={drop.id} className="benefitCard">
-                <div className="benefitCount">{`0${index + 1}`}</div>
-                <div className="benefitTitle">{drop.title}</div>
-                <div className="benefitText">
-                  {drop.description || "A limited Dawn Sogni design built to feel collectible and wearable."}
-                </div>
-                <Link className="btn" to={dropHref(drop.id)}>
-                  View product
-                </Link>
-              </article>
-            ))}
-          </div>
-        </section>
-      )}
-
-      <section className="section">
+      <section className="section revealSection">
         <div className="sectionTitle">New Arrivals</div>
 
         {isLoading && (
@@ -148,28 +123,14 @@ export function HomePage() {
         )}
 
         <div className="productGrid">
-          {newArrivals.map((d) => (
-            <div className="productCard" key={d.id}>
-              <Link to={dropHref(d.id)} aria-label={d.title}>
-                {d.images?.[0] ? <img className="productImg" src={d.images[0]} alt={d.title} /> : <div className="productImg" />}
-              </Link>
-              <div className="productMeta">
-                <div className="productNameRow">
-                  <div className="productName clamp2" title={d.title}>
-                    {d.title}
-                  </div>
-                </div>
-                <div className="productPrice">{d.priceCents === 0 ? "Quote pending" : formatRupees(d.priceCents)}</div>
-                <div className="productActions">
-                  <button className="btn primary" onClick={() => (canShop ? addDropToCart(d) : requireLogin())}>
-                    Add
-                  </button>
-                  <Link className="btn" to={dropHref(d.id)}>
-                    View
-                  </Link>
-                </div>
-              </div>
-            </div>
+          {newArrivals.map((drop) => (
+            <DropProductCard
+              key={drop.id}
+              drop={drop}
+              canShop={canShop}
+              onAdd={() => addDropToCart(drop)}
+              onRequireLogin={requireLogin}
+            />
           ))}
         </div>
 

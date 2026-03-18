@@ -52,9 +52,11 @@ export function CheckoutPage() {
 
   if (!canShop) {
     return (
-      <div className="container page" style={{ maxWidth: 560 }}>
-        <div className="h2">Checkout</div>
-        <div className="muted">Sign in to add items to cart and place an order.</div>
+      <div className="container page publicPageShell" style={{ maxWidth: 560 }}>
+        <div className="publicPageIntro revealSection">
+          <div className="h2">Checkout</div>
+          <div className="muted">Sign in to add items to cart and place an order.</div>
+        </div>
         <div className="hr" />
         <button className="btn primary" onClick={requireLogin}>
           Sign in
@@ -132,14 +134,16 @@ export function CheckoutPage() {
   }
 
   return (
-    <div className="container page">
-      <div className="h2">Checkout</div>
-      <div className="muted">
-        Payment method: <b>COD</b>.
+    <div className="container page publicPageShell">
+      <div className="publicPageIntro revealSection">
+        <div className="h2">Checkout</div>
+        <div className="muted">
+          Payment method: <b>COD</b>.
+        </div>
       </div>
       <div className="hr" />
 
-      <div className="grid cards">
+      <div className="grid cards revealSection">
         <div className="card">
           <div className="p">
             <div className="row" style={{ justifyContent: "space-between" }}>
@@ -151,11 +155,7 @@ export function CheckoutPage() {
 
             <div className="label">Name</div>
             <input className="input" value={draft.name} onChange={(e) => saveDraft({ ...draft, name: e.target.value })} />
-            {errors.name && (
-              <div className="muted2" style={{ fontSize: 12, marginTop: 6 }}>
-                {errors.name}
-              </div>
-            )}
+            {errors.name && <div className="muted2" style={{ fontSize: 12, marginTop: 6 }}>{errors.name}</div>}
 
             <div className="label">Phone</div>
             <input
@@ -164,70 +164,34 @@ export function CheckoutPage() {
               onChange={(e) => saveDraft({ ...draft, phone: normalizePhone(e.target.value) })}
               placeholder="e.g. +91xxxxxxxxxx"
             />
-            {errors.phone && (
-              <div className="muted2" style={{ fontSize: 12, marginTop: 6 }}>
-                {errors.phone}
-              </div>
-            )}
+            {errors.phone && <div className="muted2" style={{ fontSize: 12, marginTop: 6 }}>{errors.phone}</div>}
 
             <div className="label">Email (optional)</div>
             <input className="input" value={draft.email ?? ""} onChange={(e) => saveDraft({ ...draft, email: e.target.value })} />
-            {errors.email && (
-              <div className="muted2" style={{ fontSize: 12, marginTop: 6 }}>
-                {errors.email}
-              </div>
-            )}
+            {errors.email && <div className="muted2" style={{ fontSize: 12, marginTop: 6 }}>{errors.email}</div>}
 
             <div className="label">Address line 1</div>
-            <input
-              className="input"
-              value={draft.addressLine1}
-              onChange={(e) => saveDraft({ ...draft, addressLine1: e.target.value })}
-            />
-            {errors.addressLine1 && (
-              <div className="muted2" style={{ fontSize: 12, marginTop: 6 }}>
-                {errors.addressLine1}
-              </div>
-            )}
+            <input className="input" value={draft.addressLine1} onChange={(e) => saveDraft({ ...draft, addressLine1: e.target.value })} />
+            {errors.addressLine1 && <div className="muted2" style={{ fontSize: 12, marginTop: 6 }}>{errors.addressLine1}</div>}
 
             <div className="label">Address line 2 (optional)</div>
-            <input
-              className="input"
-              value={draft.addressLine2 ?? ""}
-              onChange={(e) => saveDraft({ ...draft, addressLine2: e.target.value })}
-            />
+            <input className="input" value={draft.addressLine2 ?? ""} onChange={(e) => saveDraft({ ...draft, addressLine2: e.target.value })} />
 
             <div className="row">
               <div style={{ flex: 1 }}>
                 <div className="label">City</div>
                 <input className="input" value={draft.city} onChange={(e) => saveDraft({ ...draft, city: e.target.value })} />
-                {errors.city && (
-                  <div className="muted2" style={{ fontSize: 12, marginTop: 6 }}>
-                    {errors.city}
-                  </div>
-                )}
+                {errors.city && <div className="muted2" style={{ fontSize: 12, marginTop: 6 }}>{errors.city}</div>}
               </div>
               <div style={{ flex: 1 }}>
                 <div className="label">State</div>
                 <input className="input" value={draft.state} onChange={(e) => saveDraft({ ...draft, state: e.target.value })} />
-                {errors.state && (
-                  <div className="muted2" style={{ fontSize: 12, marginTop: 6 }}>
-                    {errors.state}
-                  </div>
-                )}
+                {errors.state && <div className="muted2" style={{ fontSize: 12, marginTop: 6 }}>{errors.state}</div>}
               </div>
               <div className="checkoutPinCol">
                 <div className="label">Pincode</div>
-                <input
-                  className="input"
-                  value={draft.pincode}
-                  onChange={(e) => saveDraft({ ...draft, pincode: normalizePin(e.target.value) })}
-                />
-                {errors.pincode && (
-                  <div className="muted2" style={{ fontSize: 12, marginTop: 6 }}>
-                    {errors.pincode}
-                  </div>
-                )}
+                <input className="input" value={draft.pincode} onChange={(e) => saveDraft({ ...draft, pincode: normalizePin(e.target.value) })} />
+                {errors.pincode && <div className="muted2" style={{ fontSize: 12, marginTop: 6 }}>{errors.pincode}</div>}
               </div>
             </div>
           </div>
@@ -254,7 +218,7 @@ export function CheckoutPage() {
                     <div className="cartItemTitle">{c.title}</div>
                     <div className="cartItemSub">
                       {c.kind}
-                      {c.variant ? ` Â· ${c.variant}` : ""}
+                      {c.variant ? ` | ${c.variant}` : ""}
                     </div>
                     <div className="cartItemSub">Line: {linePriceText(c)}</div>
                   </div>
@@ -278,11 +242,7 @@ export function CheckoutPage() {
             <button className="btn primary checkoutPlaceBtn" onClick={placeOrder} disabled={!canPlace}>
               {submitting ? "Placing order..." : "Place order"}
             </button>
-            {status && (
-              <div className="muted" style={{ marginTop: 12 }}>
-                {status}
-              </div>
-            )}
+            {status && <div className="muted" style={{ marginTop: 12 }}>{status}</div>}
           </div>
         </div>
       </div>

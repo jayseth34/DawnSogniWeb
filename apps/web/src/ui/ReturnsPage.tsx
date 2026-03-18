@@ -1,11 +1,13 @@
 export function ReturnsPage() {
   return (
-    <div className="container page" style={{ maxWidth: 820 }}>
-      <div className="h2">Returns & Exchanges</div>
-      <div className="muted">For returns/exchanges, contact support with your order number and photos (if needed).</div>
+    <div className="container page publicPageShell" style={{ maxWidth: 820 }}>
+      <div className="publicPageIntro revealSection">
+        <div className="h2">Returns & Exchanges</div>
+        <div className="muted">For returns or exchanges, contact support with your order number and photos if needed.</div>
+      </div>
       <div className="hr" />
 
-      <div className="card">
+      <div className="card revealSection">
         <div className="p">
           <div style={{ fontWeight: 800 }}>Eligibility</div>
           <div className="muted" style={{ marginTop: 8, lineHeight: 1.6 }}>
@@ -15,7 +17,7 @@ export function ReturnsPage() {
           <div className="hr" />
           <div style={{ fontWeight: 800 }}>How to request</div>
           <div className="muted" style={{ marginTop: 8, lineHeight: 1.6 }}>
-            Go to “Contact” and submit your request with your order number and photos, if applicable.
+            Go to "Contact" and submit your request with your order number and photos, if applicable.
           </div>
           <div className="hr" />
           <div style={{ fontWeight: 800 }}>Notes</div>
@@ -27,4 +29,3 @@ export function ReturnsPage() {
     </div>
   );
 }
-
