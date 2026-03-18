@@ -121,17 +121,6 @@ export function DropDetailPage() {
                 </Link>
               </div>
 
-              <div className="detailHighlights">
-                <div className="glassBadge">COD at checkout</div>
-                <div className="glassBadge">Session saved on device</div>
-                <div className="glassBadge">Track status later</div>
-              </div>
-
-              {!canShop && (
-                <div className="muted2" style={{ marginTop: 10, fontSize: 12 }}>
-                  Login is required to add to cart.
-                </div>
-              )}
             </div>
           </div>
         </div>
