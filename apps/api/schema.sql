@@ -1,4 +1,4 @@
-﻿-- Dawn Sogni schema (Postgres)
+-- Dawn Sogni schema (Postgres)
 -- Run with:
 -- psql -h localhost -p 5432 -U postgres -d rapido_delivery -f apps/api/schema.sql
 
@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS drop_designs (
   price_cents integer NOT NULL CHECK (price_cents >= 0),
   category text,
   images text[] NOT NULL DEFAULT '{}',
+  available_sizes text[] NOT NULL DEFAULT ARRAY['S','M','L','XL','XXL']::text[],
   is_active boolean NOT NULL DEFAULT true,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
@@ -22,6 +23,7 @@ CREATE TABLE IF NOT EXISTS drop_designs (
 -- Custom requests
 CREATE TABLE IF NOT EXISTS custom_requests (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  access_token text NOT NULL UNIQUE DEFAULT encode(gen_random_bytes(16), 'hex'),
   customer_name text NOT NULL,
   phone text NOT NULL,
   notes text,
@@ -41,7 +43,6 @@ CREATE TABLE IF NOT EXISTS custom_designs (
   notes text,
   created_at timestamptz NOT NULL DEFAULT now()
 );
-
 
 -- Customer phone login (OTP)
 CREATE TABLE IF NOT EXISTS customer_phone_otps (
@@ -144,10 +145,10 @@ END
 $$;
 
 -- Indexes
+CREATE INDEX IF NOT EXISTS idx_custom_requests_access_token ON custom_requests(access_token);
 CREATE INDEX IF NOT EXISTS idx_custom_designs_request_id ON custom_designs(custom_request_id);
 CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON order_items(order_id);
 CREATE INDEX IF NOT EXISTS idx_order_events_order_id ON order_events(order_id);
 CREATE INDEX IF NOT EXISTS idx_owner_notifications_order_id ON owner_notifications(order_id);
 
 COMMIT;
-

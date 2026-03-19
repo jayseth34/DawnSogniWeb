@@ -1,7 +1,22 @@
 import { useEffect, useMemo, useState } from "react";
-import { loadSession, saveSession, PENDING_SESSION_KEY, sessionKeyForPhone, type CartItem, type SessionState } from "../storage";
+import {
+  loadSession,
+  saveSession,
+  PENDING_SESSION_KEY,
+  sessionKeyForPhone,
+  type CartItem,
+  type SessionState
+} from "../storage";
 import type { DropDesign } from "../api";
 import { useCustomerAuth } from "./useCustomerAuth";
+
+const DEFAULT_SIZES = ["S", "M", "L", "XL", "XXL"] as const;
+
+function pickDefaultSize(available?: string[]) {
+  const sizes = Array.isArray(available) && available.length ? available : Array.from(DEFAULT_SIZES);
+  if (sizes.includes("M")) return "M";
+  return sizes[0];
+}
 
 export type SessionApi = {
   session: SessionState;
@@ -9,7 +24,7 @@ export type SessionApi = {
   cartCount: number;
   canShop: boolean;
   requireLogin: () => void;
-  addDropToCart: (drop: DropDesign, opts?: { quantity?: number }) => void;
+  addDropToCart: (drop: DropDesign, opts?: { quantity?: number; size?: string }) => void;
   addBulkToCart: (item: Omit<CartItem, "kind"> & { kind?: "BULK" }) => void;
   removeCartItem: (index: number) => void;
   updateCartQty: (index: number, nextQty: number) => void;
@@ -55,16 +70,22 @@ export function useSessionApi(): SessionApi {
     window.location.href = `/login?next=${next}`;
   }
 
-  function addDropToCart(drop: DropDesign, opts?: { quantity?: number }) {
+  function addDropToCart(drop: DropDesign, opts?: { quantity?: number; size?: string }) {
     if (status !== "authed") return requireLogin();
 
     const quantity = Math.max(1, Math.floor(opts?.quantity ?? 1));
-    const existing = session.cart.find((c) => c.kind === "DROP" && c.dropDesignId === drop.id);
+    const size = (opts?.size || pickDefaultSize(drop.availableSizes)).trim();
+
+    const existing = session.cart.find(
+      (c) => c.kind === "DROP" && c.dropDesignId === drop.id && String(c.size || "") === String(size || "")
+    );
 
     let nextCart: CartItem[];
     if (existing) {
       nextCart = session.cart.map((c) =>
-        c.kind === "DROP" && c.dropDesignId === drop.id ? { ...c, quantity: c.quantity + quantity } : c
+        c.kind === "DROP" && c.dropDesignId === drop.id && String(c.size || "") === String(size || "")
+          ? { ...c, quantity: c.quantity + quantity }
+          : c
       );
     } else {
       nextCart = [
@@ -75,6 +96,7 @@ export function useSessionApi(): SessionApi {
           title: drop.title,
           unitPriceCents: drop.priceCents,
           quantity,
+          size: size || undefined,
           imageUrl: drop.images?.[0]
         }
       ];

@@ -6,6 +6,19 @@ import { formatRupees } from "../money";
 const CATEGORY_OPTIONS = ["Oversized", "Round Neck", "Collar", "Tee", "Shirt", "Other"] as const;
 type CategoryOption = (typeof CATEGORY_OPTIONS)[number];
 
+const SIZE_OPTIONS = ["S", "M", "L", "XL", "XXL"] as const;
+type SizeOption = (typeof SIZE_OPTIONS)[number];
+
+type EditDraft = {
+  images: string[];
+  categoryOption: CategoryOption;
+  categoryOther: string;
+  description: string;
+  priceCents: number;
+  isActive: boolean;
+  availableSizes: SizeOption[];
+};
+
 function parseCsv(csv: string) {
   return csv
     .split(",")
@@ -15,6 +28,13 @@ function parseCsv(csv: string) {
 
 function removeAt<T>(arr: T[], idx: number) {
   return arr.filter((_, i) => i !== idx);
+}
+
+function normalizeSizes(input?: string[] | null): SizeOption[] {
+  const up = Array.isArray(input) ? input.map((s) => String(s).trim().toUpperCase()) : [];
+  const filtered = up.filter((s): s is SizeOption => (SIZE_OPTIONS as readonly string[]).includes(s));
+  const unique = filtered.filter((s, i) => filtered.indexOf(s) === i);
+  return unique.length ? unique : Array.from(SIZE_OPTIONS);
 }
 
 export function AdminDropsPage() {
@@ -30,14 +50,15 @@ export function AdminDropsPage() {
     categoryOption: "Oversized" as CategoryOption,
     categoryOther: "",
     imagesCsv: "",
-    isActive: true
+    isActive: true,
+    availableSizes: Array.from(SIZE_OPTIONS) as SizeOption[]
   });
 
   const imageUrls = useMemo(() => parseCsv(form.imagesCsv), [form.imagesCsv]);
   const categoryValue = form.categoryOption === "Other" ? form.categoryOther.trim() : form.categoryOption;
 
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editDraft, setEditDraft] = useState<{ images: string[]; category: string; description: string } | null>(null);
+  const [editDraft, setEditDraft] = useState<EditDraft | null>(null);
 
   async function load() {
     setStatus("");
@@ -70,17 +91,24 @@ export function AdminDropsPage() {
         const next = [...imageUrls, ...urls].join(", ");
         setForm((prev) => ({ ...prev, imagesCsv: next }));
       } else {
-        setEditDraft((prev) => ({
-          images: [...(prev?.images ?? []), ...urls],
-          category: prev?.category ?? "",
-          description: prev?.description ?? ""
-        }));
+        setEditDraft((prev) => {
+          if (!prev) return null;
+          return { ...prev, images: [...prev.images, ...urls] };
+        });
       }
     } catch (e: any) {
       setStatus(`Upload failed: ${String(e?.message ?? e)}`);
     } finally {
       setUploading(false);
     }
+  }
+
+  function toggleSize(current: SizeOption[], s: SizeOption) {
+    if (current.includes(s)) {
+      const next = current.filter((x) => x !== s);
+      return next.length ? next : current;
+    }
+    return [...current, s];
   }
 
   async function create() {
@@ -94,7 +122,8 @@ export function AdminDropsPage() {
         priceCents: Number(form.priceCents),
         category: categoryValue || undefined,
         images: imageUrls,
-        isActive: form.isActive
+        isActive: form.isActive,
+        availableSizes: form.availableSizes
       });
       setForm({ ...form, title: "", description: "", imagesCsv: "" });
       await load();
@@ -118,11 +147,16 @@ export function AdminDropsPage() {
   }
 
   function startEdit(d: DropDesign) {
+    const matchedCategory = CATEGORY_OPTIONS.find((c) => (d.category || "").toLowerCase() === c.toLowerCase());
     setEditingId(d.id);
     setEditDraft({
       images: Array.isArray(d.images) ? d.images : [],
-      category: d.category ?? "",
-      description: d.description ?? ""
+      categoryOption: (matchedCategory as CategoryOption) || "Other",
+      categoryOther: matchedCategory ? "" : d.category ?? "",
+      description: d.description ?? "",
+      priceCents: d.priceCents ?? 0,
+      isActive: !!d.isActive,
+      availableSizes: normalizeSizes(d.availableSizes)
     });
   }
 
@@ -131,11 +165,15 @@ export function AdminDropsPage() {
     setStatus("");
     setSaving(true);
     try {
+      const category = editDraft.categoryOption === "Other" ? editDraft.categoryOther.trim() : editDraft.categoryOption;
       await api.admin.updateDrop(d.id, {
         ...d,
         images: editDraft.images,
-        category: editDraft.category || undefined,
-        description: editDraft.description || undefined
+        category: category || undefined,
+        description: editDraft.description || undefined,
+        priceCents: editDraft.priceCents,
+        isActive: editDraft.isActive,
+        availableSizes: editDraft.availableSizes
       });
       setEditingId(null);
       setEditDraft(null);
@@ -152,7 +190,7 @@ export function AdminDropsPage() {
       <div className="adminPageTitle">
         <div>
           <div className="h2">Products (Drops)</div>
-          <div className="muted">Create, activate/deactivate, and manage your product drops.</div>
+          <div className="muted">Create, activate/deactivate, edit price, category, and available sizes.</div>
         </div>
       </div>
 
@@ -174,16 +212,12 @@ export function AdminDropsPage() {
                 className="input"
                 type="number"
                 value={Math.round(Number(form.priceCents) / 100)}
-                onChange={(e) => setForm({ ...form, priceCents: Number(e.target.value) * 100 })}
+                onChange={(e) => setForm({ ...form, priceCents: Math.max(0, Number(e.target.value) * 100) })}
               />
             </div>
             <div style={{ width: 260, minWidth: 260 }}>
               <div className="label">Category</div>
-              <select
-                className="input"
-                value={form.categoryOption}
-                onChange={(e) => setForm({ ...form, categoryOption: e.target.value as CategoryOption })}
-              >
+              <select className="input" value={form.categoryOption} onChange={(e) => setForm({ ...form, categoryOption: e.target.value as CategoryOption })}>
                 {CATEGORY_OPTIONS.map((c) => (
                   <option key={c} value={c}>
                     {c}
@@ -200,6 +234,20 @@ export function AdminDropsPage() {
                 />
               )}
             </div>
+          </div>
+
+          <div className="label">Available sizes</div>
+          <div className="sizeRow" style={{ marginBottom: 6 }}>
+            {SIZE_OPTIONS.map((s) => (
+              <button
+                key={s}
+                type="button"
+                className={form.availableSizes.includes(s) ? "sizeChip selected" : "sizeChip"}
+                onClick={() => setForm({ ...form, availableSizes: toggleSize(form.availableSizes, s) })}
+              >
+                {s}
+              </button>
+            ))}
           </div>
 
           <div className="label">Description</div>
@@ -243,11 +291,7 @@ export function AdminDropsPage() {
             </div>
           )}
 
-          {status && (
-            <div className="muted" style={{ marginTop: 12 }}>
-              {status}
-            </div>
-          )}
+          {status && <div className="muted" style={{ marginTop: 12 }}>{status}</div>}
         </div>
       </div>
 
@@ -256,6 +300,7 @@ export function AdminDropsPage() {
       <div className="adminList">
         {drops.map((d) => {
           const isEditing = editingId === d.id;
+          const sizes = normalizeSizes(d.availableSizes);
           return (
             <div className="adminItem" key={d.id}>
               <div className="adminItemInner">
@@ -266,7 +311,10 @@ export function AdminDropsPage() {
                     {d.title}
                   </div>
                   <div className="adminMetaSub">
-                    {formatRupees(d.priceCents)} Â· {d.category || "-"} Â· {d.isActive ? "Active" : "Inactive"}
+                    {formatRupees(d.priceCents)} • {d.category || "-"} • {d.isActive ? "Active" : "Inactive"}
+                  </div>
+                  <div className="muted2" style={{ marginTop: 6, fontSize: 12 }}>
+                    Sizes: {sizes.join(", ")}
                   </div>
                 </div>
 
@@ -285,18 +333,52 @@ export function AdminDropsPage() {
 
               {isEditing && editDraft && (
                 <div className="p" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
-                  <div className="row" style={{ alignItems: "flex-end", justifyContent: "space-between" }}>
-                    <div style={{ flex: 1 }}>
+                  <div className="row" style={{ alignItems: "flex-end", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+                    <div style={{ flex: 1, minWidth: 220 }}>
                       <div className="label">Category</div>
-                      <input className="input" value={editDraft.category} onChange={(e) => setEditDraft({ ...editDraft, category: e.target.value })} />
+                      <select className="input" value={editDraft.categoryOption} onChange={(e) => setEditDraft({ ...editDraft, categoryOption: e.target.value as CategoryOption })}>
+                        {CATEGORY_OPTIONS.map((c) => (
+                          <option key={c} value={c}>
+                            {c}
+                          </option>
+                        ))}
+                      </select>
+                      {editDraft.categoryOption === "Other" && (
+                        <input className="input" style={{ marginTop: 8 }} value={editDraft.categoryOther} onChange={(e) => setEditDraft({ ...editDraft, categoryOther: e.target.value })} placeholder="Custom category" />
+                      )}
                     </div>
-                    <div style={{ width: 240 }}>
+
+                    <div style={{ width: 180, minWidth: 160 }}>
+                      <div className="label">Price (INR)</div>
+                      <input className="input" type="number" value={Math.round(editDraft.priceCents / 100)} onChange={(e) => setEditDraft({ ...editDraft, priceCents: Math.max(0, Number(e.target.value) * 100) })} />
+                    </div>
+
+                    <div style={{ width: 220, minWidth: 200 }}>
                       <div className="label">Upload more images</div>
                       <input className="input" type="file" multiple disabled={uploading || saving} onChange={(e) => upload(e.currentTarget.files, "edit")} />
                     </div>
+
+                    <button className="btn" onClick={() => setEditDraft({ ...editDraft, isActive: !editDraft.isActive })}>
+                      {editDraft.isActive ? "Active" : "Inactive"}
+                    </button>
+
                     <button className="btn primary" disabled={saving} onClick={() => saveEdit(d)}>
                       {saving ? "Saving..." : "Save"}
                     </button>
+                  </div>
+
+                  <div className="label">Available sizes</div>
+                  <div className="sizeRow" style={{ marginBottom: 8 }}>
+                    {SIZE_OPTIONS.map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        className={editDraft.availableSizes.includes(s) ? "sizeChip selected" : "sizeChip"}
+                        onClick={() => setEditDraft({ ...editDraft, availableSizes: toggleSize(editDraft.availableSizes, s) })}
+                      >
+                        {s}
+                      </button>
+                    ))}
                   </div>
 
                   <div className="label">Description</div>

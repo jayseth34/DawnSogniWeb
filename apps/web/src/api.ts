@@ -5,7 +5,9 @@ export type DropDesign = {
   priceCents: number;
   category: string | null;
   images: string[];
+  availableSizes?: string[];
   isActive: boolean;
+  updatedAt?: string;
   createdAt: string;
 };
 
@@ -296,3 +298,5 @@ export const api = {
     }
   }
 };
+
+

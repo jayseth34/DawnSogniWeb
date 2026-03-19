@@ -1,9 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api";
 import { useSessionApi } from "./useSession";
 import { formatRupees } from "./money";
+
+const ALL_SIZES = ["S", "M", "L", "XL", "XXL"] as const;
+
+function normalizeSizes(input?: string[] | null) {
+  const sizes = Array.isArray(input) ? input.map((s) => String(s).trim().toUpperCase()).filter(Boolean) : [];
+  const unique = sizes.filter((s, i) => sizes.indexOf(s) === i);
+  return unique.length ? unique : Array.from(ALL_SIZES);
+}
 
 export function DropDetailPage() {
   const params = useParams();
@@ -19,6 +27,10 @@ export function DropDetailPage() {
   const drop = data;
   const [qty, setQty] = useState(1);
   const [selectedImg, setSelectedImg] = useState<string>("");
+  const [selectedSize, setSelectedSize] = useState<string>("M");
+
+  const availableSizes = useMemo(() => normalizeSizes(drop?.availableSizes), [drop?.availableSizes]);
+  const availableSet = useMemo(() => new Set(availableSizes), [availableSizes.join("|")]);
 
   useEffect(() => {
     const first = drop?.images?.[0] ?? "";
@@ -29,6 +41,16 @@ export function DropDetailPage() {
     });
   }, [drop?.images]);
 
+  useEffect(() => {
+    // Keep size stable across refreshes, but always fall back to a valid available size.
+    setSelectedSize((cur) => {
+      const next = String(cur || "").toUpperCase();
+      if (availableSet.has(next)) return next;
+      if (availableSet.has("M")) return "M";
+      return availableSizes[0] ?? "M";
+    });
+  }, [availableSizes.join("|")]);
+
   const mainImg = selectedImg;
 
   return (
@@ -38,7 +60,7 @@ export function DropDetailPage() {
           <div>
             <div className="infoEyebrow">Product view</div>
             <div className="h2" style={{ marginBottom: 0 }}>{drop?.title ?? "View product"}</div>
-            <div className="muted">Browse the full artwork, switch between images, and add your quantity directly from here.</div>
+            <div className="muted">Select your size, switch images, and add to cart.</div>
           </div>
           <div className="row" style={{ gap: 10 }}>
             <Link className="pill" to="/drops">
@@ -97,6 +119,35 @@ export function DropDetailPage() {
               </div>
 
               <div className="hr" />
+
+              <div className="label">Size</div>
+              <div className="sizeRow">
+                {ALL_SIZES.map((s) => {
+                  const enabled = availableSet.has(s);
+                  const selected = String(selectedSize).toUpperCase() === s;
+                  return (
+                    <button
+                      key={s}
+                      type="button"
+                      className={
+                        "sizeChip" +
+                        (selected ? " selected" : "") +
+                        (enabled ? "" : " disabled")
+                      }
+                      onClick={() => {
+                        if (!enabled) return;
+                        setSelectedSize(s);
+                      }}
+                      aria-disabled={!enabled}
+                      title={!enabled ? "Not available" : ""}
+                    >
+                      {s}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div style={{ height: 10 }} />
               <div className="label">Quantity</div>
               <div className="row productDetailQty">
                 <button className="btn" onClick={() => setQty((q) => Math.max(1, q - 1))}>
@@ -112,7 +163,7 @@ export function DropDetailPage() {
               <div className="productDetailCtas">
                 <button
                   className="btn primary"
-                  onClick={() => (canShop ? addDropToCart(drop, { quantity: qty }) : requireLogin())}
+                  onClick={() => (canShop ? addDropToCart(drop, { quantity: qty, size: selectedSize }) : requireLogin())}
                 >
                   Add to cart
                 </button>
@@ -121,6 +172,11 @@ export function DropDetailPage() {
                 </Link>
               </div>
 
+              {!canShop && (
+                <div className="muted2" style={{ marginTop: 10, fontSize: 12 }}>
+                  Login is required to add to cart.
+                </div>
+              )}
             </div>
           </div>
         </div>

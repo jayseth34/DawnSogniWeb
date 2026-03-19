@@ -2032,3 +2032,52 @@ textarea {
     right: 18px;
   }
 }
+
+.sizeRow {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.sizeChip {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.85);
+  padding: 8px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 700;
+  min-width: 44px;
+  text-align: center;
+}
+
+.sizeChip:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.sizeChip.selected {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.sizeChip.disabled {
+  color: rgba(255, 107, 107, 0.95);
+  border-color: rgba(255, 107, 107, 0.35);
+  background: rgba(255, 107, 107, 0.08);
+  text-decoration: line-through;
+  cursor: not-allowed;
+}
+
+.cartSizeRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.cartSizeSelect {
+  width: 110px;
+  padding: 8px 10px;
+}

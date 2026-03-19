@@ -5,6 +5,8 @@ import { type CartItem, type CustomerDraft } from "../storage";
 import { useSessionApi } from "./useSession";
 import { formatRupees } from "./money";
 
+const ALL_SIZES = ["S", "M", "L", "XL", "XXL"] as const;
+
 function linePriceText(item: CartItem) {
   if (item.unitPriceCents === 0) return "Quote pending";
   return formatRupees(item.unitPriceCents * item.quantity);
@@ -65,10 +67,7 @@ export function CheckoutPage() {
     );
   }
 
-  const subtotal = useMemo(
-    () => session.cart.reduce((s, i) => s + i.unitPriceCents * i.quantity, 0),
-    [session.cart]
-  );
+  const subtotal = useMemo(() => session.cart.reduce((s, i) => s + i.unitPriceCents * i.quantity, 0), [session.cart]);
 
   const errors = useMemo(() => validateDraft(draft), [draft]);
   const canPlace = session.cart.length > 0 && Object.keys(errors).length === 0 && !submitting;
@@ -82,6 +81,13 @@ export function CheckoutPage() {
     persist({ ...session, customerDraft: draft });
     setSavedHint("Saved");
     setTimeout(() => setSavedHint(""), 1200);
+  }
+
+  function updateCartSize(index: number, nextSize: string) {
+    persist({
+      ...session,
+      cart: session.cart.map((c, i) => (i === index ? { ...c, size: nextSize } : c))
+    });
   }
 
   async function placeOrder() {
@@ -155,7 +161,11 @@ export function CheckoutPage() {
 
             <div className="label">Name</div>
             <input className="input" value={draft.name} onChange={(e) => saveDraft({ ...draft, name: e.target.value })} />
-            {errors.name && <div className="muted2" style={{ fontSize: 12, marginTop: 6 }}>{errors.name}</div>}
+            {errors.name && (
+              <div className="muted2" style={{ fontSize: 12, marginTop: 6 }}>
+                {errors.name}
+              </div>
+            )}
 
             <div className="label">Phone</div>
             <input
@@ -164,15 +174,27 @@ export function CheckoutPage() {
               onChange={(e) => saveDraft({ ...draft, phone: normalizePhone(e.target.value) })}
               placeholder="e.g. +91xxxxxxxxxx"
             />
-            {errors.phone && <div className="muted2" style={{ fontSize: 12, marginTop: 6 }}>{errors.phone}</div>}
+            {errors.phone && (
+              <div className="muted2" style={{ fontSize: 12, marginTop: 6 }}>
+                {errors.phone}
+              </div>
+            )}
 
             <div className="label">Email (optional)</div>
             <input className="input" value={draft.email ?? ""} onChange={(e) => saveDraft({ ...draft, email: e.target.value })} />
-            {errors.email && <div className="muted2" style={{ fontSize: 12, marginTop: 6 }}>{errors.email}</div>}
+            {errors.email && (
+              <div className="muted2" style={{ fontSize: 12, marginTop: 6 }}>
+                {errors.email}
+              </div>
+            )}
 
             <div className="label">Address line 1</div>
             <input className="input" value={draft.addressLine1} onChange={(e) => saveDraft({ ...draft, addressLine1: e.target.value })} />
-            {errors.addressLine1 && <div className="muted2" style={{ fontSize: 12, marginTop: 6 }}>{errors.addressLine1}</div>}
+            {errors.addressLine1 && (
+              <div className="muted2" style={{ fontSize: 12, marginTop: 6 }}>
+                {errors.addressLine1}
+              </div>
+            )}
 
             <div className="label">Address line 2 (optional)</div>
             <input className="input" value={draft.addressLine2 ?? ""} onChange={(e) => saveDraft({ ...draft, addressLine2: e.target.value })} />
@@ -181,17 +203,29 @@ export function CheckoutPage() {
               <div style={{ flex: 1 }}>
                 <div className="label">City</div>
                 <input className="input" value={draft.city} onChange={(e) => saveDraft({ ...draft, city: e.target.value })} />
-                {errors.city && <div className="muted2" style={{ fontSize: 12, marginTop: 6 }}>{errors.city}</div>}
+                {errors.city && (
+                  <div className="muted2" style={{ fontSize: 12, marginTop: 6 }}>
+                    {errors.city}
+                  </div>
+                )}
               </div>
               <div style={{ flex: 1 }}>
                 <div className="label">State</div>
                 <input className="input" value={draft.state} onChange={(e) => saveDraft({ ...draft, state: e.target.value })} />
-                {errors.state && <div className="muted2" style={{ fontSize: 12, marginTop: 6 }}>{errors.state}</div>}
+                {errors.state && (
+                  <div className="muted2" style={{ fontSize: 12, marginTop: 6 }}>
+                    {errors.state}
+                  </div>
+                )}
               </div>
               <div className="checkoutPinCol">
                 <div className="label">Pincode</div>
                 <input className="input" value={draft.pincode} onChange={(e) => saveDraft({ ...draft, pincode: normalizePin(e.target.value) })} />
-                {errors.pincode && <div className="muted2" style={{ fontSize: 12, marginTop: 6 }}>{errors.pincode}</div>}
+                {errors.pincode && (
+                  <div className="muted2" style={{ fontSize: 12, marginTop: 6 }}>
+                    {errors.pincode}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -209,6 +243,7 @@ export function CheckoutPage() {
                 Cart is empty. <Link to="/drops">Shop</Link> or <Link to="/bulk">bulk orders</Link>.
               </div>
             )}
+
             <div className="grid" style={{ gap: 10 }}>
               {session.cart.map((c, idx) => (
                 <div key={`${c.title}-${idx}`} className="cartItem">
@@ -220,6 +255,25 @@ export function CheckoutPage() {
                       {c.kind}
                       {c.variant ? ` | ${c.variant}` : ""}
                     </div>
+
+                    {c.kind === "DROP" && (
+                      <div className="cartSizeRow">
+                        <div className="muted2" style={{ fontSize: 12 }}>Size</div>
+                        <select
+                          className="input cartSizeSelect"
+                          value={String(c.size || "M")}
+                          onChange={(e) => updateCartSize(idx, e.target.value)}
+                          disabled={submitting}
+                        >
+                          {ALL_SIZES.map((s) => (
+                            <option key={s} value={s}>
+                              {s}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
                     <div className="cartItemSub">Line: {linePriceText(c)}</div>
                   </div>
 
@@ -238,6 +292,7 @@ export function CheckoutPage() {
                 </div>
               ))}
             </div>
+
             <div style={{ height: 14 }} />
             <button className="btn primary checkoutPlaceBtn" onClick={placeOrder} disabled={!canPlace}>
               {submitting ? "Placing order..." : "Place order"}

@@ -1,4 +1,4 @@
-﻿import express from "express";
+import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
@@ -97,6 +97,7 @@ app.get("/api/drops", async (_req, res) => {
       price_cents as "priceCents",
       category,
       images,
+      available_sizes as "availableSizes",
       is_active as "isActive",
       created_at as "createdAt",
       updated_at as "updatedAt"
@@ -117,6 +118,7 @@ app.get("/api/drops/:id", async (req, res) => {
       price_cents as "priceCents",
       category,
       images,
+      available_sizes as "availableSizes",
       is_active as "isActive",
       created_at as "createdAt",
       updated_at as "updatedAt"
@@ -574,6 +576,7 @@ app.get("/api/admin/drops", requireAdmin, async (_req, res) => {
       price_cents as "priceCents",
       category,
       images,
+      available_sizes as "availableSizes",
       is_active as "isActive",
       created_at as "createdAt",
       updated_at as "updatedAt"
@@ -588,8 +591,8 @@ app.post("/api/admin/drops", requireAdmin, async (req, res) => {
   if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
 
   const r = await pool.query(
-    `insert into drop_designs (title, description, price_cents, category, images, is_active)
-     values ($1,$2,$3,$4,$5,$6)
+    `insert into drop_designs (title, description, price_cents, category, images, available_sizes, is_active)
+     values ($1,$2,$3,$4,$5,$6,$7)
      returning
       id,
       title,
@@ -597,6 +600,7 @@ app.post("/api/admin/drops", requireAdmin, async (req, res) => {
       price_cents as "priceCents",
       category,
       images,
+      available_sizes as "availableSizes",
       is_active as "isActive",
       created_at as "createdAt",
       updated_at as "updatedAt"`,
@@ -606,6 +610,7 @@ app.post("/api/admin/drops", requireAdmin, async (req, res) => {
       parsed.data.priceCents,
       parsed.data.category ?? null,
       parsed.data.images ?? [],
+            (parsed.data.availableSizes ?? ["S","M","L","XL","XXL"]),
       parsed.data.isActive ?? true
     ]
   );
@@ -619,7 +624,7 @@ app.put("/api/admin/drops/:id", requireAdmin, async (req, res) => {
 
   const r = await pool.query(
     `update drop_designs
-     set title=$2, description=$3, price_cents=$4, category=$5, images=$6, is_active=$7
+     set title=$2, description=$3, price_cents=$4, category=$5, images=$6, available_sizes=$7, is_active=$8
      where id=$1
      returning
       id,
@@ -628,6 +633,7 @@ app.put("/api/admin/drops/:id", requireAdmin, async (req, res) => {
       price_cents as "priceCents",
       category,
       images,
+      available_sizes as "availableSizes",
       is_active as "isActive",
       created_at as "createdAt",
       updated_at as "updatedAt"`,
@@ -638,6 +644,7 @@ app.put("/api/admin/drops/:id", requireAdmin, async (req, res) => {
       parsed.data.priceCents,
       parsed.data.category ?? null,
       parsed.data.images ?? [],
+            (parsed.data.availableSizes ?? ["S","M","L","XL","XXL"]),
       parsed.data.isActive ?? true
     ]
   );
@@ -1094,6 +1101,9 @@ const port = Number(process.env.PORT || 4000);
 app.listen(port, "0.0.0.0", () => {
   console.log(`API listening on port ${port}`);
 });
+
+
+
 
 
 

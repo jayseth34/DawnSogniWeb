@@ -4,6 +4,8 @@ export const moneyCents = z.number().int().nonnegative();
 
 const phoneRawSchema = z.string().min(6).max(24);
 
+const sizeSchema = z.enum(["S", "M", "L", "XL", "XXL"]);
+
 export function normalizePhoneDigits(input: string) {
   return input.replace(/[^0-9]/g, "").slice(0, 15);
 }
@@ -52,6 +54,7 @@ export const adminUpsertDropSchema = z.object({
   priceCents: moneyCents,
   category: z.string().optional(),
   images: z.array(z.string().url()).default([]),
+  availableSizes: z.array(sizeSchema).optional(),
   isActive: z.boolean().optional()
 });
 
@@ -93,3 +96,4 @@ export const publicUpdateCustomRequestSchema = z.object({
   referenceImages: z.array(z.string().url()).optional(),
   notes: z.string().optional()
 });
+
