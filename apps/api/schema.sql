@@ -1,4 +1,4 @@
--- Dawn Sogni schema (Postgres)
+﻿-- Dawn Sogni schema (Postgres)
 -- Run with:
 -- psql -h localhost -p 5432 -U postgres -d rapido_delivery -f apps/api/schema.sql
 

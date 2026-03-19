@@ -2081,3 +2081,88 @@ textarea {
   width: 110px;
   padding: 8px 10px;
 }
+
+/* --- Card sync fixes: keep product cards aligned even with 1 image --- */
+.premiumGalleryThumbs {
+  min-height: 72px;
+  align-items: center;
+}
+
+.premiumGalleryThumbsEmpty {
+  justify-content: center;
+  padding: 18px 10px 20px;
+}
+
+.premiumGalleryDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.28);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
+  display: inline-block;
+}
+
+.premiumGalleryThumbsEmpty .premiumGalleryDot {
+  margin: 0 6px;
+}
+
+.premiumCardBadgeGhost {
+  opacity: 0.72;
+}
+
+.premiumProductMeta {
+  display: flex;
+  flex-direction: column;
+  min-height: 190px;
+}
+
+.premiumProductActions {
+  margin-top: auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+@media (max-width: 560px) {
+  .premiumGalleryThumbs {
+    min-height: 66px;
+  }
+  .premiumProductMeta {
+    min-height: 176px;
+  }
+}
+
+/* --- Card sync fixes (v2): always-reserved gallery bar --- */
+.premiumGalleryBar {
+  min-height: 76px;
+  display: flex;
+  align-items: center;
+  padding: 12px 12px 14px;
+}
+
+.premiumGalleryThumbs {
+  padding: 0;
+  width: 100%;
+}
+
+.premiumGalleryDots {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.premiumGalleryDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+@media (max-width: 560px) {
+  .premiumGalleryBar {
+    min-height: 68px;
+    padding: 10px 10px 12px;
+  }
+}
