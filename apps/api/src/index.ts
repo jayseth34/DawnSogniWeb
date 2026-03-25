@@ -1,4 +1,4 @@
-import express from "express";
+﻿import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
@@ -13,6 +13,7 @@ import {
   adminAddCustomDesignSchema,
   adminCancelOrderSchema,
   adminLoginSchema,
+  adminOrderMessageSchema,
   adminOrderNoteSchema,
   adminRequestPartialSchema,
   adminUpdateCustomRequestSchema,
@@ -21,6 +22,8 @@ import {
   createOrderSchema,
   customerLoginStartSchema,
   customerLoginVerifySchema,
+  publicOrderMessageSchema,
+  publicPaymentReportSchema,
   publicUpdateCustomRequestSchema
 } from "./validation.js";
 import { createAccessToken, createOrderNumber, addOrderEvent } from "./orders.js";
@@ -409,6 +412,70 @@ app.get("/api/orders/by-token/:token", async (req, res) => {
   );
 
   res.json({ order: { ...order, items: itemsR.rows, events: eventsR.rows } });
+});
+
+
+app.post("/api/orders/by-token/:token/message", async (req, res) => {
+  const parsed = publicOrderMessageSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+
+  const token = req.params.token;
+  const message = String(parsed.data.message).trim();
+  if (!message) return res.status(400).json({ error: "Message is required" });
+
+  const ok = await tx(async (client) => {
+    const orderR = await client.query(
+      "select id from orders where access_token = $1",
+      [token]
+    );
+    const order = orderR.rows[0];
+    if (!order) return false;
+    await addOrderEvent(client, { orderId: order.id, type: "CUSTOMER_MESSAGE", message });
+    return true;
+  });
+
+  if (!ok) return res.status(404).json({ error: "Order not found" });
+  res.json({ ok: true });
+});
+
+app.post("/api/orders/by-token/:token/report-payment", async (req, res) => {
+  const parsed = publicPaymentReportSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+
+  const token = req.params.token;
+  const method = String(parsed.data.method || "UPI").trim();
+  const txnRef = String(parsed.data.txnRef || "").trim();
+  const note = String(parsed.data.note || "").trim();
+  const proofUrl = parsed.data.proofUrl ? String(parsed.data.proofUrl).trim() : "";
+
+  const result = await tx(async (client) => {
+    const orderR = await client.query(
+      "select id, partial_amount_cents as \"partialAmountCents\" from orders where access_token = $1",
+      [token]
+    );
+    const order = orderR.rows[0];
+    if (!order) return { ok: false as const, error: "Order not found" };
+
+    const amountCents = parsed.data.amountCents ?? order.partialAmountCents ?? null;
+    if (!amountCents || amountCents <= 0) return { ok: false as const, error: "Amount is required" };
+
+    const rupees = Math.round(amountCents / 100);
+    const amountText = rupees.toLocaleString("en-IN");
+    const parts = [
+      `Customer reported payment: Rs ${amountText}`,
+      `Method: ${method}`
+    ];
+    if (txnRef) parts.push(`Ref: ${txnRef}`);
+    if (proofUrl) parts.push(`Proof: ${proofUrl}`);
+    if (note) parts.push(`Note: ${note}`);
+    const message = parts.join(" | ");
+
+    await addOrderEvent(client, { orderId: order.id, type: "PAYMENT_SUBMITTED", message });
+    return { ok: true as const };
+  });
+
+  if (!result.ok) return res.status(400).json({ error: result.error });
+  res.json({ ok: true });
 });
 
 app.post("/api/public/imagekit/auth", (_req, res) => {
@@ -879,6 +946,24 @@ app.get("/api/admin/orders/:id", requireAdmin, async (req, res) => {
   );
 
   res.json({ order: { ...order, items: itemsR.rows, events: eventsR.rows, notifications: notR.rows } });
+});
+
+app.post("/api/admin/orders/:id/message", requireAdmin, async (req, res) => {
+  const parsed = adminOrderMessageSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+  const message = String(parsed.data.message).trim();
+  if (!message) return res.status(400).json({ error: "Message is required" });
+
+  const ok = await tx(async (client) => {
+    const orderR = await client.query("select id from orders where id = $1", [req.params.id]);
+    const order = orderR.rows[0];
+    if (!order) return false;
+    await addOrderEvent(client, { orderId: order.id, type: "ADMIN_MESSAGE", message });
+    return true;
+  });
+
+  if (!ok) return res.status(404).json({ error: "Order not found" });
+  res.json({ ok: true });
 });
 
 app.post("/api/admin/orders/:id/accept", requireAdmin, async (req, res) => {

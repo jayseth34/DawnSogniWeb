@@ -1,4 +1,4 @@
-﻿import { Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api";
 import { useSessionApi } from "./useSession";
@@ -32,7 +32,7 @@ export function HomePage() {
               </div>
 
               <p className="premiumHeroText">
-                Dawn Sogni is a premium streetwear label built around the feeling of a morning dream ? original drops,
+                Dawn Sogni is a premium streetwear label built around the feeling of a morning dream - original drops,
                 custom-designed pieces, and bulk apparel produced with a sharper visual identity.
               </p>
 
@@ -102,6 +102,48 @@ export function HomePage() {
       </section>
 
       <section className="section revealSection premiumSectionShell">
+        <div className="premiumCollectionHeader">
+          <div>
+            <div className="infoEyebrow">Live now</div>
+            <div className="sectionTitle premiumSectionHeading">Selected arrivals</div>
+          </div>
+          <Link className="btn premiumBtnGhost" to="/drops">
+            View full catalog
+          </Link>
+        </div>
+
+        {isLoading && (
+          <div className="muted" style={{ textAlign: "center", padding: 18 }}>
+            Loading...
+          </div>
+        )}
+        {error && (
+          <div className="muted" style={{ textAlign: "center", padding: 18 }}>
+            Failed to load products.
+          </div>
+        )}
+
+        <div className="productGrid premiumProductGrid">
+          {newArrivals.map((drop) => (
+            <DropProductCard
+              key={drop.id}
+              drop={drop}
+              canShop={canShop}
+              onAdd={() => addDropToCart(drop)}
+              onRequireLogin={requireLogin}
+              showDescription
+            />
+          ))}
+        </div>
+
+        {!isLoading && drops.length === 0 && (
+          <div className="muted" style={{ textAlign: "center", padding: 18 }}>
+            No products available right now. Check back soon.
+          </div>
+        )}
+      </section>
+
+      <section className="section revealSection premiumSectionShell">
         <div className="premiumSplitStory">
           <article className="premiumStoryCard premiumStoryLarge revealItem">
             <div className="infoEyebrow">The concept</div>
@@ -113,7 +155,7 @@ export function HomePage() {
           </article>
 
           <article className="premiumStoryCard premiumStoryQuote revealItem">
-            <div className="premiumQuoteMark">?</div>
+            <div className="premiumQuoteMark">"</div>
             <p className="premiumQuoteText">
               Premium is not only fabric or price. It is the way the brand feels before the first order is placed.
             </p>
@@ -159,49 +201,6 @@ export function HomePage() {
           </article>
         </div>
       </section>
-
-      <section className="section revealSection premiumSectionShell">
-        <div className="premiumCollectionHeader">
-          <div>
-            <div className="infoEyebrow">Live now</div>
-            <div className="sectionTitle premiumSectionHeading">Selected arrivals</div>
-          </div>
-          <Link className="btn premiumBtnGhost" to="/drops">
-            View full catalog
-          </Link>
-        </div>
-
-        {isLoading && (
-          <div className="muted" style={{ textAlign: "center", padding: 18 }}>
-            Loading...
-          </div>
-        )}
-        {error && (
-          <div className="muted" style={{ textAlign: "center", padding: 18 }}>
-            Failed to load products.
-          </div>
-        )}
-
-        <div className="productGrid premiumProductGrid">
-          {newArrivals.map((drop) => (
-            <DropProductCard
-              key={drop.id}
-              drop={drop}
-              canShop={canShop}
-              onAdd={() => addDropToCart(drop)}
-              onRequireLogin={requireLogin}
-              showDescription
-            />
-          ))}
-        </div>
-
-        {!isLoading && drops.length === 0 && (
-          <div className="muted" style={{ textAlign: "center", padding: 18 }}>
-            No products available right now. Check back soon.
-          </div>
-        )}
-      </section>
     </div>
   );
 }
-

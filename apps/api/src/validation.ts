@@ -97,3 +97,19 @@ export const publicUpdateCustomRequestSchema = z.object({
   notes: z.string().optional()
 });
 
+// ---- Order communication + payment reporting ----
+export const publicOrderMessageSchema = z.object({
+  message: z.string().min(1).max(800)
+});
+
+export const publicPaymentReportSchema = z.object({
+  amountCents: moneyCents.optional(),
+  method: z.enum(["UPI"]).optional(),
+  txnRef: z.string().max(80).optional(),
+  proofUrl: z.string().url().optional(),
+  note: z.string().max(500).optional()
+});
+
+export const adminOrderMessageSchema = z.object({
+  message: z.string().min(1).max(800)
+});

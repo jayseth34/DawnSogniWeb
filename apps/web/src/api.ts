@@ -1,4 +1,4 @@
-export type DropDesign = {
+﻿export type DropDesign = {
   id: string;
   title: string;
   description: string | null;
@@ -41,6 +41,7 @@ export type Order = {
   state: string;
   pincode: string;
   totalCents: number;
+  partialAmountCents?: number | null;
   createdAt: string;
   items: Array<{
     id: string;
@@ -101,7 +102,8 @@ export const api = {
     });
     const d = await json<{ customRequest: CustomRequest }>(r);
     return d.customRequest;
-  },createCustomRequest: async (payload: { customerName: string; phone: string; notes?: string; referenceImages: string[] }) => {
+  },
+  createCustomRequest: async (payload: { customerName: string; phone: string; notes?: string; referenceImages: string[] }) => {
     const r = await fetch("/api/custom-requests", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -121,6 +123,25 @@ export const api = {
     const r = await fetch(`/api/orders/by-token/${encodeURIComponent(token)}`);
     const d = await json<{ order: Order }>(r);
     return d.order;
+  },
+  sendOrderMessageByToken: async (token: string, message: string): Promise<{ ok: true }> => {
+    const r = await fetch(`/api/orders/by-token/${encodeURIComponent(token)}/message`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message })
+    });
+    return json(r);
+  },
+  reportPaymentByToken: async (
+    token: string,
+    payload: { amountCents?: number; method?: "UPI" | "BANK" | "CARD" | "CASH" | "OTHER"; txnRef?: string; proofUrl?: string; note?: string }
+  ): Promise<{ ok: true }> => {
+    const r = await fetch(`/api/orders/by-token/${encodeURIComponent(token)}/report-payment`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    return json(r);
   },
   customer: {
     startLogin: async (phone: string): Promise<{ ok: true; code?: string }> => {
@@ -242,6 +263,15 @@ export const api = {
       const r = await fetch(`/api/admin/orders/${id}`, { credentials: "include" });
       return json(r);
     },
+    sendOrderMessage: async (id: string, message: string): Promise<{ ok: true }> => {
+      const r = await fetch(`/api/admin/orders/${id}/message`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ message })
+      });
+      return json(r);
+    },
     acceptOrder: async (id: string, note?: string) => {
       const r = await fetch(`/api/admin/orders/${id}/accept`, {
         method: "POST",
@@ -298,5 +328,8 @@ export const api = {
     }
   }
 };
+
+
+
 
 

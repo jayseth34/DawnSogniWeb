@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { api } from "../../api";
 import { formatRupees } from "../money";
@@ -31,6 +31,7 @@ export function AdminOrderDetailPage() {
   const [partial, setPartial] = useState(20000);
   const [stageNote, setStageNote] = useState("");
   const [cancelReason, setCancelReason] = useState("");
+  const [adminMessage, setAdminMessage] = useState("");
   const [saving, setSaving] = useState(false);
 
   async function load() {
@@ -47,6 +48,12 @@ export function AdminOrderDetailPage() {
     () => (data?.items ?? []).map((i: any) => `${i.title} x ${i.quantity}`).join(" | "),
     [data]
   );
+
+  const lastPaymentReport = useMemo(() => {
+    const events = (data?.events ?? []) as any[];
+    const last = events.filter((e) => String(e.type) === "PAYMENT_SUBMITTED").slice(-1)[0];
+    return last ?? null;
+  }, [data]);
 
   if (!data)
     return (
@@ -105,6 +112,31 @@ export function AdminOrderDetailPage() {
               placeholder="Example: UPI/Bank details, tracking id, timeline, etc"
             />
 
+            <div style={{ height: 12 }} />
+            <div className="label">Message customer</div>
+            <textarea
+              className="textarea"
+              value={adminMessage}
+              onChange={(e) => setAdminMessage(e.target.value)}
+              placeholder="Write a message the customer will see in their order timeline"
+            />
+            <div style={{ height: 10 }} />
+            <div className="row" style={{ justifyContent: "flex-end" }}>
+              <button
+                className="btn"
+                onClick={() =>
+                  act(async () => {
+                    const msg = adminMessage.trim();
+                    if (!msg) return;
+                    await api.admin.sendOrderMessage(data.id, msg);
+                    setAdminMessage("");
+                  })
+                }
+                disabled={saving || !adminMessage.trim()}
+              >
+                Send message
+              </button>
+            </div>
             <div style={{ height: 10 }} />
             <div className="row">
               <button
@@ -148,6 +180,17 @@ export function AdminOrderDetailPage() {
             <div className="hr" />
             <div style={{ fontWeight: 900 }}>Partial payment</div>
             <div className="muted" style={{ marginTop: 8 }}>Requested: {moneyText(data.partialAmountCents)}</div>
+            {lastPaymentReport && (
+              <div className="pill" style={{ width: "100%", justifyContent: "space-between", marginTop: 10 }}>
+                <div>
+                  <div style={{ fontWeight: 800 }}>Customer reported payment</div>
+                  <div className="muted" style={{ fontSize: 12 }}>
+                    {lastPaymentReport.message ? fixMojibake(String(lastPaymentReport.message)) : "-"}
+                  </div>
+                </div>
+                <div className="muted" style={{ fontSize: 12 }}>{new Date(lastPaymentReport.createdAt).toLocaleString()}</div>
+              </div>
+            )}
             <div className="row" style={{ marginTop: 10, flexWrap: "wrap" }}>
               <input
                 className="input"

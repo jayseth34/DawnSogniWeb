@@ -2166,3 +2166,369 @@ textarea {
     padding: 10px 10px 12px;
   }
 }
+
+/* --- Morning Dream (Bright) theme overrides --- */
+:root {
+  --bg: #f7f4ef;
+  --panel: rgba(255, 255, 255, 0.82);
+  --panel2: rgba(255, 255, 255, 0.74);
+  --text: #141414;
+  --muted: rgba(0, 0, 0, 0.66);
+  --muted2: rgba(0, 0, 0, 0.44);
+  --line: rgba(0, 0, 0, 0.14);
+  --line2: rgba(0, 0, 0, 0.08);
+  --focus: rgba(0, 0, 0, 0.22);
+}
+
+body {
+  background:
+    radial-gradient(900px 520px at 15% 0%, rgba(255, 214, 153, 0.55), transparent 58%),
+    radial-gradient(740px 420px at 88% 8%, rgba(172, 223, 255, 0.55), transparent 56%),
+    linear-gradient(180deg, #fbfaf8, #f7f4ef 40%, #f3f0ea 100%);
+  color: var(--text);
+}
+
+.publicApp {
+  background: transparent;
+}
+
+.siteHeader {
+  background: rgba(251, 250, 248, 0.78);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.topNotice {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.headerLink {
+  color: rgba(0, 0, 0, 0.65);
+}
+
+.headerLink:hover {
+  color: rgba(0, 0, 0, 0.9);
+}
+
+.headerLink.active {
+  color: rgba(0, 0, 0, 0.92);
+  border-bottom-color: rgba(0, 0, 0, 0.28);
+}
+
+.brandMark,
+.premiumBrandMark {
+  color: rgba(0, 0, 0, 0.92);
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.78);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.pill,
+.tag {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.86);
+  border-color: rgba(0, 0, 0, 0.12);
+  color: rgba(0, 0, 0, 0.9);
+}
+
+.btn:hover {
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+.btn.primary {
+  background: linear-gradient(135deg, rgba(255, 232, 178, 0.95), rgba(255, 255, 255, 0.95));
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.muted2 {
+  color: var(--muted2);
+}
+
+.premiumHero {
+  background:
+    radial-gradient(860px 420px at 12% 8%, rgba(255, 214, 153, 0.65), transparent 58%),
+    radial-gradient(720px 360px at 88% 22%, rgba(172, 223, 255, 0.6), transparent 58%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.55));
+}
+
+.premiumHeroTitleLine {
+  color: rgba(0, 0, 0, 0.92);
+  text-shadow: 0 18px 40px rgba(0, 0, 0, 0.12);
+}
+
+.premiumHeroTitleShift {
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.premiumHeroText,
+.premiumSectionText,
+.premiumOfferText,
+.premiumEditorialText,
+.premiumMiniText {
+  color: rgba(0, 0, 0, 0.65);
+}
+
+.premiumStatCard,
+.premiumEditorialMain,
+.premiumEditorialMini,
+.premiumStoryCard,
+.premiumOfferCard,
+.premiumProductCard {
+  border-color: rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.premiumCardBadge {
+  background: rgba(255, 255, 255, 0.72);
+  color: rgba(0, 0, 0, 0.82);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+.galleryNav {
+  background: rgba(255, 255, 255, 0.72);
+  color: rgba(0, 0, 0, 0.9);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+.premiumProductActions .btn {
+  width: 100%;
+  white-space: nowrap;
+}
+
+.cartBadgeDot {
+  background: rgba(0, 0, 0, 0.9);
+  color: #fff;
+}
+
+.appToast {
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  z-index: 60;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.16);
+  color: rgba(0, 0, 0, 0.88);
+  font-weight: 700;
+}
+
+/* Keep admin dark even with bright public theme */
+.adminRoot {
+  --bg: #000;
+  --panel: #0c0c0c;
+  --panel2: #111;
+  --text: #f5f5f5;
+  --muted: rgba(255, 255, 255, 0.68);
+  --muted2: rgba(255, 255, 255, 0.42);
+  --line: rgba(255, 255, 255, 0.12);
+  --line2: rgba(255, 255, 255, 0.08);
+  --focus: rgba(255, 255, 255, 0.22);
+}
+
+/* --- Bright theme fixes: ensure icons/text remain readable --- */
+.publicApp .iconBtn,
+.publicApp .premiumIconBtn {
+  color: rgba(0, 0, 0, 0.78);
+  background: rgba(255, 255, 255, 0.82);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+.publicApp .iconBtn:hover,
+.publicApp .premiumIconBtn:hover {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.18);
+}
+
+.publicApp .iconBtn svg {
+  color: currentColor;
+}
+
+.publicApp .heroPill {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.12);
+  color: rgba(0, 0, 0, 0.66);
+}
+
+.publicApp .premiumTickerItem {
+  color: rgba(0, 0, 0, 0.62);
+}
+
+.publicApp .premiumInlineLink {
+  color: rgba(0, 0, 0, 0.92);
+}
+
+/* Button baseline: keep link+button identical */
+.publicApp .btn {
+  line-height: 1;
+  font-weight: 700;
+}
+
+.publicApp a.btn {
+  font-weight: 700;
+}
+
+/* --- Bright theme content visibility fixes (text + sizes) --- */
+.publicApp .infoEyebrow,
+.publicApp .sectionTitle,
+.publicApp .premiumEditorialKicker,
+.publicApp .premiumMiniIndex,
+.publicApp .premiumOfferNumber,
+.publicApp .premiumTickerItem {
+  color: rgba(0, 0, 0, 0.58);
+}
+
+.publicApp .premiumSectionTitle,
+.publicApp .premiumEditorialTitle,
+.publicApp .premiumMiniTitle,
+.publicApp .premiumOfferTitle,
+.publicApp .premiumStatValue {
+  color: rgba(0, 0, 0, 0.92);
+}
+
+.publicApp .premiumQuoteMark {
+  color: rgba(0, 0, 0, 0.28);
+}
+
+.publicApp .premiumQuoteText {
+  color: rgba(0, 0, 0, 0.86);
+}
+
+.publicApp .premiumStatLabel,
+.publicApp .premiumOfferText,
+.publicApp .premiumSectionText,
+.publicApp .premiumHeroText,
+.publicApp .premiumEditorialText,
+.publicApp .premiumMiniText {
+  color: rgba(0, 0, 0, 0.66);
+}
+
+.publicApp .glassBadge {
+  color: rgba(0, 0, 0, 0.72);
+  background: rgba(255, 255, 255, 0.78);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+.publicApp .glassBadge.active {
+  color: rgba(0, 0, 0, 0.92);
+  background: linear-gradient(135deg, rgba(255, 232, 178, 0.95), rgba(255, 255, 255, 0.92));
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+.publicApp .sizeChip {
+  color: rgba(0, 0, 0, 0.86);
+  border-color: rgba(0, 0, 0, 0.14);
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.publicApp .sizeChip:hover {
+  border-color: rgba(0, 0, 0, 0.22);
+}
+
+.publicApp .sizeChip.selected {
+  background: rgba(0, 0, 0, 0.08);
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+.publicApp .sizeChip.disabled {
+  color: rgba(166, 28, 28, 0.95);
+  border-color: rgba(166, 28, 28, 0.3);
+  background: rgba(255, 107, 107, 0.16);
+}
+
+/* --- Admin portal: bright theme overrides --- */
+.adminRoot {
+  --bg: #f7f4ef;
+  --panel: rgba(255, 255, 255, 0.86);
+  --panel2: rgba(255, 255, 255, 0.76);
+  --text: #141414;
+  --muted: rgba(0, 0, 0, 0.66);
+  --muted2: rgba(0, 0, 0, 0.44);
+  --line: rgba(0, 0, 0, 0.14);
+  --line2: rgba(0, 0, 0, 0.08);
+  --focus: rgba(0, 0, 0, 0.22);
+
+  background:
+    radial-gradient(900px 520px at 18% 0%, rgba(255, 214, 153, 0.45), transparent 58%),
+    radial-gradient(740px 420px at 88% 8%, rgba(172, 223, 255, 0.45), transparent 56%),
+    linear-gradient(180deg, #fbfaf8, #f7f4ef 40%, #f3f0ea 100%);
+  color: var(--text);
+}
+
+.adminTopBar {
+  background: rgba(251, 250, 248, 0.86);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.adminBrandSub {
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.adminSide,
+.adminItem {
+  border-color: rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.adminNavLink {
+  color: rgba(0, 0, 0, 0.72);
+}
+
+.adminNavLink:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: rgba(0, 0, 0, 0.9);
+}
+
+.adminNavLink.active {
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.12);
+  color: rgba(0, 0, 0, 0.94);
+}
+
+.adminThumb,
+.adminThumbSm {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.adminMetaSub {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.adminRoot .btn {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(0, 0, 0, 0.12);
+  color: rgba(0, 0, 0, 0.9);
+}
+
+.adminRoot .btn.primary {
+  background: linear-gradient(135deg, rgba(255, 232, 178, 0.95), rgba(255, 255, 255, 0.95));
+}
+
+.adminRoot .btn.danger {
+  background: rgba(255, 107, 107, 0.18);
+  border-color: rgba(255, 107, 107, 0.32);
+}
+
+
+/* Orders: message + payment tools */
+.orderToolsGrid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+@media (min-width: 780px) { .orderToolsGrid { grid-template-columns: 1fr 1fr; } }
+.orderToolBox { border: 1px solid var(--line2); border-radius: 18px; padding: 14px; background: rgba(255, 255, 255, 0.78); backdrop-filter: blur(10px); }
+.orderToolBox .textarea { min-height: 96px; }
+select.input { cursor: pointer; }

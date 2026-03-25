@@ -103,6 +103,12 @@ export function useSessionApi(): SessionApi {
     }
 
     persist({ ...session, cart: nextCart });
+
+    try {
+      window.dispatchEvent(new CustomEvent("dawnsogni:toast", { detail: { message: "Added to cart" } }));
+    } catch {
+      // ignore
+    }
   }
 
   function addBulkToCart(item: Omit<CartItem, "kind"> & { kind?: "BULK" }) {
@@ -124,6 +130,12 @@ export function useSessionApi(): SessionApi {
         }
       ]
     });
+
+    try {
+      window.dispatchEvent(new CustomEvent("dawnsogni:toast", { detail: { message: "Added to cart" } }));
+    } catch {
+      // ignore
+    }
   }
 
   function removeCartItem(index: number) {
@@ -152,3 +164,5 @@ export function useSessionApi(): SessionApi {
     updateCartQty
   };
 }
+
+

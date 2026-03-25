@@ -1,4 +1,4 @@
-import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+﻿import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../../api";
 
@@ -6,7 +6,7 @@ function AdminNavLink(props: { to: string; label: string; active: boolean }) {
   return (
     <Link className={props.active ? "adminNavLink active" : "adminNavLink"} to={props.to}>
       <span>{props.label}</span>
-      <span style={{ opacity: 0.55 }}>›</span>
+      <span style={{ opacity: 0.55 }}>{">"}</span>
     </Link>
   );
 }
@@ -52,7 +52,7 @@ export function AdminLayout() {
     return (
       <div className="adminRoot">
         <div className="container page">
-          <div className="muted">Loading…</div>
+          <div className="muted">Loading...</div>
         </div>
       </div>
     );
@@ -108,3 +108,5 @@ export function AdminLayout() {
     </div>
   );
 }
+
+

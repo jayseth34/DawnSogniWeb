@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { api, type Order } from "../api";
 import { formatRupees } from "./money";
@@ -61,6 +61,8 @@ export function OrdersPage() {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [newToken, setNewToken] = useState("");
   const [uiToast, setUiToast] = useState("");
+  const [draftMessages, setDraftMessages] = useState<Record<string, string>>({});
+  const [paymentDrafts, setPaymentDrafts] = useState<Record<string, { amountRupees: string; method: "UPI" | "BANK" | "CARD" | "CASH" | "OTHER"; txnRef: string; proofUrl: string; note: string }>>({});
   const [params, setParams] = useSearchParams();
   const [loadingPhoneOrders, setLoadingPhoneOrders] = useState(false);
 
@@ -319,6 +321,224 @@ export function OrdersPage() {
                     </div>
                   ))}
                   {(order.events ?? []).length === 0 && <div className="muted">No status updates yet.</div>}
+                </div>
+
+                <div style={{ height: 16 }} />
+                <div className="orderToolsGrid">
+                  <div className="orderToolBox">
+                    <div style={{ fontWeight: 800 }}>Message admin</div>
+                    <div className="muted" style={{ marginTop: 6, fontSize: 12 }}>
+                      Send any note about sizes, delivery timing, or your preferences.
+                    </div>
+                    <textarea
+                      className="textarea"
+                      value={draftMessages[order.id] ?? ""}
+                      onChange={(e) =>
+                        setDraftMessages((prev) => ({
+                          ...prev,
+                          [order.id]: e.target.value
+                        }))
+                      }
+                      placeholder="Type your message to admin..."
+                    />
+                    <div className="row" style={{ justifyContent: "flex-end", marginTop: 10 }}>
+                      <button
+                        className="btn primary"
+                        disabled={!(draftMessages[order.id] ?? "").trim()}
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          const message = (draftMessages[order.id] ?? "").trim();
+                          if (!message) return;
+                          setStatus("");
+                          try {
+                            await api.sendOrderMessageByToken(order.accessToken, message);
+                            setDraftMessages((prev) => ({ ...prev, [order.id]: "" }));
+                            setUiToast("Message sent");
+                            setTimeout(() => setUiToast(""), 1400);
+                            await refreshOne(order);
+                          } catch (err: any) {
+                            setStatus(`Failed: ${String(err?.message ?? err)}`);
+                          }
+                        }}
+                      >
+                        Send
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="orderToolBox">
+                    <div style={{ fontWeight: 800 }}>Report payment</div>
+                    <div className="muted" style={{ marginTop: 6, fontSize: 12 }}>
+                      If you paid the requested partial amount, submit details here so admin can verify.
+                    </div>
+
+                    <div style={{ height: 8 }} />
+                    <div className="grid" style={{ gap: 10 }}>
+                      <div>
+                        <div className="label">Amount (INR)</div>
+                        <input
+                          className="input"
+                          inputMode="numeric"
+                          value={
+                            paymentDrafts[order.id]?.amountRupees ??
+                            (order.partialAmountCents ? String(Math.round(order.partialAmountCents / 100)) : "")
+                          }
+                          onChange={(e) =>
+                            setPaymentDrafts((prev) => ({
+                              ...prev,
+                              [order.id]: {
+                                amountRupees: e.target.value,
+                                method: prev[order.id]?.method ?? "UPI",
+                                txnRef: prev[order.id]?.txnRef ?? "",
+                                proofUrl: prev[order.id]?.proofUrl ?? "",
+                                note: prev[order.id]?.note ?? ""
+                              }
+                            }))
+                          }
+                          placeholder={order.partialAmountCents ? String(Math.round(order.partialAmountCents / 100)) : "Amount"}
+                        />
+                      </div>
+
+                      <div>
+                        <div className="label">Method</div>
+                        <select
+                          className="input"
+                          value={paymentDrafts[order.id]?.method ?? "UPI"}
+                          onChange={(e) =>
+                            setPaymentDrafts((prev) => ({
+                              ...prev,
+                              [order.id]: {
+                                amountRupees:
+                                  prev[order.id]?.amountRupees ??
+                                  (order.partialAmountCents ? String(Math.round(order.partialAmountCents / 100)) : ""),
+                                method: e.target.value as any,
+                                txnRef: prev[order.id]?.txnRef ?? "",
+                                proofUrl: prev[order.id]?.proofUrl ?? "",
+                                note: prev[order.id]?.note ?? ""
+                              }
+                            }))
+                          }
+                        >
+                          <option value="UPI">UPI</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <div className="label">Transaction ref (optional)</div>
+                        <input
+                          className="input"
+                          value={paymentDrafts[order.id]?.txnRef ?? ""}
+                          onChange={(e) =>
+                            setPaymentDrafts((prev) => ({
+                              ...prev,
+                              [order.id]: {
+                                amountRupees:
+                                  prev[order.id]?.amountRupees ??
+                                  (order.partialAmountCents ? String(Math.round(order.partialAmountCents / 100)) : ""),
+                                method: prev[order.id]?.method ?? "UPI",
+                                txnRef: e.target.value,
+                                proofUrl: prev[order.id]?.proofUrl ?? "",
+                                note: prev[order.id]?.note ?? ""
+                              }
+                            }))
+                          }
+                          placeholder="UPI ref / bank UTR"
+                        />
+                      </div>
+
+                      <div>
+                        <div className="label">Proof URL (optional)</div>
+                        <input
+                          className="input"
+                          value={paymentDrafts[order.id]?.proofUrl ?? ""}
+                          onChange={(e) =>
+                            setPaymentDrafts((prev) => ({
+                              ...prev,
+                              [order.id]: {
+                                amountRupees:
+                                  prev[order.id]?.amountRupees ??
+                                  (order.partialAmountCents ? String(Math.round(order.partialAmountCents / 100)) : ""),
+                                method: prev[order.id]?.method ?? "UPI",
+                                txnRef: prev[order.id]?.txnRef ?? "",
+                                proofUrl: e.target.value,
+                                note: prev[order.id]?.note ?? ""
+                              }
+                            }))
+                          }
+                          placeholder="Paste screenshot link"
+                        />
+                      </div>
+
+                      <div>
+                        <div className="label">Note (optional)</div>
+                        <textarea
+                          className="textarea"
+                          value={paymentDrafts[order.id]?.note ?? ""}
+                          onChange={(e) =>
+                            setPaymentDrafts((prev) => ({
+                              ...prev,
+                              [order.id]: {
+                                amountRupees:
+                                  prev[order.id]?.amountRupees ??
+                                  (order.partialAmountCents ? String(Math.round(order.partialAmountCents / 100)) : ""),
+                                method: prev[order.id]?.method ?? "UPI",
+                                txnRef: prev[order.id]?.txnRef ?? "",
+                                proofUrl: prev[order.id]?.proofUrl ?? "",
+                                note: e.target.value
+                              }
+                            }))
+                          }
+                          placeholder="Anything else to mention..."
+                        />
+                      </div>
+                    </div>
+
+                    <div className="row" style={{ justifyContent: "flex-end", marginTop: 10 }}>
+                      <button
+                        className="btn primary"
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          const draft = paymentDrafts[order.id];
+                          const amountText = (
+                            (draft?.amountRupees ??
+                              (order.partialAmountCents ? String(Math.round(order.partialAmountCents / 100)) : ""))
+                          ).trim();
+                          const amount = Number(amountText);
+                          if (!amount || amount <= 0) {
+                            setStatus("Amount is required");
+                            return;
+                          }
+                          setStatus("");
+                          try {
+                            await api.reportPaymentByToken(order.accessToken, {
+                              amountCents: Math.round(amount * 100),
+                              method: (draft?.method ?? "UPI") as any,
+                              txnRef: draft?.txnRef?.trim() || undefined,
+                              proofUrl: draft?.proofUrl?.trim() || undefined,
+                              note: draft?.note?.trim() || undefined
+                            });
+                            setUiToast("Payment submitted");
+                            setTimeout(() => setUiToast(""), 1400);
+                            setPaymentDrafts((prev) => ({
+                              ...prev,
+                              [order.id]: {
+                                amountRupees: amountText,
+                                method: (draft?.method ?? "UPI") as any,
+                                txnRef: "",
+                                proofUrl: "",
+                                note: ""
+                              }
+                            }));
+                            await refreshOne(order);
+                          } catch (err: any) {
+                            setStatus(`Failed: ${String(err?.message ?? err)}`);
+                          }
+                        }}
+                      >
+                        Submit
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}

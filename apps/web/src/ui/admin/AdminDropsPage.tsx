@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+ï»¿import { useEffect, useMemo, useState } from "react";
 import { api, type DropDesign } from "../../api";
 import { uploadToImageKit } from "../../imagekitUpload";
 import { formatRupees } from "../money";
@@ -311,7 +311,7 @@ export function AdminDropsPage() {
                     {d.title}
                   </div>
                   <div className="adminMetaSub">
-                    {formatRupees(d.priceCents)} • {d.category || "-"} • {d.isActive ? "Active" : "Inactive"}
+                    {formatRupees(d.priceCents)} - {d.category || "-"} - {d.isActive ? "Active" : "Inactive"}
                   </div>
                   <div className="muted2" style={{ marginTop: 6, fontSize: 12 }}>
                     Sizes: {sizes.join(", ")}
@@ -414,3 +414,6 @@ export function AdminDropsPage() {
     </div>
   );
 }
+
+export default AdminDropsPage;
+

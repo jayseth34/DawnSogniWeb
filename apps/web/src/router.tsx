@@ -1,5 +1,6 @@
-import { createBrowserRouter } from "react-router-dom";
+﻿import { createBrowserRouter } from "react-router-dom";
 import { AppLayout } from "./ui/AppLayout";
+import { ErrorPage } from "./ui/ErrorPage";
 import { HomePage } from "./ui/HomePage";
 import { DropsPage } from "./ui/DropsPage";
 import { DropDetailPage } from "./ui/DropDetailPage";
@@ -13,7 +14,7 @@ import { ReturnsPage } from "./ui/ReturnsPage";
 import { SizeChartPage } from "./ui/SizeChartPage";
 import { AdminLayout } from "./ui/admin/AdminLayout";
 import { AdminLoginPage } from "./ui/admin/AdminLoginPage";
-import { AdminDropsPage } from "./ui/admin/AdminDropsPage";
+import AdminDropsPage from "./ui/admin/AdminDropsPage";
 import { AdminCustomRequestsPage } from "./ui/admin/AdminCustomRequestsPage";
 import { AdminOrdersPage } from "./ui/admin/AdminOrdersPage";
 import { AdminOrderDetailPage } from "./ui/admin/AdminOrderDetailPage";
@@ -22,6 +23,7 @@ export const router = createBrowserRouter([
   {
     path: "/",
     element: <AppLayout />,
+    errorElement: <ErrorPage />,
     children: [
       { index: true, element: <HomePage /> },
       { path: "drops", element: <DropsPage /> },
@@ -39,6 +41,7 @@ export const router = createBrowserRouter([
   {
     path: "/admin",
     element: <AdminLayout />,
+    errorElement: <ErrorPage />,
     children: [
       { index: true, element: <AdminOrdersPage /> },
       { path: "login", element: <AdminLoginPage /> },
@@ -49,3 +52,4 @@ export const router = createBrowserRouter([
     ]
   }
 ]);
+
