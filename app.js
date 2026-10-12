@@ -73,6 +73,15 @@
   });
   render("all");
 
+  /* size charts */
+  const chartTable = fit => {
+    const c = D.sizeCharts?.[fit]; if (!c) return "";
+    return `<table class="size-table"><caption>${esc(c.title)}</caption>
+      <thead><tr><th scope="col">Size</th>${c.columns.map(x => `<th scope="col">${esc(x)}</th>`).join("")}</tr></thead>
+      <tbody>${c.rows.map(r => `<tr><th scope="row">${esc(r[0])}</th>${r.slice(1).map(v => `<td>${esc(v)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+  };
+  $("#size-tables").innerHTML = Object.keys(D.sizeCharts || {}).map(chartTable).join("");
+
   /* product dialog */
   const sheet = $("#sheet");
   let current = null, sel = {};
@@ -98,6 +107,7 @@
     $("#size-row").innerHTML = p.sizes.map(s =>
       `<label><input type="radio" name="size" value="${esc(s)}" ${s === sel.size ? "checked" : ""}><span>${esc(s)}</span></label>`).join("");
     updateOrder();
+    $("#sheet-chart").innerHTML = chartTable(sel.fit);
     sheet.showModal();
     sheet.scrollTop = 0;
     history.replaceState(null, "", "#p=" + p.id);
@@ -107,7 +117,7 @@
   sheet.addEventListener("click", e => { if (e.target === sheet) sheet.close(); });
   sheet.addEventListener("close", () => history.replaceState(null, "", location.pathname + location.search));
   sheet.addEventListener("change", e => {
-    if (e.target.name === "fit") sel.fit = e.target.value;
+    if (e.target.name === "fit") { sel.fit = e.target.value; $("#sheet-chart").innerHTML = chartTable(sel.fit); }
     if (e.target.name === "size") sel.size = e.target.value;
     updateOrder();
   });

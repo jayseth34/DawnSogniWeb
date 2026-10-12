@@ -21,6 +21,20 @@ window.DS = {
   whatsapp: "919920279905",
   instagram: "dawn.sogni",
 
+  // Size charts. Regular: chest in inches. Oversized: garment measurements in cm.
+  sizeCharts: {
+    regular: {
+      title: "Regular fit",
+      columns: ["Chest (in)"],
+      rows: [["S", "36"], ["M", "38"], ["L", "40"], ["XL", "42"], ["XXL", "44"]]
+    },
+    oversized: {
+      title: "Oversized fit",
+      columns: ["Fits chest (in)", "Length (cm)", "Tee chest, flat (cm)"],
+      rows: [["S", "37–38", "67", "51"], ["M", "39–40", "69", "54"], ["L", "41–42", "72", "56"], ["XL", "43–44", "75", "58"], ["XXL", "45–46", "77", "61"]]
+    }
+  },
+
   drops: [],
 
   products: [

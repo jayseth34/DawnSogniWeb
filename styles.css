@@ -164,3 +164,18 @@ h2 { font-size: clamp(36px, 4.6vw, 64px); line-height: .95; font-weight: 800; le
 .empty h3 { font-size: clamp(24px, 3vw, 34px); font-weight: 700; letter-spacing: -.01em; }
 .empty p { color: var(--muted); max-width: 42ch; }
 .grid { gap: 40px 20px; }
+
+/* size chart */
+.sizes { padding: clamp(56px, 8vw, 104px) var(--pad); border-bottom: 1px solid var(--line); }
+.sizes h2 { margin-bottom: 16px; }
+.sizes-tip { color: var(--muted); max-width: 62ch; margin-bottom: 36px; }
+.size-tables { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 32px; align-items: start; }
+.size-table { width: 100%; border-collapse: collapse; font-size: 15px; font-variant-numeric: tabular-nums; }
+.size-table caption { text-align: left; font-weight: 700; font-size: 20px; padding-bottom: 12px; }
+.size-table th, .size-table td { padding: 12px 10px; border-bottom: 1px solid var(--line); text-align: left; }
+.size-table thead th { color: var(--muted); font-weight: 500; font-size: 13px; }
+.size-table tbody th { font-weight: 700; }
+.sheet-chart summary { cursor: pointer; font-size: 15px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; width: max-content; }
+.sheet-chart[open] summary { margin-bottom: 8px; }
+.sheet-chart .size-table caption { font-size: 15px; padding-bottom: 6px; }
+.sheet-chart .size-table th, .sheet-chart .size-table td { padding: 8px 6px; font-size: 14px; }
