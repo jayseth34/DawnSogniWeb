@@ -19,42 +19,52 @@
   $("#ig-link").href = `https://instagram.com/${D.instagram}`;
   $("#year").textContent = "© " + new Date().getFullYear();
 
-  /* image or a plain colour tile until a photo is added */
-  const isDark = hex => {
-    const [r, g, b] = [1, 3, 5].map(i => parseInt((hex || "#eeeeee").slice(i, i + 2), 16));
-    return 0.299 * r + 0.587 * g + 0.114 * b < 140;
-  };
+  /* cards */
   const visual = (p, eager) => p.photo
-    ? `<img src="${esc(p.photo)}" alt="${esc(p.name)} in ${esc(p.colorName)}" ${eager ? "" : 'loading="lazy"'}>`
-    : `<div class="tile-empty" style="background:${esc(p.color)};color:${isDark(p.color) ? "#F7F3EC" : "#1C1830"}"><span>${esc(p.id)}</span><strong>${esc(p.name)}</strong></div>`;
+    ? `<img src="${esc(p.photo)}" alt="${esc(p.name)}" ${eager ? "" : 'loading="lazy"'}>`
+    : "";
   const priceLabel = p => {
-    const v = Object.values(p.prices);
+    const v = Object.values(p.prices || {});
+    if (!v.length) return "";
     return v.length > 1 ? "From " + rupee(Math.min(...v)) : rupee(v[0]);
   };
   const firstFit = p => (p.prices.regular != null ? "regular" : Object.keys(p.prices)[0]);
+  const card = p => `
+    <button class="piece" type="button" data-id="${esc(p.id)}" aria-label="${esc(p.name)}, ${priceLabel(p)}. View details">
+      <div class="tile">${visual(p)}</div>
+      <div class="piece-text">
+        <span><span class="piece-name">${esc(p.name)}</span>${p.colorName ? `<br><span class="piece-meta">${esc(p.colorName)}</span>` : ""}</span>
+        <span class="piece-price">${priceLabel(p)}</span>
+      </div>
+    </button>`;
 
-  /* catalogue */
   const chips = $("#chips"), dropsEl = $("#drops");
-  chips.innerHTML = [{ id: "all", name: "All" }, ...D.drops].map((f, i) =>
-    `<button class="chip" role="tab" type="button" data-f="${esc(f.id)}" aria-selected="${i === 0}">${esc(f.name)}</button>`).join("");
+  const useDrops = D.drops.length > 0 && D.products.some(p => p.drop);
+  if (useDrops && D.drops.length > 1) {
+    chips.innerHTML = [{ id: "all", name: "All" }, ...D.drops].map((f, i) =>
+      `<button class="chip" role="tab" type="button" data-f="${esc(f.id)}" aria-selected="${i === 0}">${esc(f.name)}</button>`).join("");
+  }
 
   function render(filter) {
-    dropsEl.innerHTML = D.drops.filter(d => filter === "all" || d.id === filter).map(d => {
-      const items = D.products.filter(p => p.drop === d.id);
-      if (!items.length) return "";
-      return `<div class="drop">
-        <div class="drop-head"><h3>${esc(d.name)}</h3><span class="drop-date">${esc(d.date)}</span></div>
-        ${d.note ? `<p class="drop-note">${esc(d.note)}</p>` : ""}
-        <div class="grid">${items.map(p => `
-          <button class="piece" type="button" data-id="${esc(p.id)}" aria-label="${esc(p.name)}, ${priceLabel(p)}. View details">
-            <div class="tile">${visual(p)}</div>
-            <div class="piece-text">
-              <span><span class="piece-name">${esc(p.name)}</span><br><span class="piece-meta">${esc(p.colorName)}</span></span>
-              <span class="piece-price">${priceLabel(p)}</span>
-            </div>
-          </button>`).join("")}</div>
+    if (!D.products.length) {
+      dropsEl.innerHTML = `<div class="empty">
+        <h3>New designs are on their way</h3>
+        <p>Message us on WhatsApp to hear first when they drop, or to get your own artwork printed.</p>
+        <a class="btn btn-ink" href="${wa(WA_TEXT.general)}" target="_blank" rel="noopener">Message on WhatsApp</a>
       </div>`;
-    }).join("");
+      return;
+    }
+    if (!useDrops) { dropsEl.innerHTML = `<div class="grid">${D.products.map(card).join("")}</div>`; return; }
+    const groups = D.drops.filter(d => filter === "all" || d.id === filter)
+      .map(d => ({ d, items: D.products.filter(p => p.drop === d.id) }));
+    const loose = D.products.filter(p => !dropById[p.drop]);
+    if (filter === "all" && loose.length) groups.push({ d: { name: "More designs" }, items: loose });
+    dropsEl.innerHTML = groups.filter(g => g.items.length).map(({ d, items }) => `
+      <div class="drop">
+        <div class="drop-head"><h3>${esc(d.name)}</h3>${d.date ? `<span class="drop-date">${esc(d.date)}</span>` : ""}</div>
+        ${d.note ? `<p class="drop-note">${esc(d.note)}</p>` : ""}
+        <div class="grid">${items.map(card).join("")}</div>
+      </div>`).join("");
   }
   chips.addEventListener("click", e => {
     const b = e.target.closest(".chip"); if (!b) return;
@@ -70,17 +80,17 @@
     const p = current, price = p.prices[sel.fit];
     $("#sheet-price").textContent = rupee(price);
     const link = location.href.split("#")[0] + "#p=" + p.id;
-    $("#sheet-wa").href = wa(`Hi Dawn Sogni! I'd like to order this design:\n\n*${p.name}* (${p.id})\nFit: ${FIT[sel.fit] || sel.fit}\nSize: ${sel.size}\nColour: ${p.colorName}\nPrice: ${rupee(price)}\n\n${link}`);
+    $("#sheet-wa").href = wa(`Hi Dawn Sogni! I'd like to order this design:\n\n*${p.name}* (${p.id})\nFit: ${FIT[sel.fit] || sel.fit}\nSize: ${sel.size}\n${p.colorName ? "Colour: " + p.colorName + "\n" : ""}Price: ${rupee(price)}\n\n${link}`);
   }
   function open(id) {
     const p = byId[id]; if (!p) return;
     current = p;
     sel = { fit: firstFit(p), size: p.sizes.includes("M") ? "M" : p.sizes[0] };
     $("#sheet-visual").innerHTML = visual(p, true);
-    $("#sheet-drop").textContent = `${dropById[p.drop]?.name || ""} · ${p.id}`;
+    $("#sheet-drop").textContent = [dropById[p.drop]?.name, p.id].filter(Boolean).join(", ");
     $("#sheet-name").textContent = p.name;
     $("#sheet-desc").textContent = p.description || "";
-    $("#sheet-colour").innerHTML = `<span class="swatch" style="background:${esc(p.color)}"></span>${esc(p.colorName)}`;
+    $("#sheet-colour").textContent = p.colorName ? "Colour: " + p.colorName : "";
     const fits = Object.keys(p.prices);
     $("#opt-fit").hidden = fits.length < 2;
     $("#fit-row").innerHTML = fits.map(f =>
