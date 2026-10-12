@@ -163,7 +163,12 @@ h2 { font-size: clamp(36px, 4.6vw, 64px); line-height: .95; font-weight: 800; le
 }
 .empty h3 { font-size: clamp(24px, 3vw, 34px); font-weight: 700; letter-spacing: -.01em; }
 .empty p { color: var(--muted); max-width: 42ch; }
-.grid { gap: 40px 20px; }
+.grid { gap: 28px 16px; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+.piece-text { margin-top: 10px; flex-direction: column; gap: 2px; }
+.piece-name { font-size: 15px; line-height: 1.3; }
+.piece-meta { font-size: 13px; }
+.piece-price { font-size: 14px; font-weight: 600; }
+@media (max-width: 520px) { .grid { grid-template-columns: repeat(2, 1fr); gap: 24px 12px; } }
 
 /* size chart */
 .sizes { padding: clamp(56px, 8vw, 104px) var(--pad); border-bottom: 1px solid var(--line); }
