@@ -3,7 +3,7 @@
 
   WHATSAPP: country code + number, digits only.
 
-  DROPS: newest first. The first drop is shown on the swinging rail near the top.
+  DROPS: newest first. 
 
   PRODUCTS — fields:
     id          short unique code, used in the WhatsApp message and share link
@@ -13,12 +13,8 @@
     prices      { regular: 500, oversized: 600 }  (remove a fit to hide it)
     sizes       sizes offered
     color       tee colour (hex) + colorName
-    photo       OPTIONAL: path to a real product photo, e.g. "images/first-light.jpg"
-                 -> replaces the drawn tee entirely (transparent PNG on a hanger looks best)
-    art         OPTIONAL: path to your design artwork (transparent PNG),
-                 -> printed onto the drawn tee mockup
-    print       built-in placeholder print, used when neither photo nor art is set
-    ink, accent colours for the placeholder print
+    photo       path to the product photo, e.g. "images/first-light.jpg" (portrait 4:5 looks best)
+                 until a photo is added, the card shows the design name on its tee colour
 */
 
 window.DS = {
@@ -49,7 +45,7 @@ window.DS = {
       prices: { regular: 500, oversized: 600 },
       sizes: ["S", "M", "L", "XL", "XXL"],
       color: "#EDE5D8", colorName: "Bone",
-      print: "sunrise", ink: "#2B2340", accent: "#E9803F"
+      photo: ""
     },
     {
       id: "FL-02",
@@ -59,7 +55,7 @@ window.DS = {
       prices: { regular: 500, oversized: 600 },
       sizes: ["S", "M", "L", "XL", "XXL"],
       color: "#1F1C33", colorName: "Midnight",
-      print: "wordmark", ink: "#F6D3C4", accent: "#F2A65A"
+      photo: ""
     },
     {
       id: "FL-03",
@@ -69,7 +65,7 @@ window.DS = {
       prices: { regular: 500, oversized: 600 },
       sizes: ["S", "M", "L", "XL", "XXL"],
       color: "#CDBB9E", colorName: "Sand",
-      print: "chai", ink: "#3A2618", accent: "#B6542A"
+      photo: ""
     },
     {
       id: "FL-04",
@@ -79,7 +75,7 @@ window.DS = {
       prices: { oversized: 600 },
       sizes: ["M", "L", "XL", "XXL"],
       color: "#2D3949", colorName: "Slate",
-      print: "bands", ink: "#F6D3C4", accent: "#F2A65A"
+      photo: ""
     },
     {
       id: "AH-01",
@@ -89,7 +85,7 @@ window.DS = {
       prices: { regular: 500, oversized: 600 },
       sizes: ["S", "M", "L", "XL", "XXL"],
       color: "#18171E", colorName: "Washed black",
-      print: "moons", ink: "#ECE4D6", accent: "#ECE4D6"
+      photo: ""
     },
     {
       id: "AH-02",
@@ -99,7 +95,7 @@ window.DS = {
       prices: { regular: 500, oversized: 600 },
       sizes: ["S", "M", "L", "XL", "XXL"],
       color: "#3B2A4F", colorName: "Plum",
-      print: "stars", ink: "#F6D3C4", accent: "#F2C14E"
+      photo: ""
     },
     {
       id: "AH-03",
@@ -109,7 +105,7 @@ window.DS = {
       prices: { regular: 500, oversized: 600 },
       sizes: ["S", "M", "L", "XL", "XXL"],
       color: "#E1E4E6", colorName: "Cloud",
-      print: "rain", ink: "#2D3A4A", accent: "#5C7A99"
+      photo: ""
     }
   ]
 };

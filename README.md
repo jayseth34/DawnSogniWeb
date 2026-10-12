@@ -4,11 +4,9 @@ Live at https://jayseth34.github.io/DawnSogniWeb/ (served from this `gh-pages` b
 
 ## Add or change designs
 Everything lives in `products.js`:
-- **drops** — newest first; the first one is shown on the swinging rail.
+- **drops** — newest first.
 - **products** — name, drop, description, prices (`regular` / `oversized`), sizes, colour.
-- Real images: put files in `images/` and set either
-  - `photo: "images/name.png"` — a photo of the garment (transparent PNG on a hanger looks best), or
-  - `art: "images/name.png"` — your artwork only; it gets printed onto the drawn tee.
+- Photos: put files in `images/` and set `photo: "images/name.jpg"` (portrait 4:5 looks best).
 
 Commit and push to `gh-pages`; GitHub Pages updates in about a minute.
 
