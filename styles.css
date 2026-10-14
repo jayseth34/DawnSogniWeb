@@ -71,6 +71,9 @@ svg.fill { fill: currentColor; stroke: none; }
 @media (min-width: 760px) { .grid { grid-template-columns: repeat(3, 1fr); gap: 56px 28px; } }
 @media (min-width: 1100px) { .grid { grid-template-columns: repeat(4, 1fr); } }
 
+.grid.few { display: flex; justify-content: center; flex-wrap: wrap; padding-top: 24px; }
+.grid.few .card { width: min(420px, calc(50% - 8px)); }
+.pills[hidden] { display: none; }
 .card { all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: column; align-items: center; text-align: center; width: 100%; }
 .card:focus-visible { outline: 2px solid #fff; outline-offset: 6px; border-radius: 12px; }
 .card-img {

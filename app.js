@@ -59,6 +59,7 @@
     { id: "front", name: "Front print", test: p => p.print === "front" }
   ].filter(f => f.id === "all" || D.products.some(f.test));
   const pills = $("#pills"), grid = $("#grid");
+  if (D.products.length < 3) { pills.hidden = true; grid.classList.add("few"); }
   pills.innerHTML = FILTERS.map((f, i) => `<button class="pill" role="tab" type="button" data-f="${f.id}" aria-selected="${i === 0}">${f.name}</button>`).join("");
   function render(fid) {
     const f = FILTERS.find(x => x.id === fid) || FILTERS[0];
