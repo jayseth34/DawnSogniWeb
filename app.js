@@ -1,4 +1,4 @@
-/* Dawn Sogni — shop and ordering */
+/* Dawn Sogni — shop, ordering, music */
 (() => {
   const D = window.DS;
   const $ = (s, r = document) => r.querySelector(s);
@@ -133,4 +133,28 @@
   const m = location.hash.match(/^#p=(.+)$/);
   if (m) open(decodeURIComponent(m[1]));
 
+
+  /* ---------- background music: plays by default, starts on first interaction if the browser blocks autoplay ---------- */
+  const bgm = $("#bgm"), mBtn = $("#music-btn");
+  let userPaused = false;
+  try { userPaused = localStorage.getItem("ds-music") === "off"; } catch (e) {}
+  bgm.volume = 0.6;
+  const syncBtn = () => { const on = !bgm.paused; mBtn.setAttribute("aria-pressed", on); mBtn.setAttribute("aria-label", on ? "Pause music" : "Play music"); };
+  bgm.addEventListener("play", syncBtn); bgm.addEventListener("pause", syncBtn);
+  const tryPlay = () => bgm.play().catch(() => {});
+  const unlock = e => {
+    if (e && e.target.closest && e.target.closest("#music-btn")) return;
+    if (!userPaused && bgm.paused) tryPlay();
+    ["pointerdown", "keydown", "touchstart"].forEach(t => removeEventListener(t, unlock, true));
+  };
+  if (userPaused) bgm.pause();
+  else {
+    tryPlay();
+    ["pointerdown", "keydown", "touchstart"].forEach(t => addEventListener(t, unlock, true));
+  }
+  mBtn.addEventListener("click", () => {
+    if (bgm.paused) { userPaused = false; tryPlay(); } else { userPaused = true; bgm.pause(); }
+    try { localStorage.setItem("ds-music", userPaused ? "off" : "on"); } catch (e) {}
+  });
+  syncBtn();
 })();
