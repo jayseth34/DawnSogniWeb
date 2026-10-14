@@ -51,11 +51,17 @@ svg.fill { fill: currentColor; stroke: none; }
 .icon-btn:hover { background: rgba(255,255,255,.08); }
 .icon-btn:last-child { justify-self: end; }
 .logo { justify-self: center; text-decoration: none; display: flex; flex-direction: column; align-items: center; line-height: 1; }
-.logo-mark {
-  font-family: var(--goth); font-size: clamp(38px, 6vw, 50px); line-height: .95;
+.logo-mark { position: relative; font-family: var(--goth); font-size: clamp(38px, 6vw, 50px); line-height: .95; }
+.logo-mark .face {
+  display: block; backface-visibility: hidden; -webkit-backface-visibility: hidden;
   background: var(--silver); -webkit-background-clip: text; background-clip: text; color: transparent;
   filter: drop-shadow(0 1px 0 rgba(255,255,255,.25)) drop-shadow(0 0 10px rgba(200,215,230,.25));
 }
+.logo-mark .back { position: absolute; inset: 0; transform: rotateY(180deg); }
+.logo { perspective: 600px; }
+.logo-mark { display: inline-block; transform-style: preserve-3d; animation: ds-spin 6s linear infinite; will-change: transform; }
+@keyframes ds-spin { from { transform: rotateY(0deg); } to { transform: rotateY(360deg); } }
+.logo:hover .logo-mark { animation-duration: 2s; }
 .logo-word { margin-top: 3px; font-size: 10px; font-weight: 600; letter-spacing: .32em; text-transform: uppercase; color: #B9C3CD; padding-left: .32em; }
 
 
