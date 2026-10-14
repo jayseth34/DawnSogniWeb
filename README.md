@@ -6,7 +6,11 @@ Live at https://jayseth34.github.io/DawnSogniWeb/ (served from this `gh-pages` b
 Everything lives in `products.js`:
 - **drops** — newest first.
 - **products** — name, drop, description, prices (`regular` / `oversized`), sizes, colour.
-- Photos: put files in `images/` and set `photo: "images/name.jpg"` (portrait 4:5 looks best).
+- Images: `tee` is the t-shirt cut-out shown on the card (transparent .webp/.png, square), `photo` is the on-model photo shown in the product view.
+- `print`: `front` or `back` (drives the filter pills).
+
+## Music
+`music.spotify` in `products.js` is the Spotify track id (from a share link `open.spotify.com/track/<id>`). Currently: Starboy, The Weeknd.
 
 Commit and push to `gh-pages`; GitHub Pages updates in about a minute.
 

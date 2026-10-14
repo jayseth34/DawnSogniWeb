@@ -7,7 +7,7 @@
       name: "Design name",
       description: "One or two lines about the design.",
       photo: "images/ds-01.jpg",           // put the photo in the images/ folder (portrait 4:5 looks best)
-      prices: { regular: 500, oversized: 600 },   // remove a fit if you don't offer it
+      prices: { regular: 1000, oversized: 1100 },   // remove a fit if you don't offer it
       sizes: ["S", "M", "L", "XL", "XXL"],
       colorName: "Black",                  // optional
       drop: "drop-01"                      // optional — only if you use drops below
@@ -20,6 +20,9 @@
 window.DS = {
   whatsapp: "919920279905",
   instagram: "dawn.sogni",
+
+  // Background song (Spotify track id from the share link open.spotify.com/track/<id>)
+  music: { spotify: "7MXVkk9YMctZqd1Srtv4MB", title: "Starboy", artist: "The Weeknd" },
 
   // Size charts. Regular: chest in inches. Oversized: garment measurements in cm.
   sizeCharts: {
@@ -39,49 +42,49 @@ window.DS = {
 
   products: [
     {
-      id: "DS-01", name: "Mustang", photo: "images/ds-01.jpg?v=2", colorName: "Chocolate brown",
+      id: "DS-01", name: "Mustang", tee: "images/tee-01.webp", photo: "images/ds-01.jpg?v=2", print: "front", colorName: "Chocolate brown",
       description: "A galloping horse in sand, rust and rose tones across the chest, on a deep chocolate brown tee.",
-      prices: { regular: 500, oversized: 600 }, sizes: ["S", "M", "L", "XL", "XXL"]
+      prices: { regular: 1000, oversized: 1100 }, sizes: ["S", "M", "L", "XL", "XXL"]
     },
     {
-      id: "DS-02", name: "World Tour '26", photo: "images/ds-02.jpg?v=2", colorName: "Red",
+      id: "DS-02", name: "World Tour '26", tee: "images/tee-02.webp", photo: "images/ds-02.jpg?v=2", print: "back", colorName: "Red",
       description: "Dawn Sogni in sky-blue block letters over a world map, with clouds drifting through and \"Twenty Twenty Six\" arched below. Big back print on bold red.",
-      prices: { regular: 500, oversized: 600 }, sizes: ["S", "M", "L", "XL", "XXL"]
+      prices: { regular: 1000, oversized: 1100 }, sizes: ["S", "M", "L", "XL", "XXL"]
     },
     {
-      id: "DS-03", name: "Music Is My Only Drug", photo: "images/ds-03.jpg?v=2", colorName: "Black",
+      id: "DS-03", name: "Music Is My Only Drug", tee: "images/tee-03.webp", photo: "images/ds-03.jpg?v=2", print: "back", colorName: "Black",
       description: "Warped white lettering stacked down the back. For the ones whose headphones never come off.",
-      prices: { regular: 500, oversized: 600 }, sizes: ["S", "M", "L", "XL", "XXL"]
+      prices: { regular: 1000, oversized: 1100 }, sizes: ["S", "M", "L", "XL", "XXL"]
     },
     {
-      id: "DS-04", name: "Root of All Evil", photo: "images/ds-04.jpg?v=2", colorName: "Dusty blue",
+      id: "DS-04", name: "Root of All Evil", tee: "images/tee-04.webp", photo: "images/ds-04.jpg?v=2", print: "back", colorName: "Dusty blue",
       description: "\"For the love of money is the root of all evil\" in tall, warped white type down the back, with a small Dawn Sogni above it.",
-      prices: { regular: 500, oversized: 600 }, sizes: ["S", "M", "L", "XL", "XXL"]
+      prices: { regular: 1000, oversized: 1100 }, sizes: ["S", "M", "L", "XL", "XXL"]
     },
     {
-      id: "DS-05", name: "One Last Ride", photo: "images/ds-05.jpg?v=2", colorName: "Lavender",
+      id: "DS-05", name: "One Last Ride", tee: "images/tee-05.webp", photo: "images/ds-05.jpg?v=2", print: "back", colorName: "Lavender",
       description: "A crouching black panther over \"One Last Ride\" in varsity letters, printed across the back of a soft lavender tee.",
-      prices: { regular: 500, oversized: 600 }, sizes: ["S", "M", "L", "XL", "XXL"]
+      prices: { regular: 1000, oversized: 1100 }, sizes: ["S", "M", "L", "XL", "XXL"]
     },
     {
-      id: "DS-06", name: "Signature Halftone", photo: "images/ds-06.jpg?v=2", colorName: "Black",
+      id: "DS-06", name: "Signature Halftone", tee: "images/tee-06.webp", photo: "images/ds-06.jpg?v=2", print: "back", colorName: "Black",
       description: "A halftone portrait in periwinkle across the back, signed with the Dawn Sogni script in white.",
-      prices: { regular: 500, oversized: 600 }, sizes: ["S", "M", "L", "XL", "XXL"]
+      prices: { regular: 1000, oversized: 1100 }, sizes: ["S", "M", "L", "XL", "XXL"]
     },
     {
-      id: "DS-07", name: "You Just Gotta Chill", photo: "images/ds-07.jpg?v=2", colorName: "White",
+      id: "DS-07", name: "You Just Gotta Chill", tee: "images/tee-07.webp", photo: "images/ds-07.jpg?v=2", print: "back", colorName: "White",
       description: "A bold black silhouette under hand-script lettering arched across the back. Clean white tee, loud message.",
-      prices: { regular: 500, oversized: 600 }, sizes: ["S", "M", "L", "XL", "XXL"]
+      prices: { regular: 1000, oversized: 1100 }, sizes: ["S", "M", "L", "XL", "XXL"]
     },
     {
-      id: "DS-08", name: "Praying Mantis", photo: "images/ds-08.jpg?v=2", colorName: "Black",
+      id: "DS-08", name: "Praying Mantis", tee: "images/tee-08.webp", photo: "images/ds-08.jpg?v=2", print: "back", colorName: "Black",
       description: "A silver-grey mantis climbing up the back, with \"Praying Mantis\" written beside it in gold script.",
-      prices: { regular: 500, oversized: 600 }, sizes: ["S", "M", "L", "XL", "XXL"]
+      prices: { regular: 1000, oversized: 1100 }, sizes: ["S", "M", "L", "XL", "XXL"]
     },
     {
-      id: "DS-09", name: "Gold Script", photo: "images/ds-09.jpg?v=2", colorName: "Black",
+      id: "DS-09", name: "Gold Script", tee: "images/tee-09.webp", photo: "images/ds-09.jpg?v=2", print: "front", colorName: "Black",
       description: "The Dawn Sogni name in gold script across the chest. The simplest piece in the line, made for everyday wear.",
-      prices: { regular: 500, oversized: 600 }, sizes: ["S", "M", "L", "XL", "XXL"]
+      prices: { regular: 1000, oversized: 1100 }, sizes: ["S", "M", "L", "XL", "XXL"]
     }
   ]
 };
