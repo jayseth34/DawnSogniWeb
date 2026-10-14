@@ -9,6 +9,15 @@
   const FIT = { regular: "Regular", oversized: "Oversized" };
   const byId = Object.fromEntries(D.products.map(p => [p.id, p]));
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  /* ---------- loader: at least 0.9s, gone on load or after 2.5s ---------- */
+  const loader = $("#loader"), t0 = performance.now();
+  document.body.classList.add("loading");
+  const hideLoader = () => {
+    const wait = Math.max(0, 900 - (performance.now() - t0));
+    setTimeout(() => { loader.classList.add("done"); document.body.classList.remove("loading"); setTimeout(() => loader.remove(), 700); }, wait);
+  };
+  if (document.readyState === "complete") hideLoader(); else addEventListener("load", hideLoader, { once: true });
+  setTimeout(hideLoader, 2500);
   const store = {
     get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
