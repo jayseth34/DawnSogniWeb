@@ -6,7 +6,7 @@ Live at https://jayseth34.github.io/DawnSogniWeb/ (served from this `gh-pages` b
 Everything lives in `products.js`:
 - **drops** — newest first.
 - **products** — name, drop, description, prices (`regular` / `oversized`), sizes, colour.
-- Images: `tee` is the t-shirt cut-out shown on the card (transparent .webp/.png, square), `photo` is the on-model photo shown in the product view.
+- Images: `tee` is the t-shirt cut-out (transparent .webp/.png, square). Optional `teeFront` adds the other side (cards swap to it on hover, product view gets Back/Front). Without it, hovering zooms into the print at `printFocus` (e.g. `"50% 40%"`).
 - `print`: `front` or `back` (drives the filter pills).
 
 

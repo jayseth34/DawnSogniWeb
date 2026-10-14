@@ -6,7 +6,9 @@
       id: "DS-01",                         // short unique code (shows in the WhatsApp order)
       name: "Design name",
       description: "One or two lines about the design.",
-      photo: "images/ds-01.jpg",           // put the photo in the images/ folder (portrait 4:5 looks best)
+      tee: "images/tee-01.webp",           // t-shirt cut-out (transparent, square) — the back, or whichever side has the print
+      teeFront: "images/tee-01-front.webp",// OPTIONAL other side; cards swap to it on hover. Without it, hover zooms into the print
+      printFocus: "50% 45%",               // OPTIONAL where the print sits (x% y%), used for the zoom
       prices: { regular: 1000, oversized: 1100 },   // remove a fit if you don't offer it
       sizes: ["S", "M", "L", "XL", "XXL"],
       colorName: "Black",                  // optional
@@ -40,12 +42,12 @@ window.DS = {
 
   products: [
     {
-      id: "DS-05", name: "One Last Ride", tee: "images/tee-05.webp", print: "back", colorName: "Lavender",
+      id: "DS-05", name: "One Last Ride", tee: "images/tee-05.webp", printFocus: "50% 38%", print: "back", colorName: "Lavender",
       description: "A crouching black panther over \"One Last Ride\" in varsity letters, printed across the back of a soft lavender tee.",
       prices: { regular: 1000, oversized: 1100 }, sizes: ["S", "M", "L", "XL", "XXL"]
     },
     {
-      id: "DS-07", name: "You Just Gotta Chill", tee: "images/tee-07.webp", print: "back", colorName: "White",
+      id: "DS-07", name: "You Just Gotta Chill", tee: "images/tee-07.webp", printFocus: "50% 50%", print: "back", colorName: "White",
       description: "A bold black silhouette under hand-script lettering arched across the back. Clean white tee, loud message.",
       prices: { regular: 1000, oversized: 1100 }, sizes: ["S", "M", "L", "XL", "XXL"]
     }
