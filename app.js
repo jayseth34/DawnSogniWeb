@@ -1,4 +1,4 @@
-/* Dawn Sogni — shop, ordering, music */
+/* Dawn Sogni — shop and ordering */
 (() => {
   const D = window.DS;
   const $ = (s, r = document) => r.querySelector(s);
@@ -133,32 +133,4 @@
   const m = location.hash.match(/^#p=(.+)$/);
   if (m) open(decodeURIComponent(m[1]));
 
-  /* ---------- music (Spotify embed) ---------- */
-  const music = D.music, mBtn = $("#music-btn"), panel = $("#music-panel");
-  if (!music?.spotify) { $("#music").hidden = true; return; }
-  let ctrl = null, playing = false, wantPlay = false, apiLoaded = false;
-  const setPlaying = v => { playing = v; mBtn.setAttribute("aria-pressed", v); mBtn.setAttribute("aria-label", v ? "Pause music" : "Play music"); };
-  const showPanel = v => panel.setAttribute("aria-hidden", !v);
-  function loadApi() {
-    if (apiLoaded) return; apiLoaded = true;
-    window.onSpotifyIframeApiReady = API => {
-      API.createController($("#spotify-embed"), { uri: "spotify:track:" + music.spotify, width: "100%", height: 80 }, c => {
-        ctrl = c;
-        c.addListener("playback_update", e => setPlaying(!e.data.isPaused));
-        c.addListener("ready", () => { if (wantPlay) c.play(); });
-      });
-    };
-    const s = document.createElement("script"); s.src = "https://open.spotify.com/embed/iframe-api/v1"; s.async = true; document.body.appendChild(s);
-  }
-  mBtn.addEventListener("click", () => {
-    showPanel(true);
-    if (!ctrl) { wantPlay = true; loadApi(); return; }
-    ctrl.togglePlay();
-  });
-  // panel hides itself a few seconds after playback starts; the button keeps control
-  let hideT;
-  mBtn.addEventListener("mouseenter", () => showPanel(true));
-  $("#music").addEventListener("mouseleave", () => { clearTimeout(hideT); hideT = setTimeout(() => playing && showPanel(false), 1200); });
-  new MutationObserver(() => { clearTimeout(hideT); if (playing) hideT = setTimeout(() => showPanel(false), 4000); })
-    .observe(mBtn, { attributes: true, attributeFilter: ["aria-pressed"] });
 })();

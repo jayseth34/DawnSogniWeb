@@ -21,8 +21,6 @@ window.DS = {
   whatsapp: "919920279905",
   instagram: "dawn.sogni",
 
-  // Background song (Spotify track id from the share link open.spotify.com/track/<id>)
-  music: { spotify: "7MXVkk9YMctZqd1Srtv4MB", title: "Starboy", artist: "The Weeknd" },
 
   // Size charts. Regular: chest in inches. Oversized: garment measurements in cm.
   sizeCharts: {
