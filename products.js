@@ -1,62 +1,194 @@
-/*
-  DAWN SOGNI — your catalogue. Add your designs to the `products` list below.
-
-  Each design:
-    {
-      id: "DS-01",                         // short unique code (shows in the WhatsApp order)
-      name: "Design name",
-      description: "One or two lines about the design.",
-      tee: "images/tee-01.webp",           // t-shirt cut-out (transparent, square) — the back, or whichever side has the print
-      teeFront: "images/tee-01-front.webp",// OPTIONAL other side; cards swap to it on hover. Without it, hover zooms into the print
-      printFocus: "50% 45%",               // OPTIONAL where the print sits (x% y%), used for the zoom
-      prices: { regular: 1000, oversized: 1100 },   // remove a fit if you don't offer it
-      sizes: ["S", "M", "L", "XL", "XXL"],
-      colorName: "Black",                  // optional
-      drop: "drop-01"                      // optional — only if you use drops below
-    },
-
-  Drops are optional. If you add them, designs are grouped by drop and a filter appears:
-    drops: [{ id: "drop-01", name: "Drop 01", date: "October 2026" }]
-*/
-
+/* Dawn Sogni catalogue.
+   Edit it from admin.html, or by hand. Everything after "window.DS = " must stay valid JSON.
+   Field guide: see README.md. */
 window.DS = {
-  whatsapp: "919920279905",
-  instagram: "dawn.sogni",
-
-
-  // Size charts. Regular: chest in inches. Oversized: garment measurements in cm.
-  sizeCharts: {
-    regular: {
-      title: "Regular fit · 180 GSM",
-      columns: ["Chest (in)"],
-      rows: [["S", "36"], ["M", "38"], ["L", "40"], ["XL", "42"], ["XXL", "44"]]
+  "whatsapp": "919920279905",
+  "instagram": "dawn.sogni",
+  "sizeCharts": {
+    "regular": {
+      "title": "Regular fit · 180 GSM",
+      "columns": [
+        "Chest (in)"
+      ],
+      "rows": [
+        [
+          "S",
+          "36"
+        ],
+        [
+          "M",
+          "38"
+        ],
+        [
+          "L",
+          "40"
+        ],
+        [
+          "XL",
+          "42"
+        ],
+        [
+          "XXL",
+          "44"
+        ]
+      ]
     },
-    oversized: {
-      title: "Oversized fit · 240 GSM",
-      columns: ["Fits chest (in)", "Length (cm)", "Tee chest, flat (cm)"],
-      rows: [["S", "37–38", "67", "51"], ["M", "39–40", "69", "54"], ["L", "41–42", "72", "56"], ["XL", "43–44", "75", "58"], ["XXL", "45–46", "77", "61"]]
+    "oversized": {
+      "title": "Oversized fit · 240 GSM",
+      "columns": [
+        "Fits chest (in)",
+        "Length (cm)",
+        "Tee chest, flat (cm)"
+      ],
+      "rows": [
+        [
+          "S",
+          "37–38",
+          "67",
+          "51"
+        ],
+        [
+          "M",
+          "39–40",
+          "69",
+          "54"
+        ],
+        [
+          "L",
+          "41–42",
+          "72",
+          "56"
+        ],
+        [
+          "XL",
+          "43–44",
+          "75",
+          "58"
+        ],
+        [
+          "XXL",
+          "45–46",
+          "77",
+          "61"
+        ]
+      ]
     }
   },
-
-  // Showroom atmosphere. "default" is used when there are no drops; add one per drop id to give
-  // each collection its own chamber. particles: "ash" (drifting), "embers" (rising), "snow" (falling).
-  atmospheres: {
-    default: { fog: "#04050a", glow: "#cfd8e3", rim: "#8aa2c0", particles: "ash" }
-    // "drop-01": { fog: "#0d0404", glow: "#ffb38a", rim: "#ff5a36", particles: "embers" }
-  },
-
-  drops: [],
-
-  products: [
+  "drops": [],
+  "products": [
     {
-      id: "DS-05", name: "One Last Ride", tee: "images/tee-05.webp", printFocus: "50% 38%", print: "back", colorName: "Lavender",
-      description: "A crouching black panther over \"One Last Ride\" in varsity letters, printed across the back of a soft lavender tee.",
-      prices: { regular: 1000, oversized: 1100 }, sizes: ["S", "M", "L", "XL", "XXL"]
+      "id": "DS-05",
+      "name": "One Last Ride",
+      "tee": "images/tee-05.webp",
+      "printFocus": "50% 38%",
+      "print": "back",
+      "colorName": "Lavender",
+      "description": "A crouching black panther over \"One Last Ride\" in varsity letters, printed across the back of a soft lavender tee.",
+      "prices": {
+        "regular": 1000,
+        "oversized": 1100
+      },
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ]
     },
     {
-      id: "DS-07", name: "You Just Gotta Chill", tee: "images/tee-07.webp", printFocus: "50% 50%", print: "back", colorName: "White",
-      description: "A bold black silhouette under hand-script lettering arched across the back. Clean white tee, loud message.",
-      prices: { regular: 1000, oversized: 1100 }, sizes: ["S", "M", "L", "XL", "XXL"]
+      "id": "DS-07",
+      "name": "You Just Gotta Chill",
+      "tee": "images/tee-07.webp",
+      "printFocus": "50% 50%",
+      "print": "back",
+      "colorName": "White",
+      "description": "A bold black silhouette under hand-script lettering arched across the back. Clean white tee, loud message.",
+      "prices": {
+        "regular": 1000,
+        "oversized": 1100
+      },
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ]
+    }
+  ],
+  "gallery": [
+    {
+      "src": "https://www.artic.edu/iiif/2/b2272f4e-1221-9321-6973-2d93d5babbf0/full/843,/0/default.jpg",
+      "title": "The Sleep of Reason Produces Monsters",
+      "artist": "Francisco de Goya",
+      "year": "1797–99",
+      "credit": "Art Institute of Chicago · Public domain (CC0)",
+      "link": "https://www.artic.edu/artworks/44743"
+    },
+    {
+      "src": "https://www.artic.edu/iiif/2/6a1f1c8a-d515-6ba7-3b18-2b21c2d48806/full/843,/0/default.jpg",
+      "title": "The Giant Wheel, from Imaginary Prisons",
+      "artist": "Giovanni Battista Piranesi",
+      "year": "1761",
+      "credit": "Art Institute of Chicago · Public domain (CC0)",
+      "link": "https://www.artic.edu/artworks/7364"
+    },
+    {
+      "src": "https://www.artic.edu/iiif/2/c3d9b209-b9c1-b9c2-d865-4322d71a89bf/full/843,/0/default.jpg",
+      "title": "A Mask Sounds the Funeral Knell, from To Edgar Poe",
+      "artist": "Odilon Redon",
+      "year": "1882",
+      "credit": "Art Institute of Chicago · Public domain (CC0)",
+      "link": "https://www.artic.edu/artworks/79336"
+    },
+    {
+      "src": "https://www.artic.edu/iiif/2/b42c5036-147b-fafb-9bdb-f46b3d1b7f76/full/843,/0/default.jpg",
+      "title": "Fairy Land",
+      "artist": "Gustave Doré",
+      "year": "1881",
+      "credit": "Art Institute of Chicago · Public domain (CC0)",
+      "link": "https://www.artic.edu/artworks/29728"
+    },
+    {
+      "src": "https://www.artic.edu/iiif/2/51a62c7e-7183-c6ab-5665-46b2b4982c53/full/843,/0/default.jpg",
+      "title": "Dream Vision",
+      "artist": "Odilon Redon",
+      "year": "c. 1880",
+      "credit": "Art Institute of Chicago · Public domain (CC0)",
+      "link": "https://www.artic.edu/artworks/79259"
+    },
+    {
+      "src": "https://www.artic.edu/iiif/2/86cb8682-2b2c-719f-1738-206aa018d988/full/843,/0/default.jpg",
+      "title": "The Pier with a Lamp, from Imaginary Prisons",
+      "artist": "Giovanni Battista Piranesi",
+      "year": "1761",
+      "credit": "Art Institute of Chicago · Public domain (CC0)",
+      "link": "https://www.artic.edu/artworks/7380"
+    },
+    {
+      "src": "https://www.artic.edu/iiif/2/3843a3e4-7bcb-4d34-def6-4c80161cd2e5/full/843,/0/default.jpg",
+      "title": "A Nightmare",
+      "artist": "Melchior Bocksberger",
+      "year": "after 1573",
+      "credit": "Art Institute of Chicago · Public domain (CC0)",
+      "link": "https://www.artic.edu/artworks/192873"
+    },
+    {
+      "src": "https://www.artic.edu/iiif/2/33722a6a-955b-c0fa-f297-5c0b095e7759/full/843,/0/default.jpg",
+      "title": "Melancholy",
+      "artist": "Odilon Redon",
+      "year": "1876",
+      "credit": "Art Institute of Chicago · Public domain (CC0)",
+      "link": "https://www.artic.edu/artworks/96841"
+    },
+    {
+      "src": "https://www.artic.edu/iiif/2/e2a59ec2-2850-ad48-806a-cdc8557f47fe/full/843,/0/default.jpg",
+      "title": "Sir Lancelot Approaching the Castle of Astolat",
+      "artist": "Gustave Doré",
+      "year": "n.d.",
+      "credit": "Art Institute of Chicago · Public domain (CC0)",
+      "link": "https://www.artic.edu/artworks/43672"
     }
   ]
 };

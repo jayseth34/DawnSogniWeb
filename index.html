@@ -11,17 +11,17 @@
   <meta property="og:title" content="Dawn Sogni — original prints, made to order">
   <meta property="og:description" content="Original printed tees, made to order. Browse the designs and order on WhatsApp.">
   <meta property="og:url" content="https://jayseth34.github.io/DawnSogniWeb/">
-  <meta property="og:image" content="https://jayseth34.github.io/DawnSogniWeb/og.png?v=202610151011">
+  <meta property="og:image" content="https://jayseth34.github.io/DawnSogniWeb/og.png?v=202610151031">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="Dawn Sogni DS monogram next to two printed tees">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:image" content="https://jayseth34.github.io/DawnSogniWeb/og.png?v=202610151011">
-  <link rel="icon" href="icon-64.png?v=202610151011" type="image/png">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=202610151011">
+  <meta name="twitter:image" content="https://jayseth34.github.io/DawnSogniWeb/og.png?v=202610151031">
+  <link rel="icon" href="icon-64.png?v=202610151031" type="image/png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=202610151031">
   <link rel="preload" href="fonts/chakra-petch-latin-700-italic.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="fonts/grenze-gotisch-latin-900-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=202610151011">
+  <link rel="stylesheet" href="styles.css?v=202610151031">
 </head>
 <body>
   <div class="loader" id="loader" aria-hidden="true">
@@ -52,6 +52,7 @@
     </button>
     <nav class="menu-links" aria-label="Main">
       <a href="#shop">Shop</a>
+      <a href="#gallery">Gallery</a>
       <a href="#about">About</a>
       <a href="#bag" data-open-bag>Bag</a>
       <a href="#sizes">Size Chart</a>
@@ -77,27 +78,14 @@
     </section>
 
     <section id="shop" class="shop" aria-label="Designs">
-      <div class="view-switch" id="view-switch" role="group" aria-label="View">
-        <button type="button" data-view="room" aria-pressed="true">Showroom</button>
-        <button type="button" data-view="grid" aria-pressed="false">Grid</button>
-      </div>
-      <div class="room" id="room" hidden>
-        <canvas id="room-canvas" aria-hidden="true"></canvas>
-        <div class="room-labels" id="room-labels" aria-hidden="true"></div>
-        <p class="room-hint" id="room-hint">Drag to turn the room. Tap a tee to pull it closer.</p>
-        <div class="room-ctrl" id="room-ctrl" hidden>
-          <button type="button" class="btn btn-ghost" id="room-flip">Flip</button>
-          <button type="button" class="btn" id="room-open">Open</button>
-          <button type="button" class="icon-btn" id="room-back" aria-label="Let it float back">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
-          </button>
-        </div>
-        <ul class="sr-only" id="room-list" aria-label="Designs in the showroom"></ul>
-      </div>
-      <div class="grid-wrap" id="grid-wrap">
-        <div class="pills" id="pills" role="tablist" aria-label="Filter designs"></div>
-        <div class="grid" id="grid"></div>
-      </div>
+      <div class="pills" id="pills" role="tablist" aria-label="Filter designs"></div>
+      <div class="grid" id="grid"></div>
+    </section>
+
+    <section id="gallery" class="block gallery" aria-labelledby="gallery-title">
+      <h2 id="gallery-title">The Gallery</h2>
+      <p class="lede">Dreams, nightmares and gothic night, from the masters who painted them first.</p>
+      <div class="gallery-grid" id="gallery-grid"></div>
     </section>
 
     <section id="about" class="block about" aria-labelledby="about-title">
@@ -122,7 +110,7 @@
     <section id="order" class="block" aria-labelledby="steps-title">
       <h2 id="steps-title">How to order</h2>
       <ol class="steps">
-        <li><h3>Pick a design</h3><p>In the showroom, tap a tee to pull it closer, flip it, then open it. Prefer a simple list? Switch to Grid.</p></li>
+        <li><h3>Pick a design</h3><p>Tap any tee to see it up close. Tap the photo to zoom into the print.</p></li>
         <li><h3>Choose fit and size</h3><p>Regular or oversized, S to XXL.</p></li>
         <li><h3>Add to bag, send on WhatsApp</h3><p>Add one or more tees, then send the whole order in one message. We confirm and print it for you.</p></li>
       </ol>
@@ -173,6 +161,16 @@
     </div>
   </dialog>
 
+  <dialog class="lightbox" id="lightbox" aria-label="Artwork">
+    <button class="sheet-close" id="lightbox-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+    <figure>
+      <img id="lightbox-img" alt="">
+      <figcaption id="lightbox-cap"></figcaption>
+    </figure>
+  </dialog>
+
   <p class="toast" id="toast" role="status" aria-live="polite"></p>
 
   <dialog class="sheet" id="sheet" aria-labelledby="sheet-name">
@@ -201,8 +199,7 @@
     </div>
   </dialog>
 
-  <script src="products.js?v=202610151011"></script>
-  <script type="module" src="showroom.js?v=202610151011"></script>
-  <script src="app.js?v=202610151011"></script>
+  <script src="products.js?v=202610151031"></script>
+  <script src="app.js?v=202610151031"></script>
 </body>
 </html>

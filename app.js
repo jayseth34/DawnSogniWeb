@@ -23,56 +23,44 @@
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
   };
 
-  /* ---------- starfield: a static layer, a few twinkling stars, a rare shooting star ---------- */
+  /* ---------- background: the hour before dawn. Night sky, a faint horizon glow, slow drifting mist ---------- */
   const cv = $("#stars"), cx = cv.getContext("2d");
-  let base, tw = [], W = 0, H = 0, shoot = null, nextShoot = 0;
-  function buildStars() {
-    const dpr = Math.min(devicePixelRatio || 1, 2); W = innerWidth; H = innerHeight;
-    cv.width = W * dpr; cv.height = H * dpr; cx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    base = document.createElement("canvas"); base.width = W * dpr; base.height = H * dpr;
-    const b = base.getContext("2d"); b.setTransform(dpr, 0, 0, dpr, 0, 0);
-    b.fillStyle = "#000"; b.fillRect(0, 0, W, H);
-    let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-    const n = Math.round(W * H / 2600); tw = [];
-    for (let i = 0; i < n; i++) {
-      const x = rnd() * W, y = rnd() * H, big = rnd() > 0.92, r = big ? rnd() * 1.4 + 0.9 : rnd() * 0.9 + 0.2, a = 0.25 + rnd() * 0.75;
-      if (rnd() < 0.09) { tw.push({ x, y, r: Math.max(r, 0.8), a, ph: rnd() * 6.28, sp: 0.6 + rnd() * 1.6 }); continue; }
-      b.globalAlpha = a; b.fillStyle = "#fff"; b.beginPath(); b.arc(x, y, r, 0, 6.283); b.fill();
-      if (r > 1.6) { const g = b.createRadialGradient(x, y, 0, x, y, r * 5); g.addColorStop(0, "rgba(255,255,255,.35)"); g.addColorStop(1, "rgba(255,255,255,0)"); b.fillStyle = g; b.beginPath(); b.arc(x, y, r * 5, 0, 6.283); b.fill(); }
-    }
-    b.globalAlpha = 1;
+  let W = 0, H = 0, sky, stars = [], mist = [];
+  function buildSky() {
+    const dpr = Math.min(devicePixelRatio || 1, 1.5); W = innerWidth; H = innerHeight;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); cx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    sky = document.createElement("canvas"); sky.width = cv.width; sky.height = cv.height;
+    const s = sky.getContext("2d"); s.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const g = s.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, "#000000"); g.addColorStop(0.45, "#030308"); g.addColorStop(0.78, "#0a0915"); g.addColorStop(1, "#160e1c");
+    s.fillStyle = g; s.fillRect(0, 0, W, H);
+    let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    // a few last stars, only high up, fading toward the horizon
+    stars = Array.from({ length: Math.round(W / 22) }, () => ({ x: rnd() * W, y: Math.pow(rnd(), 1.8) * H * 0.55, r: rnd() * 0.9 + 0.3, a: 0.15 + rnd() * 0.5, ph: rnd() * 6.28 }));
+    mist = Array.from({ length: 7 }, (_, i) => ({ x: rnd() * W, y: H * (0.45 + rnd() * 0.6), rx: W * (0.35 + rnd() * 0.4), ry: H * (0.08 + rnd() * 0.12), a: 0.035 + rnd() * 0.04, v: (rnd() * 0.5 + 0.3) * (i % 2 ? 1 : -1) * 6 }));
   }
-  function frame(t) {
-    const s = t / 1000;
-    cx.drawImage(base, 0, 0, W, H);
-    for (const p of tw) {
-      const k = 0.5 + 0.5 * Math.sin(s * p.sp + p.ph);
-      cx.globalAlpha = p.a * (0.15 + 0.85 * k); cx.fillStyle = "#fff";
-      cx.beginPath(); cx.arc(p.x, p.y, p.r, 0, 6.283); cx.fill();
-      if (k > 0.85) { cx.globalAlpha = (k - 0.85) * 3 * p.a; cx.fillRect(p.x - p.r * 4, p.y - 0.3, p.r * 8, 0.6); cx.fillRect(p.x - 0.3, p.y - p.r * 4, 0.6, p.r * 8); }
-    }
-    if (!shoot && s > nextShoot) {
-      const ang = Math.PI * (0.12 + Math.random() * 0.1), dir = Math.random() < 0.5 ? 1 : -1;
-      shoot = { x: W * (0.15 + Math.random() * 0.7), y: H * (0.05 + Math.random() * 0.3), vx: Math.cos(ang) * dir, vy: Math.sin(ang), start: s, len: 120 + Math.random() * 80, dist: 360 + Math.random() * 200 };
-    }
-    if (shoot) {
-      const p = (s - shoot.start) / 1.1;
-      if (p >= 1) { shoot = null; nextShoot = s + 20 + Math.random() * 10; }
-      else {
-        const d = shoot.dist * p, hx = shoot.x + shoot.vx * d, hy = shoot.y + shoot.vy * d;
-        const tx = hx - shoot.vx * shoot.len, ty = hy - shoot.vy * shoot.len;
-        const g = cx.createLinearGradient(tx, ty, hx, hy); g.addColorStop(0, "rgba(255,255,255,0)"); g.addColorStop(1, "rgba(255,255,255,.95)");
-        cx.globalAlpha = Math.sin(Math.PI * p); cx.strokeStyle = g; cx.lineWidth = 1.6; cx.lineCap = "round";
-        cx.beginPath(); cx.moveTo(tx, ty); cx.lineTo(hx, hy); cx.stroke();
-      }
+  function paintSky(t) {
+    cx.globalAlpha = 1; cx.drawImage(sky, 0, 0, W, H);
+    // horizon glow, breathing very slowly
+    const br = 0.85 + 0.15 * Math.sin(t / 9000);
+    const hg = cx.createRadialGradient(W * 0.5, H * 1.08, 0, W * 0.5, H * 1.08, Math.max(W, H) * 0.75);
+    hg.addColorStop(0, `rgba(255,150,105,${0.16 * br})`); hg.addColorStop(0.35, `rgba(150,90,140,${0.08 * br})`); hg.addColorStop(1, "rgba(0,0,0,0)");
+    cx.fillStyle = hg; cx.fillRect(0, 0, W, H);
+    for (const s of stars) { cx.globalAlpha = s.a * (1 - s.y / (H * 0.6)) * (0.6 + 0.4 * Math.sin(t / 1600 + s.ph)); cx.fillStyle = "#fff"; cx.beginPath(); cx.arc(s.x, s.y, s.r, 0, 6.283); cx.fill(); }
+    // mist banks drifting sideways
+    for (const m of mist) {
+      const x = ((m.x + (t / 1000) * m.v) % (W + m.rx * 2) + (W + m.rx * 2)) % (W + m.rx * 2) - m.rx;
+      cx.save(); cx.translate(x, m.y); cx.scale(1, m.ry / m.rx);
+      const mg = cx.createRadialGradient(0, 0, 0, 0, 0, m.rx); mg.addColorStop(0, `rgba(200,205,225,${m.a})`); mg.addColorStop(1, "rgba(200,205,225,0)");
+      cx.globalAlpha = 1; cx.fillStyle = mg; cx.beginPath(); cx.arc(0, 0, m.rx, 0, 6.283); cx.fill(); cx.restore();
     }
     cx.globalAlpha = 1;
   }
   let raf = 0, last = 0;
-  const loop = t => { raf = requestAnimationFrame(loop); if (t - last < 33) return; last = t; frame(t); };
-  function startStars() { buildStars(); nextShoot = performance.now() / 1000 + 6; cancelAnimationFrame(raf); if (reduce) frame(0); else raf = requestAnimationFrame(loop); }
-  startStars();
-  let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(startStars, 150); });
+  const loop = t => { raf = requestAnimationFrame(loop); if (t - last < 50) return; last = t; paintSky(t); };
+  function startSky() { buildSky(); cancelAnimationFrame(raf); if (reduce) paintSky(0); else raf = requestAnimationFrame(loop); }
+  startSky();
+  let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(startSky, 150); });
   document.addEventListener("visibilitychange", () => { if (document.hidden) cancelAnimationFrame(raf); else if (!reduce) raf = requestAnimationFrame(loop); });
 
   /* ---------- WhatsApp + links ---------- */
@@ -142,6 +130,27 @@
       <tbody>${c.rows.map(r => `<tr><th scope="row">${esc(r[0])}</th>${r.slice(1).map(v => `<td>${esc(v)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
   };
   $("#size-tables").innerHTML = Object.keys(D.sizeCharts || {}).map(chartTable).join("");
+
+  /* ---------- gallery ---------- */
+  const big = src => src.replace("/full/843,/", "/full/1686,/");
+  const gal = D.gallery || [];
+  if (!gal.length) $("#gallery").hidden = true;
+  $("#gallery-grid").innerHTML = gal.map((a, i) => `
+    <button class="art" type="button" data-i="${i}" aria-label="${esc(a.title)} by ${esc(a.artist)}. View larger">
+      <span class="art-frame"><img src="${esc(a.src)}" alt="${esc(a.title)}, ${esc(a.artist)}" loading="lazy" decoding="async"></span>
+      <span class="art-cap"><b>${esc(a.title)}</b><span>${esc(a.artist)}${a.year ? ", " + esc(a.year) : ""}</span></span>
+    </button>`).join("");
+  // if a museum image ever fails to load, drop that tile quietly
+  $$("#gallery-grid img").forEach(img => img.addEventListener("error", () => { img.closest(".art").remove(); if (!$("#gallery-grid .art")) $("#gallery").hidden = true; }));
+  const lb = $("#lightbox");
+  $("#gallery-grid").addEventListener("click", e => {
+    const b = e.target.closest(".art"); if (!b) return; const a = gal[+b.dataset.i];
+    $("#lightbox-img").src = big(a.src); $("#lightbox-img").alt = `${a.title}, ${a.artist}`;
+    $("#lightbox-cap").innerHTML = `<b>${esc(a.title)}</b>${esc(a.artist)}${a.year ? ", " + esc(a.year) : ""}${a.credit ? `<br>${a.link ? `<a href="${esc(a.link)}" target="_blank" rel="noopener">${esc(a.credit)}</a>` : esc(a.credit)}` : ""}`;
+    lb.showModal();
+  });
+  $("#lightbox-close").addEventListener("click", () => lb.close());
+  lb.addEventListener("click", e => { if (e.target === lb) lb.close(); });
 
   /* ---------- toast ---------- */
   let toastT;
@@ -255,7 +264,6 @@
   });
   const m = location.hash.match(/^#p=(.+)$/);
   if (m) open(decodeURIComponent(m[1]));
-  window.DSApp = { open, rs, esc, basePrice };
 
   /* ---------- background music: plays by default, starts on first interaction if the browser blocks autoplay ---------- */
   const bgm = $("#bgm"), mBtn = $("#music-btn");
