@@ -11,17 +11,17 @@
   <meta property="og:title" content="Dawn Sogni — original prints, made to order">
   <meta property="og:description" content="Original printed tees, made to order. Browse the designs and order on WhatsApp.">
   <meta property="og:url" content="https://jayseth34.github.io/DawnSogniWeb/">
-  <meta property="og:image" content="https://jayseth34.github.io/DawnSogniWeb/og.png?v=202610150955">
+  <meta property="og:image" content="https://jayseth34.github.io/DawnSogniWeb/og.png?v=202610151000">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="Dawn Sogni DS monogram next to two printed tees">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:image" content="https://jayseth34.github.io/DawnSogniWeb/og.png?v=202610150955">
-  <link rel="icon" href="icon-64.png?v=202610150955" type="image/png">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=202610150955">
+  <meta name="twitter:image" content="https://jayseth34.github.io/DawnSogniWeb/og.png?v=202610151000">
+  <link rel="icon" href="icon-64.png?v=202610151000" type="image/png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=202610151000">
   <link rel="preload" href="fonts/chakra-petch-latin-700-italic.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="fonts/grenze-gotisch-latin-900-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=202610150955">
+  <link rel="stylesheet" href="styles.css?v=202610151000">
 </head>
 <body>
   <div class="loader" id="loader" aria-hidden="true">
@@ -65,6 +65,17 @@
   </div>
 
   <main id="top">
+    <section class="hero" aria-label="Dawn Sogni">
+      <picture>
+        <source media="(max-width: 700px)" srcset="images/gothic-hall-800.webp">
+        <img class="hero-img" src="images/gothic-hall.webp" alt="" width="1179" height="1164" fetchpriority="high">
+      </picture>
+      <div class="hero-text">
+        <p class="hero-line">Original prints, made to order.</p>
+        <a class="btn" href="#shop">Shop the drop</a>
+      </div>
+    </section>
+
     <section id="shop" class="shop" aria-label="Designs">
       <div class="pills" id="pills" role="tablist" aria-label="Filter designs"></div>
       <div class="grid" id="grid"></div>
@@ -117,9 +128,8 @@
 
 
   <audio id="bgm" src="audio/retribution.mp3" loop preload="auto" autoplay></audio>
-  <button class="music-btn" id="music-btn" type="button" aria-label="Pause music" aria-pressed="true">
-    <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
-    <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg>
+  <button class="music-btn" id="music-btn" type="button" aria-label="Mute music" aria-pressed="true">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path class="bars" d="M9 5v14M15 5v14"/><path class="slash" d="M4.5 4.5l15 15"/></svg>
   </button>
 
   <a class="wa-float" data-wa="general" href="#" target="_blank" rel="noopener" aria-label="Chat on WhatsApp">
@@ -172,7 +182,7 @@
     </div>
   </dialog>
 
-  <script src="products.js?v=202610150955"></script>
-  <script src="app.js?v=202610150955"></script>
+  <script src="products.js?v=202610151000"></script>
+  <script src="app.js?v=202610151000"></script>
 </body>
 </html>

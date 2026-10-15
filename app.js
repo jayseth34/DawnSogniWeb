@@ -260,7 +260,7 @@
   const bgm = $("#bgm"), mBtn = $("#music-btn");
   let userPaused = store.get("ds-music-off", false);
   bgm.volume = 0.6;
-  const syncBtn = () => { const on = !bgm.paused; mBtn.setAttribute("aria-pressed", on); mBtn.setAttribute("aria-label", on ? "Pause music" : "Play music"); };
+  const syncBtn = () => { const on = !bgm.paused; mBtn.setAttribute("aria-pressed", on); mBtn.setAttribute("aria-label", on ? "Mute music" : "Play music"); };
   bgm.addEventListener("play", syncBtn); bgm.addEventListener("pause", syncBtn);
   const tryPlay = () => bgm.play().catch(() => {});
   const EVTS = ["pointerdown", "keydown", "touchstart"];
