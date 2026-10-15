@@ -170,6 +170,30 @@ window.DS = {
       "print": "front",
       "tee": "images/tee-ds-04-front-mv9e16v0.webp",
       "teeFront": "images/tee-ds-04-back-mv9e42qy.webp"
+    },
+    {
+      "id": "DS-05",
+      "name": "OCTANE T",
+      "description": "The Octane Tee brings raw energy to futuristic streetwear. Set against a deep forest-green base, its striking silver-white typography and explosive light-streak effects create a high-speed visual inspired by metal aesthetics, underground culture, and mechanical intensity.",
+      "colorName": "Green",
+      "cover": "back",
+      "prices": {
+        "regular": 1000,
+        "oversized": 1100
+      },
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "printFocus": "50% 45%",
+      "front": "images/tee-ds-05-front-mv9fn4lh.webp",
+      "back": "images/tee-ds-05-back-mv9fn8kd.webp",
+      "print": "back",
+      "tee": "images/tee-ds-05-back-mv9fn8kd.webp",
+      "teeFront": "images/tee-ds-05-front-mv9fn4lh.webp"
     }
   ],
   "gallery": [
