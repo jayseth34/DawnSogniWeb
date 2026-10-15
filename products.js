@@ -75,7 +75,29 @@ window.DS = {
     }
   },
   "drops": [],
-  "products": [],
+  "products": [
+    {
+      "id": "DS-01",
+      "name": "2026 World Traveller T",
+      "description": "The Traveller Tee brings a vintage-inspired graphic to bold streetwear. Featuring striking cyan typography, cloud illustrations, and a globe emblem against a statement red base, this tee captures the spirit of exploring the unknown and living beyond boundaries",
+      "colorName": "Red",
+      "print": "back",
+      "prices": {
+        "regular": 1000,
+        "oversized": 1100
+      },
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "tee": "images/tee-ds-01-mv9cr7q6.webp",
+      "printFocus": "50% 45%",
+      "teeFront": "images/tee-ds-01-front-mv9crani.webp"
+    }
+  ],
   "gallery": [
     {
       "src": "https://www.artic.edu/iiif/2/b2272f4e-1221-9321-6973-2d93d5babbf0/full/843,/0/default.jpg",
