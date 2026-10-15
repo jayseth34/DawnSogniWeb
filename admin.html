@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Dawn Sogni — Admin</title>
+  <link rel="icon" href="icon-64.png" type="image/png">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="./" target="_blank" rel="noopener">DS <span>Admin</span></a>
+    <nav class="tabs" id="tabs" role="tablist" hidden>
+      <button type="button" role="tab" data-tab="products" aria-selected="true">Products</button>
+      <button type="button" role="tab" data-tab="gallery" aria-selected="false">Gallery</button>
+      <button type="button" role="tab" data-tab="settings" aria-selected="false">Settings</button>
+    </nav>
+    <div class="top-right">
+      <span class="dirty" id="dirty" hidden></span>
+      <button class="btn" id="publish" type="button" hidden>Publish to site</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- connect -->
+    <section class="panel" id="connect">
+      <h1>Connect to your site</h1>
+      <p class="muted">Changes are saved straight to your GitHub repository, and the site updates about a minute after you publish. This needs a GitHub access key that can only edit this one repository.</p>
+      <form id="connect-form" class="form">
+        <label>GitHub access key
+          <input type="password" id="token" autocomplete="off" required placeholder="github_pat_…">
+        </label>
+        <details class="help">
+          <summary>How to get an access key (2 minutes)</summary>
+          <ol>
+            <li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub → New fine-grained token</a> (signed in as the repo owner).</li>
+            <li>Name it "Dawn Sogni admin". Expiration: up to a year.</li>
+            <li>Repository access: <b>Only select repositories</b> → <b>DawnSogniWeb</b>.</li>
+            <li>Permissions → Repository → <b>Contents: Read and write</b>. Nothing else.</li>
+            <li>Generate, copy the key, paste it above.</li>
+          </ol>
+          <p class="muted">The key is kept only in this browser. Anyone with it can edit your site's files, so don't share it. You can revoke it on GitHub any time.</p>
+        </details>
+        <div class="row">
+          <label>Repository <input id="repo" value="jayseth34/DawnSogniWeb" required></label>
+          <label>Branch <input id="branch" value="gh-pages" required></label>
+        </div>
+        <label class="check"><input type="checkbox" id="remember" checked> Remember on this device</label>
+        <button class="btn" type="submit">Connect</button>
+        <p class="error" id="connect-error" role="alert"></p>
+      </form>
+    </section>
+
+    <!-- products -->
+    <section class="panel" id="tab-products" hidden>
+      <div class="panel-head">
+        <h1>Products <span class="count" id="p-count"></span></h1>
+        <button class="btn" id="p-add" type="button">Add product</button>
+      </div>
+      <ul class="list" id="p-list"></ul>
+    </section>
+
+    <!-- gallery -->
+    <section class="panel" id="tab-gallery" hidden>
+      <div class="panel-head">
+        <h1>Gallery <span class="count" id="g-count"></span></h1>
+        <button class="btn" id="g-add" type="button">Add artwork</button>
+      </div>
+      <ul class="list" id="g-list"></ul>
+    </section>
+
+    <!-- settings -->
+    <section class="panel" id="tab-settings" hidden>
+      <h1>Settings</h1>
+      <form class="form" id="s-form">
+        <div class="row">
+          <label>WhatsApp number (country code + number, digits only)
+            <input id="s-wa" inputmode="numeric" pattern="[0-9]{8,15}" required>
+          </label>
+          <label>Instagram handle
+            <input id="s-ig" placeholder="dawn.sogni">
+          </label>
+        </div>
+        <h2>Size charts</h2>
+        <p class="muted">One size per line. Separate columns with a vertical bar, e.g. <code>M | 39–40 | 69 | 54</code></p>
+        <div id="s-charts"></div>
+        <button class="btn btn-ghost" type="submit">Apply settings</button>
+      </form>
+    </section>
+  </main>
+
+  <!-- product editor -->
+  <dialog class="editor" id="p-editor">
+    <form method="dialog" class="form" id="p-form">
+      <h2 id="p-title">Product</h2>
+      <div class="row">
+        <label>Name *<input id="p-name" required maxlength="60"></label>
+        <label>Code *<input id="p-id" required maxlength="20" pattern="[A-Za-z0-9-]+"></label>
+      </div>
+      <label>Description<textarea id="p-desc" rows="3" maxlength="400"></textarea></label>
+      <div class="row">
+        <label>Colour name<input id="p-colour" maxlength="30" placeholder="Black"></label>
+        <label>Print side
+          <select id="p-print"><option value="back">Back</option><option value="front">Front</option></select>
+        </label>
+      </div>
+      <div class="row">
+        <label class="price"><span><input type="checkbox" id="p-reg-on" checked> Regular fit (Rs.)</span><input type="number" id="p-reg" min="0" step="1" value="1000"></label>
+        <label class="price"><span><input type="checkbox" id="p-ovr-on" checked> Oversized fit (Rs.)</span><input type="number" id="p-ovr" min="0" step="1" value="1100"></label>
+      </div>
+      <fieldset class="sizes"><legend>Sizes *</legend><div id="p-sizes"></div></fieldset>
+      <div class="row imgs">
+        <div class="img-field">
+          <span class="lbl">T-shirt image * <small>(transparent PNG looks best)</small></span>
+          <div class="drop" id="p-tee-drop" tabindex="0">
+            <img id="p-tee-prev" alt="" hidden>
+            <span class="focus-dot" id="p-focus-dot" hidden></span>
+            <span class="drop-hint" id="p-tee-hint">Click to choose an image</span>
+          </div>
+          <input type="file" id="p-tee" accept="image/png,image/webp,image/jpeg" hidden>
+          <small class="muted">Click the print on the preview to set where the hover zoom goes.</small>
+          <small class="warn" id="p-tee-warn" hidden>This image has a solid background, so it will show as a square. Cut it out first for the floating look.</small>
+        </div>
+        <div class="img-field">
+          <span class="lbl">Other side <small>(optional)</small></span>
+          <div class="drop" id="p-front-drop" tabindex="0">
+            <img id="p-front-prev" alt="" hidden>
+            <span class="drop-hint" id="p-front-hint">Click to add the other side</span>
+          </div>
+          <input type="file" id="p-front" accept="image/png,image/webp,image/jpeg" hidden>
+          <button type="button" class="link" id="p-front-clear" hidden>Remove other side</button>
+        </div>
+      </div>
+      <p class="error" id="p-error" role="alert"></p>
+      <div class="actions">
+        <button type="button" class="btn btn-ghost" id="p-cancel">Cancel</button>
+        <button type="submit" class="btn" value="save">Save product</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- gallery editor -->
+  <dialog class="editor" id="g-editor">
+    <form method="dialog" class="form" id="g-form">
+      <h2 id="g-title">Artwork</h2>
+      <div class="img-field">
+        <span class="lbl">Image * <small>(upload, or paste a link below)</small></span>
+        <div class="drop wide" id="g-drop" tabindex="0">
+          <img id="g-prev" alt="" hidden>
+          <span class="drop-hint" id="g-hint">Click to choose an image</span>
+        </div>
+        <input type="file" id="g-file" accept="image/*" hidden>
+      </div>
+      <label>…or image link<input id="g-url" type="url" placeholder="https://…"></label>
+      <div class="row">
+        <label>Title *<input id="g-name" required maxlength="120"></label>
+        <label>Artist<input id="g-artist" maxlength="80"></label>
+      </div>
+      <div class="row">
+        <label>Year<input id="g-year" maxlength="30"></label>
+        <label>Credit<input id="g-credit" maxlength="120" placeholder="e.g. Public domain"></label>
+      </div>
+      <label>Source link<input id="g-link" type="url" placeholder="https://…"></label>
+      <p class="error" id="g-error" role="alert"></p>
+      <div class="actions">
+        <button type="button" class="btn btn-ghost" id="g-cancel">Cancel</button>
+        <button type="submit" class="btn" value="save">Save artwork</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="editor log" id="pub">
+    <h2 id="pub-title">Publishing…</h2>
+    <ol id="pub-log"></ol>
+    <div class="actions"><button type="button" class="btn" id="pub-close" hidden>Close</button></div>
+  </dialog>
+
+  <script src="admin.js"></script>
+</body>
+</html>
