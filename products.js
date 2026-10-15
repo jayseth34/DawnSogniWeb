@@ -105,7 +105,7 @@ window.DS = {
       "name": "STAR SYNDROME T",
       "description": "The Star Syndrome Tee is made for those who were never meant to blend in. Featuring a bold black silhouette, contrasting white star graphics on the sleeves, curved STAR SYNDROME lettering, and a striking outlined star design across the lower front, this tee brings a raw, minimalist edge to statement streetwear.",
       "colorName": "BLACK",
-      "print": "back",
+      "print": "front",
       "prices": {
         "regular": 1000,
         "oversized": 1100
@@ -117,12 +117,12 @@ window.DS = {
         "XL",
         "XXL"
       ],
-      "tee": "images/tee-ds-02-front-mv9dej03.webp",
-      "printFocus": "50% 50%",
-      "teeFront": "images/tee-ds-02-mv9defxe.webp",
-      "front": "images/tee-ds-02-mv9defxe.webp",
-      "back": "images/tee-ds-02-front-mv9dej03.webp",
-      "cover": "back"
+      "tee": "images/tee-ds-02-front-mv9dntg6.webp",
+      "printFocus": "50% 45%",
+      "teeFront": "images/tee-ds-02-back-mv9dnxw8.webp",
+      "front": "images/tee-ds-02-front-mv9dntg6.webp",
+      "back": "images/tee-ds-02-back-mv9dnxw8.webp",
+      "cover": "front"
     },
     {
       "id": "DS-03",
