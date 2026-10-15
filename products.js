@@ -75,48 +75,7 @@ window.DS = {
     }
   },
   "drops": [],
-  "products": [
-    {
-      "id": "DS-05",
-      "name": "One Last Ride",
-      "tee": "images/tee-05.webp",
-      "printFocus": "50% 38%",
-      "print": "back",
-      "colorName": "Lavender",
-      "description": "A crouching black panther over \"One Last Ride\" in varsity letters, printed across the back of a soft lavender tee.",
-      "prices": {
-        "regular": 1000,
-        "oversized": 1100
-      },
-      "sizes": [
-        "S",
-        "M",
-        "L",
-        "XL",
-        "XXL"
-      ]
-    },
-    {
-      "id": "DS-07",
-      "name": "You Just Gotta Chill",
-      "tee": "images/tee-07.webp",
-      "printFocus": "50% 50%",
-      "print": "back",
-      "colorName": "White",
-      "description": "A bold black silhouette under hand-script lettering arched across the back. Clean white tee, loud message.",
-      "prices": {
-        "regular": 1000,
-        "oversized": 1100
-      },
-      "sizes": [
-        "S",
-        "M",
-        "L",
-        "XL",
-        "XXL"
-      ]
-    }
-  ],
+  "products": [],
   "gallery": [
     {
       "src": "https://www.artic.edu/iiif/2/b2272f4e-1221-9321-6973-2d93d5babbf0/full/843,/0/default.jpg",
