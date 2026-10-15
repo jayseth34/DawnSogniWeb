@@ -218,6 +218,30 @@ window.DS = {
       "print": "back",
       "tee": "images/tee-ds-06-back-mv9g3rsu.webp",
       "teeFront": "images/tee-ds-06-front-mv9g3luu.webp"
+    },
+    {
+      "id": "DS-07",
+      "name": "JUST GOTTA CHILL T",
+      "description": "The Just Gotta Chill Tee brings futuristic minimalism to gothic streetwear. Featuring a sleek, liquid-metal-inspired DS emblem against a charcoal-black base, this design combines sharp tribal curves with glossy chrome detailing for a bold yet understated look. It inspires to not worry and just chill.",
+      "colorName": "Charcoal",
+      "cover": "back",
+      "prices": {
+        "regular": 1000,
+        "oversized": 1100
+      },
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "printFocus": "50% 45%",
+      "back": "images/tee-ds-07-back-mv9in973.webp",
+      "front": "images/tee-ds-07-front-mv9iocar.webp",
+      "print": "back",
+      "tee": "images/tee-ds-07-back-mv9in973.webp",
+      "teeFront": "images/tee-ds-07-front-mv9iocar.webp"
     }
   ],
   "gallery": [
