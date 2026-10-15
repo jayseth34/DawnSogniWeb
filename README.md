@@ -26,5 +26,5 @@ compresses images automatically.
 Every "Order" button and the bag open WhatsApp with the design, fit, size, colour, price (and total) filled in.
 
 ## Credits
-Music: "Retribution" by Tanner Helland, CC BY 4.0. Gallery: Art Institute of Chicago open access (CC0).
+Music: "Nocturne", an original track made for Dawn Sogni (audio/nocturne.mp3). Gallery: Art Institute of Chicago open access (CC0).
 Fonts: Chakra Petch and Grenze Gotisch (SIL Open Font License).
