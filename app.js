@@ -23,11 +23,11 @@
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
   };
 
-  /* ---------- background: inside a gothic nave at dawn. The painted cathedral, slow mist, dust in the light ---------- */
+  /* ---------- background: a moonlit wood. The painted scene, rolling fog, and the odd bat crossing the moon ---------- */
   const cv = $("#stars"), cx = cv.getContext("2d");
   const nave = new Image(); nave.decoding = "async";
-  nave.src = innerWidth > 900 ? "images/cathedral.webp" : "images/cathedral-1400.webp";
-  let W = 0, H = 0, base = null, mist = [], motes = [];
+  nave.src = innerWidth > 900 ? "images/moonwood.webp" : "images/moonwood-1400.webp";
+  let W = 0, H = 0, base = null, mist = [], motes = [], nextBat = 3000;
   function buildSky() {
     const dpr = Math.min(devicePixelRatio || 1, 1.5); W = innerWidth; H = innerHeight;
     cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); cx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -37,24 +37,32 @@
     if (nave.complete && nave.naturalWidth) {
       // cover, keeping the rose window in view
       const s = Math.max(W / nave.naturalWidth, H / nave.naturalHeight), iw = nave.naturalWidth * s, ih = nave.naturalHeight * s;
-      b.globalAlpha = 0.62; b.drawImage(nave, (W - iw) / 2, (H - ih) * 0.3, iw, ih); b.globalAlpha = 1;
+      b.globalAlpha = 0.72; b.drawImage(nave, (W - iw) / 2, (H - ih) * 0.25, iw, ih); b.globalAlpha = 1;
     }
     let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
     mist = Array.from({ length: 6 }, (_, i) => ({ x: rnd() * W, y: H * (0.55 + rnd() * 0.5), rx: W * (0.35 + rnd() * 0.4), ry: H * (0.06 + rnd() * 0.1), a: 0.03 + rnd() * 0.035, v: (rnd() * 0.5 + 0.3) * (i % 2 ? 1 : -1) * 6 }));
-    motes = Array.from({ length: Math.round(W / 18) }, () => ({ x: W * (0.25 + rnd() * 0.5), y: rnd() * H, r: rnd() * 1.1 + 0.3, a: 0.15 + rnd() * 0.4, vx: (rnd() - 0.5) * 4, vy: -(rnd() * 5 + 2), ph: rnd() * 6.28 }));
+    motes = []; nextBat = 3000;
   }
   nave.addEventListener("load", () => { buildSky(); paintSky(performance.now()); });
   let lastT = 0;
   function paintSky(t) {
     const dt = Math.min(0.1, (t - lastT) / 1000 || 0); lastT = t;
     cx.globalAlpha = 1; cx.drawImage(base, 0, 0, W, H);
-    // dust floating in the rose-window light
+    // a bat or two crossing the sky now and then, wings beating
+    if (t > nextBat && motes.length < 3) {
+      const dir = Math.random() < 0.5 ? 1 : -1;
+      motes.push({ x: dir > 0 ? -60 : W + 60, y: H * (0.08 + Math.random() * 0.35), vx: dir * (W / (9 + Math.random() * 5)), wob: Math.random() * 6.28, s: 0.7 + Math.random() * 0.6, born: t });
+      nextBat = t + 6000 + Math.random() * 9000;
+    }
+    motes = motes.filter(m => m.x > -80 && m.x < W + 80);
     for (const m of motes) {
-      m.x += (m.vx + Math.sin(t / 2200 + m.ph) * 3) * dt; m.y += m.vy * dt;
-      if (m.y < -5) { m.y = H + 5; } if (m.x < W * 0.15) m.x = W * 0.85; if (m.x > W * 0.85) m.x = W * 0.15;
-      const fade = 1 - Math.abs(m.x - W / 2) / (W * 0.35);
-      cx.globalAlpha = m.a * Math.max(0, fade) * (0.6 + 0.4 * Math.sin(t / 900 + m.ph)); cx.fillStyle = "#ffe6cc";
-      cx.beginPath(); cx.arc(m.x, m.y, m.r, 0, 6.283); cx.fill();
+      m.x += m.vx * dt; const y = m.y + Math.sin(t / 700 + m.wob) * 14, flap = Math.sin(t / 85 + m.wob);
+      cx.save(); cx.translate(m.x, y); cx.scale(m.s * (m.vx > 0 ? 1 : -1), m.s); cx.globalAlpha = 0.85; cx.fillStyle = "#030404";
+      const lift = 0.35 + 0.65 * Math.abs(flap); // wings sweep from flat to raised
+      for (const k of [1, -1]) { cx.beginPath(); cx.moveTo(3 * k, -2); cx.bezierCurveTo(10 * k, -10 * lift, 18 * k, -16 * lift, 30 * k, -20 * lift * Math.sign(flap || 1));
+        cx.lineTo(27 * k, -10 * lift); cx.quadraticCurveTo(22 * k, -4, 17 * k, -4); cx.quadraticCurveTo(12 * k, 1, 8 * k, -1); cx.quadraticCurveTo(5 * k, 3, 2 * k, 3); cx.closePath(); cx.fill(); }
+      cx.beginPath(); cx.ellipse(0, 1, 3.5, 6, 0, 0, 6.283); cx.fill(); cx.beginPath(); cx.arc(0, -5, 3, 0, 6.283); cx.fill();
+      cx.restore();
     }
     // mist rolling along the floor
     for (const m of mist) {
