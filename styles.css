@@ -113,23 +113,17 @@ body.loading { overflow: hidden; }
 }
 .bag-count[hidden] { display: none; }
 
-/* hero */
-.hero { position: relative; display: grid; place-items: center; margin-top: -8px; overflow: hidden; }
-.hero picture { display: block; width: min(100%, 900px, 86vh); }
-.hero-img {
-  width: 100%; height: auto; display: block;
-  -webkit-mask-image: radial-gradient(ellipse 58% 60% at 50% 45%, #000 50%, transparent 98%);
-  mask-image: radial-gradient(ellipse 58% 60% at 50% 45%, #000 50%, transparent 98%);
-  animation: hero-in 1.4s ease both;
+/* hero: the artwork exactly as it is, on solid black; the moonlit wood starts below it */
+.hero {
+  position: relative; display: flex; flex-direction: column; align-items: center; margin-top: -8px;
+  padding: 0 0 120px;
+  background: linear-gradient(180deg, #000 0, #000 calc(100% - 160px), rgba(0,0,0,0) 100%);
 }
+.hero picture { display: block; width: min(100%, 860px, 82vh); }
+.hero-img { width: 100%; height: auto; display: block; animation: hero-in 1.2s ease both; }
 @keyframes hero-in { from { opacity: 0; } to { opacity: 1; } }
-.hero-text {
-  position: absolute; left: 0; right: 0; bottom: clamp(16px, 6vw, 70px); display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 0 16px; text-align: center;
-}
-.hero-line { font-weight: 700; font-style: italic; font-size: clamp(18px, 2.4vw, 26px); letter-spacing: .03em; text-shadow: 0 2px 18px #000, 0 0 4px #000; }
-@media (max-width: 700px) {
-  .hero-text { position: static; margin-top: -40px; }
-}
+.hero-text { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 28px 16px 0; text-align: center; }
+.hero-line { font-weight: 700; font-style: italic; font-size: clamp(18px, 2.4vw, 26px); letter-spacing: .03em; }
 
 /* shop */
 .shop { padding: 8px var(--pad) 56px; max-width: 1280px; margin: 0 auto; }
