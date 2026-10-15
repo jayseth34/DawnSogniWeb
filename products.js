@@ -38,6 +38,13 @@ window.DS = {
     }
   },
 
+  // Showroom atmosphere. "default" is used when there are no drops; add one per drop id to give
+  // each collection its own chamber. particles: "ash" (drifting), "embers" (rising), "snow" (falling).
+  atmospheres: {
+    default: { fog: "#04050a", glow: "#cfd8e3", rim: "#8aa2c0", particles: "ash" }
+    // "drop-01": { fog: "#0d0404", glow: "#ffb38a", rim: "#ff5a36", particles: "embers" }
+  },
+
   drops: [],
 
   products: [

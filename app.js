@@ -255,6 +255,7 @@
   });
   const m = location.hash.match(/^#p=(.+)$/);
   if (m) open(decodeURIComponent(m[1]));
+  window.DSApp = { open, rs, esc, basePrice };
 
   /* ---------- background music: plays by default, starts on first interaction if the browser blocks autoplay ---------- */
   const bgm = $("#bgm"), mBtn = $("#music-btn");
