@@ -76,3 +76,5 @@ textarea.chart { font-family: ui-monospace, monospace; font-size: 13px; }
 @media (max-width: 600px) { .item { grid-template-columns: 52px 1fr; } .item .acts { grid-column: 1 / -1; justify-content: flex-start; } .item img { width: 52px; height: 52px; } }
 .chart-box { border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; margin: 0 0 14px; }
 .chart-box legend { font-weight: 600; font-size: 14px; padding: 0 4px; }
+.brand { display: flex; align-items: center; gap: 8px; }
+.brand img { height: 30px; width: auto; }

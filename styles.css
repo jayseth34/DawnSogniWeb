@@ -52,18 +52,14 @@ svg.fill { fill: currentColor; stroke: none; }
 .icon-btn:hover { background: rgba(255,255,255,.08); }
 .icon-btn:last-child { justify-self: end; }
 .logo { justify-self: center; text-decoration: none; display: flex; flex-direction: column; align-items: center; line-height: 1; }
-.logo-mark { position: relative; font-family: var(--goth); font-weight: 900; font-size: clamp(38px, 6vw, 50px); line-height: .95; }
-.logo-mark .face {
-  display: block; backface-visibility: hidden; -webkit-backface-visibility: hidden;
-  background: var(--silver); -webkit-background-clip: text; background-clip: text; color: transparent;
-  filter: drop-shadow(0 1px 0 rgba(255,255,255,.25)) drop-shadow(0 0 10px rgba(200,215,230,.25));
-}
+.logo-mark { position: relative; display: block; width: clamp(104px, 14vw, 136px); }
+.logo-mark .face { display: block; width: 100%; height: auto; backface-visibility: hidden; -webkit-backface-visibility: hidden; filter: drop-shadow(0 0 8px rgba(210,220,232,.25)); }
 .logo-mark .back { position: absolute; inset: 0; transform: rotateY(180deg); }
-.logo { perspective: 600px; }
-.logo-mark { display: inline-block; transform-style: preserve-3d; animation: ds-spin 6s linear infinite; will-change: transform; }
+.logo { perspective: 700px; }
+.logo .logo-mark { transform-style: preserve-3d; animation: ds-spin 7s linear infinite; will-change: transform; }
 @keyframes ds-spin { from { transform: rotateY(0deg); } to { transform: rotateY(360deg); } }
-.logo:hover .logo-mark { animation-duration: 2s; }
-.logo-word { margin-top: 3px; font-size: 10px; font-weight: 600; letter-spacing: .32em; text-transform: uppercase; color: #B9C3CD; padding-left: .32em; }
+.logo:hover .logo-mark { animation-duration: 2.4s; }
+.logo-word { display: block; width: clamp(84px, 10vw, 104px); height: auto; margin-top: 4px; opacity: .9; }
 
 
 /* loader */
@@ -72,8 +68,8 @@ svg.fill { fill: currentColor; stroke: none; }
   perspective: 600px; transition: opacity .6s ease, visibility .6s;
   animation: loader-fallback 0s linear 4s forwards;
 }
-.loader .logo-mark { font-size: clamp(96px, 20vw, 150px); display: inline-block; transform-style: preserve-3d; animation: ds-spin 2.2s linear infinite; }
-.loader-word { font-size: 13px; font-weight: 600; letter-spacing: .5em; padding-left: .5em; text-transform: uppercase; color: #B9C3CD; }
+.loader .logo-mark { width: min(70vw, 420px); transform-style: preserve-3d; animation: ds-spin 2.4s linear infinite; }
+.loader-word { width: min(46vw, 300px); height: auto; opacity: .9; }
 .loader.done { opacity: 0; visibility: hidden; }
 @keyframes loader-fallback { to { opacity: 0; visibility: hidden; } }
 body.loading { overflow: hidden; }
@@ -272,13 +268,8 @@ body.loading { overflow: hidden; }
 @media (max-width: 720px) { .steps { grid-template-columns: 1fr; } }
 
 .foot { text-align: center; padding: 56px var(--pad) calc(96px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); }
-.foot-logo { display: flex; flex-direction: column; align-items: center; margin-bottom: 24px; }
-.foot-logo span:last-child { font-weight: 600; letter-spacing: .32em; text-transform: uppercase; font-size: 12px; color: #B9C3CD; margin-top: 6px; padding-left: .32em; }
-.foot-mark {
-  font-family: var(--goth); font-weight: 900; font-size: clamp(72px, 14vw, 140px); line-height: .9;
-  background: var(--silver); -webkit-background-clip: text; background-clip: text; color: transparent;
-  filter: drop-shadow(0 0 18px rgba(200,215,230,.2));
-}
+.foot-logo { display: flex; justify-content: center; margin: 0 0 24px; }
+.foot-logo img { width: min(78vw, 520px); height: auto; filter: drop-shadow(0 0 18px rgba(210,220,232,.18)); }
 .foot-links { list-style: none; margin: 0 0 14px; padding: 0; display: flex; justify-content: center; gap: 24px; font-weight: 600; }
 .foot-small { color: var(--muted); font-size: 13px; }
 
