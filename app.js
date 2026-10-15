@@ -23,41 +23,50 @@
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
   };
 
-  /* ---------- background: the hour before dawn. Night sky, a faint horizon glow, slow drifting mist ---------- */
+  /* ---------- background: inside a gothic nave at dawn. The painted cathedral, slow mist, dust in the light ---------- */
   const cv = $("#stars"), cx = cv.getContext("2d");
-  let W = 0, H = 0, sky, stars = [], mist = [];
+  const nave = new Image(); nave.decoding = "async";
+  nave.src = innerWidth > 900 ? "images/cathedral.webp" : "images/cathedral-1400.webp";
+  let W = 0, H = 0, base = null, mist = [], motes = [];
   function buildSky() {
     const dpr = Math.min(devicePixelRatio || 1, 1.5); W = innerWidth; H = innerHeight;
     cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); cx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    sky = document.createElement("canvas"); sky.width = cv.width; sky.height = cv.height;
-    const s = sky.getContext("2d"); s.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const g = s.createLinearGradient(0, 0, 0, H);
-    g.addColorStop(0, "#000000"); g.addColorStop(0.45, "#030308"); g.addColorStop(0.78, "#0a0915"); g.addColorStop(1, "#160e1c");
-    s.fillStyle = g; s.fillRect(0, 0, W, H);
+    base = document.createElement("canvas"); base.width = cv.width; base.height = cv.height;
+    const b = base.getContext("2d"); b.setTransform(dpr, 0, 0, dpr, 0, 0);
+    b.fillStyle = "#000"; b.fillRect(0, 0, W, H);
+    if (nave.complete && nave.naturalWidth) {
+      // cover, keeping the rose window in view
+      const s = Math.max(W / nave.naturalWidth, H / nave.naturalHeight), iw = nave.naturalWidth * s, ih = nave.naturalHeight * s;
+      b.globalAlpha = 0.62; b.drawImage(nave, (W - iw) / 2, (H - ih) * 0.3, iw, ih); b.globalAlpha = 1;
+    }
     let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-    // a few last stars, only high up, fading toward the horizon
-    stars = Array.from({ length: Math.round(W / 22) }, () => ({ x: rnd() * W, y: Math.pow(rnd(), 1.8) * H * 0.55, r: rnd() * 0.9 + 0.3, a: 0.15 + rnd() * 0.5, ph: rnd() * 6.28 }));
-    mist = Array.from({ length: 7 }, (_, i) => ({ x: rnd() * W, y: H * (0.45 + rnd() * 0.6), rx: W * (0.35 + rnd() * 0.4), ry: H * (0.08 + rnd() * 0.12), a: 0.035 + rnd() * 0.04, v: (rnd() * 0.5 + 0.3) * (i % 2 ? 1 : -1) * 6 }));
+    mist = Array.from({ length: 6 }, (_, i) => ({ x: rnd() * W, y: H * (0.55 + rnd() * 0.5), rx: W * (0.35 + rnd() * 0.4), ry: H * (0.06 + rnd() * 0.1), a: 0.03 + rnd() * 0.035, v: (rnd() * 0.5 + 0.3) * (i % 2 ? 1 : -1) * 6 }));
+    motes = Array.from({ length: Math.round(W / 18) }, () => ({ x: W * (0.25 + rnd() * 0.5), y: rnd() * H, r: rnd() * 1.1 + 0.3, a: 0.15 + rnd() * 0.4, vx: (rnd() - 0.5) * 4, vy: -(rnd() * 5 + 2), ph: rnd() * 6.28 }));
   }
+  nave.addEventListener("load", () => { buildSky(); paintSky(performance.now()); });
+  let lastT = 0;
   function paintSky(t) {
-    cx.globalAlpha = 1; cx.drawImage(sky, 0, 0, W, H);
-    // horizon glow, breathing very slowly
-    const br = 0.85 + 0.15 * Math.sin(t / 9000);
-    const hg = cx.createRadialGradient(W * 0.5, H * 1.08, 0, W * 0.5, H * 1.08, Math.max(W, H) * 0.75);
-    hg.addColorStop(0, `rgba(255,150,105,${0.16 * br})`); hg.addColorStop(0.35, `rgba(150,90,140,${0.08 * br})`); hg.addColorStop(1, "rgba(0,0,0,0)");
-    cx.fillStyle = hg; cx.fillRect(0, 0, W, H);
-    for (const s of stars) { cx.globalAlpha = s.a * (1 - s.y / (H * 0.6)) * (0.6 + 0.4 * Math.sin(t / 1600 + s.ph)); cx.fillStyle = "#fff"; cx.beginPath(); cx.arc(s.x, s.y, s.r, 0, 6.283); cx.fill(); }
-    // mist banks drifting sideways
+    const dt = Math.min(0.1, (t - lastT) / 1000 || 0); lastT = t;
+    cx.globalAlpha = 1; cx.drawImage(base, 0, 0, W, H);
+    // dust floating in the rose-window light
+    for (const m of motes) {
+      m.x += (m.vx + Math.sin(t / 2200 + m.ph) * 3) * dt; m.y += m.vy * dt;
+      if (m.y < -5) { m.y = H + 5; } if (m.x < W * 0.15) m.x = W * 0.85; if (m.x > W * 0.85) m.x = W * 0.15;
+      const fade = 1 - Math.abs(m.x - W / 2) / (W * 0.35);
+      cx.globalAlpha = m.a * Math.max(0, fade) * (0.6 + 0.4 * Math.sin(t / 900 + m.ph)); cx.fillStyle = "#ffe6cc";
+      cx.beginPath(); cx.arc(m.x, m.y, m.r, 0, 6.283); cx.fill();
+    }
+    // mist rolling along the floor
     for (const m of mist) {
       const x = ((m.x + (t / 1000) * m.v) % (W + m.rx * 2) + (W + m.rx * 2)) % (W + m.rx * 2) - m.rx;
       cx.save(); cx.translate(x, m.y); cx.scale(1, m.ry / m.rx);
-      const mg = cx.createRadialGradient(0, 0, 0, 0, 0, m.rx); mg.addColorStop(0, `rgba(200,205,225,${m.a})`); mg.addColorStop(1, "rgba(200,205,225,0)");
+      const mg = cx.createRadialGradient(0, 0, 0, 0, 0, m.rx); mg.addColorStop(0, `rgba(190,198,220,${m.a})`); mg.addColorStop(1, "rgba(190,198,220,0)");
       cx.globalAlpha = 1; cx.fillStyle = mg; cx.beginPath(); cx.arc(0, 0, m.rx, 0, 6.283); cx.fill(); cx.restore();
     }
     cx.globalAlpha = 1;
   }
   let raf = 0, last = 0;
-  const loop = t => { raf = requestAnimationFrame(loop); if (t - last < 50) return; last = t; paintSky(t); };
+  const loop = t => { raf = requestAnimationFrame(loop); if (t - last < 40) return; last = t; paintSky(t); };
   function startSky() { buildSky(); cancelAnimationFrame(raf); if (reduce) paintSky(0); else raf = requestAnimationFrame(loop); }
   startSky();
   let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(startSky, 150); });
