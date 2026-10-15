@@ -83,8 +83,8 @@ window.DS = {
       "colorName": "Red",
       "print": "back",
       "prices": {
-        "regular": 1000,
-        "oversized": 1100
+        "regular": 999,
+        "oversized": 1099
       },
       "sizes": [
         "S",
@@ -107,8 +107,8 @@ window.DS = {
       "colorName": "BLACK",
       "print": "front",
       "prices": {
-        "regular": 1000,
-        "oversized": 1100
+        "regular": 999,
+        "oversized": 1099
       },
       "sizes": [
         "S",
@@ -130,8 +130,8 @@ window.DS = {
       "description": "The Dark Dreams Tee captures the darker side of streetwear through striking lavender-blue artwork and elegant white calligraphy. Featuring a distressed graphic of a shadowed figure surrounded by reaching hands, this design blends gothic aesthetics with raw emotion and artistic rebellion.",
       "print": "front",
       "prices": {
-        "regular": 1000,
-        "oversized": 1100
+        "regular": 999,
+        "oversized": 1099
       },
       "sizes": [
         "S",
@@ -154,8 +154,8 @@ window.DS = {
       "colorName": "Royal Blue",
       "cover": "front",
       "prices": {
-        "regular": 1000,
-        "oversized": 1100
+        "regular": 999,
+        "oversized": 1099
       },
       "sizes": [
         "S",
@@ -178,8 +178,8 @@ window.DS = {
       "colorName": "Green",
       "cover": "back",
       "prices": {
-        "regular": 1000,
-        "oversized": 1100
+        "regular": 999,
+        "oversized": 1099
       },
       "sizes": [
         "S",
@@ -202,8 +202,8 @@ window.DS = {
       "colorName": "Navy Blue",
       "cover": "back",
       "prices": {
-        "regular": 1000,
-        "oversized": 1100
+        "regular": 999,
+        "oversized": 1099
       },
       "sizes": [
         "S",
@@ -226,8 +226,8 @@ window.DS = {
       "colorName": "Charcoal",
       "cover": "back",
       "prices": {
-        "regular": 1000,
-        "oversized": 1100
+        "regular": 999,
+        "oversized": 1099
       },
       "sizes": [
         "S",

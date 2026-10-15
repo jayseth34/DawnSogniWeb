@@ -160,11 +160,11 @@
   }
   function openProduct(i) {
     editIdx = i; const p = i >= 0 ? data.products[i] : null;
-    draft = p ? normalise(JSON.parse(JSON.stringify(p))) : { id: nextId(), name: "", description: "", colorName: "", cover: "back", prices: { regular: 1000, oversized: 1100 }, sizes: ["S", "M", "L", "XL", "XXL"], printFocus: "50% 45%" };
+    draft = p ? normalise(JSON.parse(JSON.stringify(p))) : { id: nextId(), name: "", description: "", colorName: "", cover: "back", prices: { regular: 999, oversized: 1099 }, sizes: ["S", "M", "L", "XL", "XXL"], printFocus: "50% 45%" };
     $("#p-title").textContent = p ? `Edit ${p.name}` : "New product";
     $("#p-name").value = draft.name; $("#p-id").value = draft.id; $("#p-desc").value = draft.description || ""; $("#p-colour").value = draft.colorName || "";
-    $("#p-reg-on").checked = draft.prices.regular != null; $("#p-reg").value = draft.prices.regular ?? 1000;
-    $("#p-ovr-on").checked = draft.prices.oversized != null; $("#p-ovr").value = draft.prices.oversized ?? 1100;
+    $("#p-reg-on").checked = draft.prices.regular != null; $("#p-reg").value = draft.prices.regular ?? 999;
+    $("#p-ovr-on").checked = draft.prices.oversized != null; $("#p-ovr").value = draft.prices.oversized ?? 1099;
     $$("#p-sizes input").forEach(cb => (cb.checked = draft.sizes.includes(cb.value)));
     $("#p-tee-warn").hidden = true; $("#p-error").textContent = "";
     refreshSides();
