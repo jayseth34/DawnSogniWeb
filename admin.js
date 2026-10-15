@@ -30,7 +30,7 @@
     if (r.status === 404 && !opts.method) return null;
     if (!r.ok) {
       let msg = ""; try { msg = (await r.json()).message || ""; } catch (e) {}
-      const hint = r.status === 401 ? "The access key is wrong or expired." : r.status === 403 ? "The access key doesn't have permission to write to this repository (it needs Contents: Read and write)." : r.status === 404 ? "Repository or branch not found." : r.status === 409 ? "Someone else changed this file. Reload the admin and try again." : r.status === 422 ? "GitHub rejected the file." : "";
+      const hint = r.status === 401 ? "The access key is wrong or expired." : r.status === 403 ? "The access key can read your site but isn't allowed to save to it. On GitHub open Settings → Developer settings → Fine-grained tokens → your key, set Repository access to DawnSogniWeb and Permissions → Contents to \"Read and write\", click Update, then press Publish again (your changes here are kept)." : r.status === 404 ? "Repository or branch not found." : r.status === 409 ? "Someone else changed this file. Reload the admin and try again." : r.status === 422 ? "GitHub rejected the file." : "";
       throw new Error(`${hint} (GitHub ${r.status}${msg ? ": " + msg : ""})`.trim());
     }
     return r.json();
