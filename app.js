@@ -157,27 +157,6 @@
   };
   $("#size-tables").innerHTML = Object.keys(D.sizeCharts || {}).map(chartTable).join("");
 
-  /* ---------- gallery ---------- */
-  const big = src => src.replace("/full/843,/", "/full/1686,/");
-  const gal = D.gallery || [];
-  if (!gal.length) $("#gallery").hidden = true;
-  $("#gallery-grid").innerHTML = gal.map((a, i) => `
-    <button class="art" type="button" data-i="${i}" aria-label="${esc(a.title)} by ${esc(a.artist)}. View larger">
-      <span class="art-frame"><img src="${esc(a.src)}" alt="${esc(a.title)}, ${esc(a.artist)}" loading="lazy" decoding="async"></span>
-      <span class="art-cap"><b>${esc(a.title)}</b><span>${esc(a.artist)}${a.year ? ", " + esc(a.year) : ""}</span></span>
-    </button>`).join("");
-  // if a museum image ever fails to load, drop that tile quietly
-  $$("#gallery-grid img").forEach(img => img.addEventListener("error", () => { img.closest(".art").remove(); if (!$("#gallery-grid .art")) $("#gallery").hidden = true; }));
-  const lb = $("#lightbox");
-  $("#gallery-grid").addEventListener("click", e => {
-    const b = e.target.closest(".art"); if (!b) return; const a = gal[+b.dataset.i];
-    $("#lightbox-img").src = big(a.src); $("#lightbox-img").alt = `${a.title}, ${a.artist}`;
-    $("#lightbox-cap").innerHTML = `<b>${esc(a.title)}</b>${esc(a.artist)}${a.year ? ", " + esc(a.year) : ""}${a.credit ? `<br>${a.link ? `<a href="${esc(a.link)}" target="_blank" rel="noopener">${esc(a.credit)}</a>` : esc(a.credit)}` : ""}`;
-    lb.showModal();
-  });
-  $("#lightbox-close").addEventListener("click", () => lb.close());
-  lb.addEventListener("click", e => { if (e.target === lb) lb.close(); });
-
   /* ---------- toast ---------- */
   let toastT;
   const toast = msg => { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 1800); };
