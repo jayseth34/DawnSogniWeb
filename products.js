@@ -194,6 +194,30 @@ window.DS = {
       "print": "back",
       "tee": "images/tee-ds-05-back-mv9fn8kd.webp",
       "teeFront": "images/tee-ds-05-front-mv9fn4lh.webp"
+    },
+    {
+      "id": "DS-06",
+      "name": "ICON T",
+      "description": "Minimal in concept, bold in execution. The Icon Tee features a deep navy-blue base paired with an oversized varsity-inspired white “I” graphic, finished with distressed detailing and a contrasting black outline. Its collegiate aesthetic meets modern streetwear, creating a statement piece that stands out through simplicity.",
+      "colorName": "Navy Blue",
+      "cover": "back",
+      "prices": {
+        "regular": 1000,
+        "oversized": 1100
+      },
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "printFocus": "50% 45%",
+      "front": "images/tee-ds-06-front-mv9g3luu.webp",
+      "back": "images/tee-ds-06-back-mv9g3rsu.webp",
+      "print": "back",
+      "tee": "images/tee-ds-06-back-mv9g3rsu.webp",
+      "teeFront": "images/tee-ds-06-front-mv9g3luu.webp"
     }
   ],
   "gallery": [
