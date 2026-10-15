@@ -146,6 +146,30 @@ window.DS = {
       "front": "images/tee-ds-03-mv9ddx9h.webp",
       "back": "images/tee-ds-03-front-mv9d9wjf.webp",
       "cover": "front"
+    },
+    {
+      "id": "DS-04",
+      "name": "OCEAN LEGACY TEE",
+      "description": "Inspired by the freedom of the open waters, the Ocean Legacy Tee combines a bold royal-blue base with a striking white graphic featuring an arc of stars and a vintage-style yacht emblem. The distressed artwork brings a retro nautical aesthetic to modern streetwear, creating a look that feels effortless, confident, and timeless.",
+      "colorName": "Royal Blue",
+      "cover": "front",
+      "prices": {
+        "regular": 1000,
+        "oversized": 1100
+      },
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "printFocus": "50% 45%",
+      "front": "images/tee-ds-04-front-mv9e16v0.webp",
+      "back": "images/tee-ds-04-back-mv9e42qy.webp",
+      "print": "front",
+      "tee": "images/tee-ds-04-front-mv9e16v0.webp",
+      "teeFront": "images/tee-ds-04-back-mv9e42qy.webp"
     }
   ],
   "gallery": [
