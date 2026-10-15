@@ -93,9 +93,12 @@ window.DS = {
         "XL",
         "XXL"
       ],
-      "tee": "images/tee-ds-01-mv9cwm89.webp",
-      "printFocus": "50% 45%",
-      "teeFront": "images/tee-ds-01-front-mv9cwsyg.webp"
+      "tee": "images/tee-ds-01-front-mv9cwsyg.webp",
+      "printFocus": "50% 50%",
+      "teeFront": "images/tee-ds-01-mv9cwm89.webp",
+      "front": "images/tee-ds-01-mv9cwm89.webp",
+      "back": "images/tee-ds-01-front-mv9cwsyg.webp",
+      "cover": "back"
     },
     {
       "id": "DS-02",
@@ -114,9 +117,12 @@ window.DS = {
         "XL",
         "XXL"
       ],
-      "tee": "images/tee-ds-02-mv9defxe.webp",
-      "printFocus": "50% 45%",
-      "teeFront": "images/tee-ds-02-front-mv9dej03.webp"
+      "tee": "images/tee-ds-02-front-mv9dej03.webp",
+      "printFocus": "50% 50%",
+      "teeFront": "images/tee-ds-02-mv9defxe.webp",
+      "front": "images/tee-ds-02-mv9defxe.webp",
+      "back": "images/tee-ds-02-front-mv9dej03.webp",
+      "cover": "back"
     },
     {
       "id": "DS-03",
@@ -134,9 +140,12 @@ window.DS = {
         "XL",
         "XXL"
       ],
-      "tee": "images/tee-ds-03-mv9ddx9h.webp",
-      "printFocus": "50% 45%",
-      "teeFront": "images/tee-ds-03-front-mv9d9wjf.webp"
+      "tee": "images/tee-ds-03-front-mv9d9wjf.webp",
+      "printFocus": "50% 50%",
+      "teeFront": "images/tee-ds-03-mv9ddx9h.webp",
+      "front": "images/tee-ds-03-mv9ddx9h.webp",
+      "back": "images/tee-ds-03-front-mv9d9wjf.webp",
+      "cover": "back"
     }
   ],
   "gallery": [
