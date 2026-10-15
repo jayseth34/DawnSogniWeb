@@ -114,9 +114,29 @@ window.DS = {
         "XL",
         "XXL"
       ],
-      "tee": "images/tee-ds-02-mv9cztr4.webp",
+      "tee": "images/tee-ds-02-mv9defxe.webp",
       "printFocus": "50% 45%",
-      "teeFront": "images/tee-ds-02-front-mv9d1a36.webp"
+      "teeFront": "images/tee-ds-02-front-mv9dej03.webp"
+    },
+    {
+      "id": "DS-03",
+      "name": "DARK DREAMS T",
+      "description": "The Dark Dreams Tee captures the darker side of streetwear through striking lavender-blue artwork and elegant white calligraphy. Featuring a distressed graphic of a shadowed figure surrounded by reaching hands, this design blends gothic aesthetics with raw emotion and artistic rebellion.",
+      "print": "back",
+      "prices": {
+        "regular": 1000,
+        "oversized": 1100
+      },
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "tee": "images/tee-ds-03-mv9ddx9h.webp",
+      "printFocus": "50% 45%",
+      "teeFront": "images/tee-ds-03-front-mv9d9wjf.webp"
     }
   ],
   "gallery": [
