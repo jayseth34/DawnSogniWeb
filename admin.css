@@ -78,3 +78,13 @@ textarea.chart { font-family: ui-monospace, monospace; font-size: 13px; }
 .chart-box legend { font-weight: 600; font-size: 14px; padding: 0 4px; }
 .brand { display: flex; align-items: center; gap: 8px; }
 .brand img { height: 30px; width: auto; }
+
+.sides { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+.sides legend { font-weight: 600; font-size: 14px; padding: 0 4px; }
+.sides legend small { font-weight: 400; color: var(--muted); }
+.img-field.is-cover .drop { border: 2px solid #fff; }
+.img-field.is-cover .lbl::after { content: " · on card"; color: var(--ok); font-weight: 600; }
+.side-acts { display: flex; gap: 14px; min-height: 1.6em; }
+.cover-pick { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.cover-pick label { flex-direction: row !important; align-items: center; gap: 6px !important; flex: none !important; font-weight: 600; }
+.cover-pick input:disabled + * , .cover-pick label:has(input:disabled) { opacity: .4; }

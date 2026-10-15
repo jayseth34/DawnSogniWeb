@@ -111,6 +111,12 @@
   document.addEventListener("keydown", e => { if (e.key === "Escape" && !menu.hidden) setMenu(false); });
 
   /* ---------- shop ---------- */
+  // which image is front / back, and which one the card shows
+  const sides = p => {
+    if (p.front || p.back) { const cover = p.cover && p[p.cover] ? p.cover : (p.back ? "back" : "front"); return { front: p.front, back: p.back, cover }; }
+    const cover = p.print === "front" ? "front" : "back", o = cover === "front" ? "back" : "front";
+    return { [cover]: p.tee, [o]: p.teeFront, cover };
+  };
   const basePrice = p => p.prices.regular ?? Math.min(...Object.values(p.prices));
   const firstFit = p => (p.prices.regular != null ? "regular" : Object.keys(p.prices)[0]);
   const FILTERS = [
@@ -123,12 +129,12 @@
   pills.innerHTML = FILTERS.map((f, i) => `<button class="pill" role="tab" type="button" data-f="${f.id}" aria-selected="${i === 0}">${f.name}</button>`).join("");
   // Card hover: swap to the other side if a front image exists, otherwise zoom into the print.
   function card(p) {
-    const swap = !!p.teeFront;
+    const sd = sides(p), cov = sd[sd.cover], alt = sd[sd.cover === "front" ? "back" : "front"], swap = !!alt;
     return `
       <button class="card ${swap ? "swap" : "zoom"}" type="button" data-id="${esc(p.id)}" style="--focus:${esc(p.printFocus || "50% 45%")}" aria-label="${esc(p.name)}, ${rs(basePrice(p))}. View details">
         <span class="card-img">
-          <img class="main" src="${esc(p.tee)}" alt="" loading="lazy" decoding="async">
-          ${swap ? `<img class="alt" src="${esc(p.teeFront)}" alt="" loading="lazy" decoding="async">` : ""}
+          <img class="main" src="${esc(cov)}" alt="" loading="lazy" decoding="async">
+          ${swap ? `<img class="alt" src="${esc(alt)}" alt="" loading="lazy" decoding="async">` : ""}
         </span>
         <span class="card-name">${esc(p.name)}</span>
         <span class="card-price">${rs(basePrice(p))}</span>
@@ -235,10 +241,10 @@
   const sheet = $("#sheet");
   let current = null, sel = {};
   function showView(v) {
-    const p = current, src = v === "front" ? p.teeFront : p.tee, img = $("#sheet-img");
+    const p = current, sd = sides(p), src = sd[v], img = $("#sheet-img");
     img.classList.remove("is-zoomed");
-    img.style.setProperty("--focus", (v === "front" ? p.frontFocus : p.printFocus) || "50% 45%");
-    img.innerHTML = `<img class="is-tee" src="${esc(src)}" alt="${esc(p.name)}, ${v === "front" ? "front" : p.print === "front" ? "front" : "back"}">`;
+    img.style.setProperty("--focus", (v === sd.cover ? p.printFocus : null) || "50% 45%");
+    img.innerHTML = `<img class="is-tee" src="${esc(src)}" alt="${esc(p.name)}, ${v}">`;
     $$(".view", $("#views")).forEach(b => b.setAttribute("aria-selected", b.dataset.v === v));
   }
   function updateOrder() {
@@ -252,8 +258,9 @@
     const p = byId[id]; if (!p) return;
     current = p;
     sel = { fit: firstFit(p), size: p.sizes.includes("M") ? "M" : p.sizes[0] };
-    $("#views").innerHTML = p.teeFront ? `<button class="view" type="button" role="tab" data-v="back">Back</button><button class="view" type="button" role="tab" data-v="front">Front</button>` : "";
-    showView("back");
+    const sd = sides(p);
+    $("#views").innerHTML = sd.front && sd.back ? `<button class="view" type="button" role="tab" data-v="front">Front</button><button class="view" type="button" role="tab" data-v="back">Back</button>` : "";
+    showView(sd.cover);
     $("#sheet-code").textContent = p.id;
     $("#sheet-name").textContent = p.name;
     $("#sheet-desc").textContent = p.description || "";

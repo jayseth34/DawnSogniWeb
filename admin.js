@@ -134,53 +134,70 @@
   const pe = $("#p-editor"); let editIdx = -1, draft = null;
   $("#p-sizes").innerHTML = SIZES.map(s => `<label><input type="checkbox" value="${s}"> ${s}</label>`).join("");
   function nextId() { let n = 1; const ids = new Set(data.products.map(p => p.id)); while (ids.has(`DS-${String(n).padStart(2, "0")}`)) n++; return `DS-${String(n).padStart(2, "0")}`; }
-  function showFocus() {
-    const [fx, fy] = (draft.printFocus || "50% 45%").split(" ").map(parseFloat);
-    const dot = $("#p-focus-dot"); dot.hidden = !draft.tee; dot.style.left = fx + "%"; dot.style.top = fy + "%";
+  const SIDES = ["front", "back"], other = s => (s === "front" ? "back" : "front");
+  // older products only have tee (+ teeFront): turn them into front/back + cover
+  function normalise(p) {
+    if (p.front || p.back) { p.cover ||= p.back ? "back" : "front"; return p; }
+    const side = p.print === "front" ? "front" : "back";
+    if (p.tee) p[side] = p.tee;
+    if (p.teeFront && p.teeFront !== p.tee) p[other(side)] = p.teeFront;
+    p.cover = side; return p;
   }
-  function setPreview(which) {
-    const path = which === "tee" ? draft.tee : draft.teeFront, img = $(`#p-${which}-prev`), hint = $(`#p-${which}-hint`);
-    img.hidden = !path; hint.hidden = !!path; if (path) img.src = imgUrl(path);
-    if (which === "front") $("#p-front-clear").hidden = !path;
-    if (which === "tee") showFocus();
+  function refreshSides() {
+    for (const s of SIDES) {
+      const path = draft[s], img = $(`#p-${s}-prev`);
+      img.hidden = !path; $(`#p-${s}-hint`).hidden = !!path; if (path) img.src = imgUrl(path);
+      $(`#p-${s}-clear`).hidden = !path; $(`#p-${s}-change`).hidden = !path;
+      const radio = $(`input[name="cover"][value="${s}"]`); radio.disabled = !path;
+    }
+    if (!draft[draft.cover]) draft.cover = draft.front ? "front" : draft.back ? "back" : "back";
+    $$('input[name="cover"]').forEach(r => (r.checked = r.value === draft.cover));
+    $$(".img-field[data-side]").forEach(f => f.classList.toggle("is-cover", f.dataset.side === draft.cover && !!draft[draft.cover]));
+    for (const s of SIDES) {
+      const dot = $(`#p-${s}-dot`), show = s === draft.cover && !!draft[s]; dot.hidden = !show;
+      if (show) { const [fx, fy] = (draft.printFocus || "50% 45%").split(" ").map(parseFloat); dot.style.left = fx + "%"; dot.style.top = fy + "%"; }
+    }
   }
   function openProduct(i) {
     editIdx = i; const p = i >= 0 ? data.products[i] : null;
-    draft = p ? JSON.parse(JSON.stringify(p)) : { id: nextId(), name: "", description: "", colorName: "", print: "back", prices: { regular: 1000, oversized: 1100 }, sizes: ["S", "M", "L", "XL", "XXL"], tee: "", printFocus: "50% 45%" };
+    draft = p ? normalise(JSON.parse(JSON.stringify(p))) : { id: nextId(), name: "", description: "", colorName: "", cover: "back", prices: { regular: 1000, oversized: 1100 }, sizes: ["S", "M", "L", "XL", "XXL"], printFocus: "50% 45%" };
     $("#p-title").textContent = p ? `Edit ${p.name}` : "New product";
     $("#p-name").value = draft.name; $("#p-id").value = draft.id; $("#p-desc").value = draft.description || ""; $("#p-colour").value = draft.colorName || "";
-    $("#p-print").value = draft.print || "back";
     $("#p-reg-on").checked = draft.prices.regular != null; $("#p-reg").value = draft.prices.regular ?? 1000;
     $("#p-ovr-on").checked = draft.prices.oversized != null; $("#p-ovr").value = draft.prices.oversized ?? 1100;
     $$("#p-sizes input").forEach(cb => (cb.checked = draft.sizes.includes(cb.value)));
     $("#p-tee-warn").hidden = true; $("#p-error").textContent = "";
-    setPreview("tee"); setPreview("front");
+    refreshSides();
     pe.showModal(); $("#p-name").focus();
   }
   $("#p-add").addEventListener("click", () => openProduct(-1));
   $("#p-cancel").addEventListener("click", () => pe.close());
-  $("#p-tee-drop").addEventListener("click", e => {
-    if (draft.tee && e.target.id === "p-tee-prev") { // click on the image sets the zoom focus
-      const r = e.currentTarget.getBoundingClientRect();
-      draft.printFocus = `${Math.round((e.clientX - r.left) / r.width * 100)}% ${Math.round((e.clientY - r.top) / r.height * 100)}%`;
-      return showFocus();
-    }
-    $("#p-tee").click();
-  });
-  $("#p-tee-drop").addEventListener("dblclick", () => $("#p-tee").click());
-  $("#p-front-drop").addEventListener("click", () => $("#p-front").click());
+  for (const s of SIDES) {
+    $(`#p-${s}-drop`).addEventListener("click", e => {
+      if (draft[s] && e.target.id === `p-${s}-prev`) {
+        if (draft.cover !== s) { draft.cover = s; draft.printFocus = "50% 45%"; return refreshSides(); } // clicking a side makes it the card image
+        const r = e.currentTarget.getBoundingClientRect();
+        draft.printFocus = `${Math.round((e.clientX - r.left) / r.width * 100)}% ${Math.round((e.clientY - r.top) / r.height * 100)}%`;
+        return refreshSides();
+      }
+      $(`#p-${s}`).click();
+    });
+    $(`#p-${s}-change`).addEventListener("click", () => $(`#p-${s}`).click());
+    $(`#p-${s}-clear`).addEventListener("click", () => { delete draft[s]; refreshSides(); });
+    $(`#p-${s}`).addEventListener("change", async e => {
+      const f = e.target.files[0]; if (!f) return; e.target.value = "";
+      try {
+        const r = await processTee(f);
+        draft[s] = stage(`images/tee-${slug($("#p-id").value || draft.id)}-${s}-${stamp()}.${r.ext}`, r.blob);
+        $("#p-tee-warn").hidden = r.hasAlpha;
+        if (!draft[other(s)]) draft.cover = s;
+        if (draft.cover === s) draft.printFocus = "50% 45%";
+        refreshSides();
+      } catch (err) { $("#p-error").textContent = err.message; }
+    });
+  }
+  $$('input[name="cover"]').forEach(r => r.addEventListener("change", () => { draft.cover = r.value; draft.printFocus = "50% 45%"; refreshSides(); }));
   $$(".drop").forEach(d => d.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); d.click(); } }));
-  $("#p-tee").addEventListener("change", async e => {
-    const f = e.target.files[0]; if (!f) return; e.target.value = "";
-    try { const r = await processTee(f); draft.tee = stage(`images/tee-${slug($("#p-id").value || draft.id)}-${stamp()}.${r.ext}`, r.blob); $("#p-tee-warn").hidden = r.hasAlpha; draft.printFocus = "50% 45%"; setPreview("tee"); }
-    catch (err) { $("#p-error").textContent = err.message; }
-  });
-  $("#p-front").addEventListener("change", async e => {
-    const f = e.target.files[0]; if (!f) return; e.target.value = "";
-    try { const r = await processTee(f); draft.teeFront = stage(`images/tee-${slug($("#p-id").value || draft.id)}-front-${stamp()}.${r.ext}`, r.blob); setPreview("front"); }
-    catch (err) { $("#p-error").textContent = err.message; }
-  });
-  $("#p-front-clear").addEventListener("click", () => { delete draft.teeFront; setPreview("front"); });
   $("#p-form").addEventListener("submit", e => {
     e.preventDefault(); const err = $("#p-error");
     const name = $("#p-name").value.trim(), id = $("#p-id").value.trim().toUpperCase();
@@ -193,8 +210,12 @@
     if (data.products.some((p, k) => p.id === id && k !== editIdx)) return (err.textContent = `Another product already uses the code ${id}.`);
     if (!Object.keys(prices).length || Object.values(prices).some(v => !(v > 0))) return (err.textContent = "Turn on at least one fit and give it a price above 0.");
     if (!sizes.length) return (err.textContent = "Pick at least one size.");
-    if (!draft.tee) return (err.textContent = "Add a T-shirt image.");
-    Object.assign(draft, { id, name, description: $("#p-desc").value.trim(), colorName: $("#p-colour").value.trim(), print: $("#p-print").value, prices, sizes });
+    if (!draft.front && !draft.back) return (err.textContent = "Add a front or back image.");
+    const cover = draft[draft.cover] ? draft.cover : (draft.front ? "front" : "back");
+    Object.assign(draft, { id, name, description: $("#p-desc").value.trim(), colorName: $("#p-colour").value.trim(), prices, sizes, cover, print: cover });
+    // keep the older fields the shop also reads
+    draft.tee = draft[cover]; if (draft[other(cover)]) draft.teeFront = draft[other(cover)]; else delete draft.teeFront;
+    SIDES.forEach(s => { if (!draft[s]) delete draft[s]; });
     if (!draft.colorName) delete draft.colorName;
     if (editIdx >= 0) data.products[editIdx] = draft; else data.products.push(draft);
     pe.close(); markDirty(); renderProducts();
@@ -283,7 +304,7 @@
     const btn = $("#publish"); btn.disabled = true;
     try {
       // only upload images that are still used
-      const used = new Set([...data.products.flatMap(p => [p.tee, p.teeFront]), ...data.gallery.map(a => a.src)]);
+      const used = new Set([...data.products.flatMap(p => [p.tee, p.teeFront, p.front, p.back]), ...data.gallery.map(a => a.src)]);
       for (const [path, { blob }] of pending) {
         if (!used.has(path)) { pending.delete(path); continue; }
         const li = log(`Uploading ${path.split("/").pop()}…`);

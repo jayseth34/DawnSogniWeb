@@ -101,37 +101,44 @@
       <label>Description<textarea id="p-desc" rows="3" maxlength="400"></textarea></label>
       <div class="row">
         <label>Colour name<input id="p-colour" maxlength="30" placeholder="Black"></label>
-        <label>Print side
-          <select id="p-print"><option value="back">Back</option><option value="front">Front</option></select>
-        </label>
       </div>
       <div class="row">
         <label class="price"><span><input type="checkbox" id="p-reg-on" checked> Regular fit (Rs.)</span><input type="number" id="p-reg" min="0" step="1" value="1000"></label>
         <label class="price"><span><input type="checkbox" id="p-ovr-on" checked> Oversized fit (Rs.)</span><input type="number" id="p-ovr" min="0" step="1" value="1100"></label>
       </div>
       <fieldset class="sizes"><legend>Sizes *</legend><div id="p-sizes"></div></fieldset>
-      <div class="row imgs">
-        <div class="img-field">
-          <span class="lbl">T-shirt image * <small>(transparent PNG looks best)</small></span>
-          <div class="drop" id="p-tee-drop" tabindex="0">
-            <img id="p-tee-prev" alt="" hidden>
-            <span class="focus-dot" id="p-focus-dot" hidden></span>
-            <span class="drop-hint" id="p-tee-hint">Click to choose an image</span>
+      <fieldset class="sides">
+        <legend>T-shirt images <small>(add at least one side; transparent PNG looks best)</small></legend>
+        <div class="row imgs">
+          <div class="img-field" data-side="front">
+            <span class="lbl">Front</span>
+            <div class="drop" id="p-front-drop" tabindex="0" aria-label="Front image">
+              <img id="p-front-prev" alt="" hidden>
+              <span class="focus-dot" id="p-front-dot" hidden></span>
+              <span class="drop-hint" id="p-front-hint">Click to add the front</span>
+            </div>
+            <input type="file" id="p-front" accept="image/png,image/webp,image/jpeg" hidden>
+            <div class="side-acts"><button type="button" class="link" id="p-front-change" hidden>Replace</button><button type="button" class="link" id="p-front-clear" hidden>Remove</button></div>
           </div>
-          <input type="file" id="p-tee" accept="image/png,image/webp,image/jpeg" hidden>
-          <small class="muted">Click the print on the preview to set where the hover zoom goes.</small>
-          <small class="warn" id="p-tee-warn" hidden>This image has a solid background, so it will show as a square. Cut it out first for the floating look.</small>
-        </div>
-        <div class="img-field">
-          <span class="lbl">Other side <small>(optional)</small></span>
-          <div class="drop" id="p-front-drop" tabindex="0">
-            <img id="p-front-prev" alt="" hidden>
-            <span class="drop-hint" id="p-front-hint">Click to add the other side</span>
+          <div class="img-field" data-side="back">
+            <span class="lbl">Back</span>
+            <div class="drop" id="p-back-drop" tabindex="0" aria-label="Back image">
+              <img id="p-back-prev" alt="" hidden>
+              <span class="focus-dot" id="p-back-dot" hidden></span>
+              <span class="drop-hint" id="p-back-hint">Click to add the back</span>
+            </div>
+            <input type="file" id="p-back" accept="image/png,image/webp,image/jpeg" hidden>
+            <div class="side-acts"><button type="button" class="link" id="p-back-change" hidden>Replace</button><button type="button" class="link" id="p-back-clear" hidden>Remove</button></div>
           </div>
-          <input type="file" id="p-front" accept="image/png,image/webp,image/jpeg" hidden>
-          <button type="button" class="link" id="p-front-clear" hidden>Remove other side</button>
         </div>
-      </div>
+        <div class="cover-pick" role="radiogroup" aria-label="Show on the shop card">
+          <span class="lbl">Show on the shop card</span>
+          <label><input type="radio" name="cover" value="front"> Front</label>
+          <label><input type="radio" name="cover" value="back"> Back</label>
+        </div>
+        <small class="muted">The card shows the side you pick; hovering a card shows the other side. Customers can switch between Front and Back in the product view. Click the print on the card side's preview to set where the zoom goes.</small>
+        <small class="warn" id="p-tee-warn" hidden>This image has a solid background, so it will show as a square. Cut it out first for the floating look.</small>
+      </fieldset>
       <p class="error" id="p-error" role="alert"></p>
       <div class="actions">
         <button type="button" class="btn btn-ghost" id="p-cancel">Cancel</button>
