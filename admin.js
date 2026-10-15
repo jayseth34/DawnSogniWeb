@@ -117,6 +117,15 @@
     if (!blob || blob.type !== "image/webp") { blob = await toBlob(c, "image/png"); ext = "png"; }
     return { blob, ext, hasAlpha };
   }
+  // small card image with the glow baked in (the shop shows these on the cards)
+  async function makeThumb(blob) {
+    const url = URL.createObjectURL(blob), im = await loadImg(url); URL.revokeObjectURL(url);
+    const S = 560, c = document.createElement("canvas"); c.width = c.height = S; const g = c.getContext("2d");
+    g.shadowColor = "rgba(255,255,255,.42)"; g.shadowBlur = 18; g.drawImage(im, 0, 0, S, S);
+    g.shadowBlur = 0; g.shadowColor = "transparent"; g.drawImage(im, 0, 0, S, S);
+    let t = await toBlob(c, "image/webp", 0.8); if (!t || t.type !== "image/webp") t = await toBlob(c, "image/png");
+    return t;
+  }
   async function processArt(file) {
     const url = URL.createObjectURL(file), im = await loadImg(url); URL.revokeObjectURL(url);
     const sc = Math.min(1, 1600 / Math.max(im.naturalWidth, im.naturalHeight));
@@ -188,7 +197,9 @@
       const f = e.target.files[0]; if (!f) return; e.target.value = "";
       try {
         const r = await processTee(f);
-        draft[s] = stage(`images/tee-${slug($("#p-id").value || draft.id)}-${s}-${stamp()}.${r.ext}`, r.blob);
+        const name = `tee-${slug($("#p-id").value || draft.id)}-${s}-${stamp()}.${r.ext}`;
+        draft[s] = stage(`images/${name}`, r.blob);
+        stage(`images/thumb/${name}`, await makeThumb(r.blob));
         $("#p-tee-warn").hidden = r.hasAlpha;
         if (!draft[other(s)]) draft.cover = s;
         if (draft.cover === s) draft.printFocus = "50% 45%";
@@ -305,6 +316,7 @@
     try {
       // only upload images that are still used
       const used = new Set([...data.products.flatMap(p => [p.tee, p.teeFront, p.front, p.back]), ...data.gallery.map(a => a.src)]);
+      for (const u of [...used]) if (u && u.startsWith("images/")) used.add(u.replace(/^images\//, "images/thumb/"));
       for (const [path, { blob }] of pending) {
         if (!used.has(path)) { pending.delete(path); continue; }
         const li = log(`Uploading ${path.split("/").pop()}…`);

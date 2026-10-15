@@ -23,61 +23,51 @@
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
   };
 
-  /* ---------- background: ravens, ruins and a full moon in fog. Kept dim so the designs stay readable ---------- */
+  /* ---------- background: ravens, ruins and a full moon in fog. The picture is a fixed CSS layer (no repainting);
+     the canvas above it only draws drifting mist and the odd raven, and pauses while the page is scrolling ---------- */
   const cv = $("#stars"), cx = cv.getContext("2d");
-  const nave = new Image(); nave.decoding = "async";
-  nave.src = innerWidth > 900 ? "images/ravenmoon.webp" : "images/ravenmoon-1200.webp";
-  let W = 0, H = 0, base = null, mist = [], motes = [], nextBat = 3000;
-  function buildSky() {
-    const dpr = Math.min(devicePixelRatio || 1, 1.5); W = innerWidth; H = innerHeight;
-    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); cx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    base = document.createElement("canvas"); base.width = cv.width; base.height = cv.height;
-    const b = base.getContext("2d"); b.setTransform(dpr, 0, 0, dpr, 0, 0);
-    b.fillStyle = "#000"; b.fillRect(0, 0, W, H);
-    if (nave.complete && nave.naturalWidth) {
-      // cover, keeping the rose window in view
-      const s = Math.max(W / nave.naturalWidth, H / nave.naturalHeight), iw = nave.naturalWidth * s, ih = nave.naturalHeight * s;
-      b.globalAlpha = 0.7; b.drawImage(nave, (W - iw) * 0.62, (H - ih) * 0.3, iw, ih); b.globalAlpha = 1;
-      const dim = b.createRadialGradient(W / 2, H * 0.5, Math.min(W, H) * 0.15, W / 2, H * 0.5, Math.max(W, H) * 0.75); dim.addColorStop(0, "rgba(0,0,0,.22)"); dim.addColorStop(1, "rgba(0,0,0,.62)"); b.fillStyle = dim; b.fillRect(0, 0, W, H);
-    }
-    let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-    mist = Array.from({ length: 6 }, (_, i) => ({ x: rnd() * W, y: H * (0.55 + rnd() * 0.5), rx: W * (0.35 + rnd() * 0.4), ry: H * (0.06 + rnd() * 0.1), a: 0.03 + rnd() * 0.035, v: (rnd() * 0.5 + 0.3) * (i % 2 ? 1 : -1) * 6 }));
-    motes = []; nextBat = 3000;
+  let W = 0, H = 0, mist = [], motes = [], nextBat = 3000, scrolling = false, scrollT;
+  function mistSprite(a) { // one pre-rendered fog blob (a soft circle, stretched when drawn), reused every frame
+    const c = document.createElement("canvas"); c.width = c.height = 128; const g = c.getContext("2d");
+    const r = g.createRadialGradient(64, 64, 0, 64, 64, 64); r.addColorStop(0, `rgba(190,198,220,${a})`); r.addColorStop(0.6, `rgba(190,198,220,${a * 0.45})`); r.addColorStop(1, "rgba(190,198,220,0)");
+    g.fillStyle = r; g.fillRect(0, 0, 128, 128); return c;
   }
-  nave.addEventListener("load", () => { buildSky(); paintSky(performance.now()); });
+  function buildSky() {
+    const dpr = Math.min(devicePixelRatio || 1, 1.25); W = innerWidth; H = innerHeight;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); cx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    mist = Array.from({ length: 5 }, (_, i) => ({ x: rnd() * W, y: H * (0.55 + rnd() * 0.45), w: W * (0.7 + rnd() * 0.8), h: H * (0.12 + rnd() * 0.18), img: mistSprite(0.05 + rnd() * 0.05), v: (rnd() * 0.5 + 0.3) * (i % 2 ? 1 : -1) * 6 }));
+    motes = []; nextBat = performance.now() + 3000;
+  }
   let lastT = 0;
   function paintSky(t) {
     const dt = Math.min(0.1, (t - lastT) / 1000 || 0); lastT = t;
-    cx.globalAlpha = 1; cx.drawImage(base, 0, 0, W, H);
-    // a raven crossing the sky now and then, wings beating
-    if (t > nextBat && motes.length < 3) {
+    cx.clearRect(0, 0, W, H);
+    for (const m of mist) {
+      const span = W + m.w, x = (((m.x + (t / 1000) * m.v) % span) + span) % span - m.w / 2;
+      cx.drawImage(m.img, x - m.w / 2, m.y - m.h / 2, m.w, m.h);
+    }
+    if (t > nextBat && motes.length < 2) {
       const dir = Math.random() < 0.5 ? 1 : -1;
-      motes.push({ x: dir > 0 ? -60 : W + 60, y: H * (0.08 + Math.random() * 0.35), vx: dir * (W / (9 + Math.random() * 5)), wob: Math.random() * 6.28, s: 0.7 + Math.random() * 0.6, born: t });
+      motes.push({ x: dir > 0 ? -60 : W + 60, y: H * (0.08 + Math.random() * 0.35), vx: dir * (W / (9 + Math.random() * 5)), wob: Math.random() * 6.28, s: 0.7 + Math.random() * 0.6 });
       nextBat = t + 6000 + Math.random() * 9000;
     }
     motes = motes.filter(m => m.x > -80 && m.x < W + 80);
+    cx.fillStyle = "#030404";
     for (const m of motes) {
-      m.x += m.vx * dt; const y = m.y + Math.sin(t / 700 + m.wob) * 14, flap = Math.sin(t / 85 + m.wob);
-      cx.save(); cx.translate(m.x, y); cx.scale(m.s * (m.vx > 0 ? 1 : -1), m.s); cx.globalAlpha = 0.85; cx.fillStyle = "#030404";
-      // raven: long tapered wings that beat up and down, wedge tail
-      const up = flap * 16;
-      for (const k of [1, -1]) { cx.beginPath(); cx.moveTo(4 * k, -1); cx.quadraticCurveTo(16 * k, -6 - up * 0.6, 34 * k, -up); cx.quadraticCurveTo(20 * k, 0 - up * 0.2, 4 * k, 3); cx.closePath(); cx.fill(); }
+      m.x += m.vx * dt; const y = m.y + Math.sin(t / 700 + m.wob) * 14, up = Math.sin(t / 85 + m.wob) * 16;
+      cx.save(); cx.translate(m.x, y); cx.scale(m.s * (m.vx > 0 ? 1 : -1), m.s); cx.globalAlpha = 0.85;
+      for (const k of [1, -1]) { cx.beginPath(); cx.moveTo(4 * k, -1); cx.quadraticCurveTo(16 * k, -6 - up * 0.6, 34 * k, -up); cx.quadraticCurveTo(20 * k, -up * 0.2, 4 * k, 3); cx.closePath(); cx.fill(); }
       cx.beginPath(); cx.ellipse(0, 1, 9, 3.2, 0, 0, 6.283); cx.fill();
       cx.beginPath(); cx.moveTo(-8, 0); cx.lineTo(-17, -3); cx.lineTo(-16, 4); cx.closePath(); cx.fill();
       cx.beginPath(); cx.arc(9, -1, 2.8, 0, 6.283); cx.fill(); cx.beginPath(); cx.moveTo(11, -1.5); cx.lineTo(16, 0); cx.lineTo(11, 1); cx.fill();
       cx.restore();
     }
-    // mist rolling along the floor
-    for (const m of mist) {
-      const x = ((m.x + (t / 1000) * m.v) % (W + m.rx * 2) + (W + m.rx * 2)) % (W + m.rx * 2) - m.rx;
-      cx.save(); cx.translate(x, m.y); cx.scale(1, m.ry / m.rx);
-      const mg = cx.createRadialGradient(0, 0, 0, 0, 0, m.rx); mg.addColorStop(0, `rgba(190,198,220,${m.a})`); mg.addColorStop(1, "rgba(190,198,220,0)");
-      cx.globalAlpha = 1; cx.fillStyle = mg; cx.beginPath(); cx.arc(0, 0, m.rx, 0, 6.283); cx.fill(); cx.restore();
-    }
     cx.globalAlpha = 1;
   }
   let raf = 0, last = 0;
-  const loop = t => { raf = requestAnimationFrame(loop); if (t - last < 40) return; last = t; paintSky(t); };
+  const loop = t => { raf = requestAnimationFrame(loop); if (scrolling || t - last < 50) return; last = t; paintSky(t); };
+  addEventListener("scroll", () => { scrolling = true; clearTimeout(scrollT); scrollT = setTimeout(() => (scrolling = false), 160); }, { passive: true });
   function startSky() { buildSky(); cancelAnimationFrame(raf); if (reduce) paintSky(0); else raf = requestAnimationFrame(loop); }
   startSky();
   let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(startSky, 150); });
@@ -117,6 +107,7 @@
     const cover = p.print === "front" ? "front" : "back", o = cover === "front" ? "back" : "front";
     return { [cover]: p.tee, [o]: p.teeFront, cover };
   };
+  const thumb = src => String(src || "").replace(/^images\/(?!thumb\/)/, "images/thumb/");
   const basePrice = p => p.prices.regular ?? Math.min(...Object.values(p.prices));
   const firstFit = p => (p.prices.regular != null ? "regular" : Object.keys(p.prices)[0]);
   const FILTERS = [
@@ -128,19 +119,33 @@
   if (D.products.length < 3) { pills.hidden = true; grid.classList.add("few"); }
   pills.innerHTML = FILTERS.map((f, i) => `<button class="pill" role="tab" type="button" data-f="${f.id}" aria-selected="${i === 0}">${f.name}</button>`).join("");
   // Card hover: swap to the other side if a front image exists, otherwise zoom into the print.
-  function card(p) {
+  function card(p, i) {
     const sd = sides(p), cov = sd[sd.cover], alt = sd[sd.cover === "front" ? "back" : "front"], swap = !!alt;
     return `
       <button class="card ${swap ? "swap" : "zoom"}" type="button" data-id="${esc(p.id)}" style="--focus:${esc(p.printFocus || "50% 45%")}" aria-label="${esc(p.name)}, ${rs(basePrice(p))}. View details">
         <span class="card-img">
-          <img class="main" src="${esc(cov)}" alt="" loading="lazy" decoding="async">
-          ${swap ? `<img class="alt" src="${esc(alt)}" alt="" loading="lazy" decoding="async">` : ""}
+          <img class="main" src="${esc(thumb(cov))}" data-full="${esc(cov)}" alt="" width="560" height="560" ${i < 4 ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async">
+          ${swap ? `<img class="alt" src="${esc(thumb(alt))}" data-full="${esc(alt)}" alt="" width="560" height="560" decoding="async">` : ""}
         </span>
         <span class="card-name">${esc(p.name)}</span>
         <span class="card-price">${rs(basePrice(p))}</span>
       </button>`;
   }
-  function render(fid) { const f = FILTERS.find(x => x.id === fid) || FILTERS[0]; grid.innerHTML = D.products.filter(f.test).map(card).join(""); }
+  function render(fid) {
+    const f = FILTERS.find(x => x.id === fid) || FILTERS[0]; grid.innerHTML = D.products.filter(f.test).map(card).join("");
+    // a thumbnail that isn't there yet (e.g. just added in the admin) falls back to the full image
+    $$("img[data-full]", grid).forEach(img => img.addEventListener("error", () => { if (img.src.indexOf("/thumb/") > -1) img.src = img.dataset.full; }, { once: true }));
+  }
+  // warm the cache: hover images and full-size images load quietly after the page is ready,
+  // and a product's full image starts loading the moment a finger or mouse touches its card
+  const warm = new Set(), prefetch = src => { if (!src || warm.has(src)) return; warm.add(src); const im = new Image(); im.decoding = "async"; im.src = src; };
+  const idle = window.requestIdleCallback || (fn => setTimeout(fn, 600));
+  addEventListener("load", () => idle(() => {
+    $$("#grid img.alt").forEach(i => prefetch(i.src));
+    D.products.forEach(p => { const sd = sides(p); prefetch(sd.front); prefetch(sd.back); });
+  }));
+  grid.addEventListener("pointerover", e => { const c = e.target.closest(".card"); if (!c) return; const sd = sides(byId[c.dataset.id]); prefetch(sd.front); prefetch(sd.back); });
+  grid.addEventListener("touchstart", e => { const c = e.target.closest(".card"); if (!c) return; const sd = sides(byId[c.dataset.id]); prefetch(sd.front); prefetch(sd.back); }, { passive: true });
   pills.addEventListener("click", e => {
     const b = e.target.closest(".pill"); if (!b) return;
     $$(".pill", pills).forEach(x => x.setAttribute("aria-selected", x === b));
@@ -188,7 +193,7 @@
     items.innerHTML = bag.map(i => {
       const p = byId[i.id], price = p.prices[i.fit];
       return `<div class="bag-item" data-key="${esc(lineKey(i))}">
-        <img src="${esc(p.tee)}" alt="">
+        <img src="${esc(thumb(p.tee))}" alt="" onerror="this.onerror=null;this.src='${esc(p.tee)}'">
         <div><h3>${esc(p.name)}</h3><p>${FIT[i.fit] || esc(i.fit)}, ${esc(i.size)}</p>
           <div class="qty"><button type="button" data-q="-1" aria-label="One less">−</button><span>${i.qty}</span><button type="button" data-q="1" aria-label="One more">+</button></div></div>
         <div class="bag-line"><span>${rs0(price * i.qty)}</span><button class="link-btn" type="button" data-remove>Remove</button></div>
@@ -277,7 +282,9 @@
   bgm.volume = 0.6;
   const syncBtn = () => { const on = !bgm.paused; mBtn.setAttribute("aria-pressed", on); mBtn.setAttribute("aria-label", on ? "Mute music" : "Play music"); };
   bgm.addEventListener("play", syncBtn); bgm.addEventListener("pause", syncBtn);
-  const tryPlay = () => bgm.play().catch(() => {});
+  // the song is 2 MB, so it only starts loading once the page and tee images are in
+  const ensureSrc = () => { if (!bgm.getAttribute("src")) { bgm.src = bgm.dataset.src; bgm.preload = "auto"; } };
+  const tryPlay = () => { ensureSrc(); return bgm.play().catch(() => {}); };
   const EVTS = ["pointerdown", "keydown", "touchstart"];
   const unlock = e => {
     if (e && e.target.closest && e.target.closest("#music-btn")) return;
@@ -285,7 +292,7 @@
     EVTS.forEach(t => removeEventListener(t, unlock, true));
   };
   if (userPaused) bgm.pause();
-  else { tryPlay(); EVTS.forEach(t => addEventListener(t, unlock, true)); }
+  else { const go = () => setTimeout(tryPlay, 300); if (document.readyState === "complete") go(); else addEventListener("load", go, { once: true }); EVTS.forEach(t => addEventListener(t, unlock, true)); }
   mBtn.addEventListener("click", () => {
     if (bgm.paused) { userPaused = false; tryPlay(); } else { userPaused = true; bgm.pause(); }
     store.set("ds-music-off", userPaused);
