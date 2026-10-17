@@ -119,29 +119,59 @@
   if (D.products.length < 3) { pills.hidden = true; grid.classList.add("few"); }
   pills.innerHTML = FILTERS.map((f, i) => `<button class="pill" role="tab" type="button" data-f="${f.id}" aria-selected="${i === 0}">${f.name}</button>`).join("");
   // Card hover: swap to the other side if a front image exists, otherwise zoom into the print.
+  // Cards appear one after another as their image arrives. Until then each card shows a small spinning DS.
   function card(p, i) {
     const sd = sides(p), cov = sd[sd.cover], alt = sd[sd.cover === "front" ? "back" : "front"], swap = !!alt;
     return `
-      <button class="card ${swap ? "swap" : "zoom"}" type="button" data-id="${esc(p.id)}" style="--focus:${esc(p.printFocus || "50% 45%")}" aria-label="${esc(p.name)}, ${rs(basePrice(p))}. View details">
+      <button class="card ${swap ? "swap" : "zoom"} is-loading" type="button" data-id="${esc(p.id)}" data-i="${i}" style="--focus:${esc(p.printFocus || "50% 45%")}" aria-label="${esc(p.name)}, ${rs(basePrice(p))}. View details">
         <span class="card-img">
-          <img class="main" src="${esc(thumb(cov))}" data-full="${esc(cov)}" alt="" width="560" height="560" ${i < 4 ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async">
-          ${swap ? `<img class="alt" src="${esc(thumb(alt))}" data-full="${esc(alt)}" alt="" width="560" height="560" decoding="async">` : ""}
+          <span class="card-loader" aria-hidden="true"><img src="images/logo-mark.webp" alt=""></span>
+          <img class="main" data-src="${esc(thumb(cov))}" data-full="${esc(cov)}" alt="" width="560" height="560" decoding="async">
+          ${swap ? `<img class="alt" data-src="${esc(thumb(alt))}" data-full="${esc(alt)}" alt="" width="560" height="560" decoding="async">` : ""}
         </span>
         <span class="card-name">${esc(p.name)}</span>
         <span class="card-price">${rs(basePrice(p))}</span>
       </button>`;
   }
+  let loadRun = 0;
+  function loadImg(img) { // resolves when the image is downloaded and decoded (falls back to the full image if the small one is missing)
+    return new Promise(res => {
+      const done = () => (img.decode ? img.decode().catch(() => {}) : Promise.resolve()).then(res);
+      img.addEventListener("load", done, { once: true });
+      img.addEventListener("error", () => {
+        if (img.src.indexOf("/thumb/") > -1) { img.addEventListener("load", done, { once: true }); img.addEventListener("error", res, { once: true }); img.src = img.dataset.full; }
+        else res();
+      }, { once: true });
+      img.src = img.dataset.src;
+    });
+  }
+  async function progressive(run) {
+    const cards = $$(".card", grid), ready = new Array(cards.length).fill(false);
+    let shown = 0;
+    const reveal = () => { // keep the order: a card shows only after the ones before it
+      while (shown < cards.length && ready[shown]) { cards[shown].classList.remove("is-loading"); cards[shown].classList.add("is-in"); shown++; }
+    };
+    let next = 0;
+    const worker = async () => {
+      while (next < cards.length && run === loadRun) {
+        const k = next++; await loadImg($("img.main", cards[k]));
+        if (run !== loadRun) return; ready[k] = true; reveal();
+      }
+    };
+    await Promise.all([worker(), worker(), worker()]); // three at a time
+    if (run !== loadRun) return;
+    // hover images come last, quietly
+    for (const img of $$("img.alt", grid)) { if (run !== loadRun) return; await loadImg(img); }
+  }
   function render(fid) {
     const f = FILTERS.find(x => x.id === fid) || FILTERS[0]; grid.innerHTML = D.products.filter(f.test).map(card).join("");
-    // a thumbnail that isn't there yet (e.g. just added in the admin) falls back to the full image
-    $$("img[data-full]", grid).forEach(img => img.addEventListener("error", () => { if (img.src.indexOf("/thumb/") > -1) img.src = img.dataset.full; }, { once: true }));
+    progressive(++loadRun);
   }
   // warm the cache: hover images and full-size images load quietly after the page is ready,
   // and a product's full image starts loading the moment a finger or mouse touches its card
   const warm = new Set(), prefetch = src => { if (!src || warm.has(src)) return; warm.add(src); const im = new Image(); im.decoding = "async"; im.src = src; };
   const idle = window.requestIdleCallback || (fn => setTimeout(fn, 600));
   addEventListener("load", () => idle(() => {
-    $$("#grid img.alt").forEach(i => prefetch(i.src));
     D.products.forEach(p => { const sd = sides(p); prefetch(sd.front); prefetch(sd.back); });
   }));
   grid.addEventListener("pointerover", e => { const c = e.target.closest(".card"); if (!c) return; const sd = sides(byId[c.dataset.id]); prefetch(sd.front); prefetch(sd.back); });

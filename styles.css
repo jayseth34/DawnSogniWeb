@@ -160,6 +160,14 @@ body.loading { overflow: hidden; }
   width: 100%; aspect-ratio: 1; display: grid; place-items: center; position: relative; overflow: hidden; border-radius: 14px;
 }
 .card-img img.alt { position: absolute; opacity: 0; transition: opacity .45s ease; }
+/* progressive loading: a small spinning DS holds each card's place until its tee arrives */
+.card-loader { position: absolute; inset: 0; display: grid; place-items: center; perspective: 400px; pointer-events: none; transition: opacity .35s ease; z-index: 1; }
+.card-loader img { width: 34%; height: auto; opacity: .75; animation: ds-spin 1.6s linear infinite; filter: drop-shadow(0 0 6px rgba(210,220,232,.3)); }
+.card.is-loading .card-img img.main { opacity: 0; transform: translateY(14px) scale(.96); }
+.card.is-in .card-img img.main { transition: opacity .6s ease, transform .6s cubic-bezier(.2,.7,.2,1); }
+.card.is-in .card-loader { opacity: 0; }
+.card.is-loading .card-name, .card.is-loading .card-price { opacity: .45; }
+.card.is-in .card-name, .card.is-in .card-price { transition: opacity .5s ease; }
 .card-img::before {
   content: ""; position: absolute; inset: 12%;
   background: radial-gradient(closest-side, rgba(255,255,255,.16), rgba(255,255,255,0));
@@ -343,5 +351,5 @@ body.loading { overflow: hidden; }
   .sheet-img { max-width: 360px; }
   .sheet-body { padding: 18px 20px calc(24px + env(safe-area-inset-bottom)); overflow: visible; }
 }
-@media (prefers-reduced-motion: reduce) { .loader { display: none; } }
+@media (prefers-reduced-motion: reduce) { .loader { display: none; } .card-loader img { animation: none; } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } html { scroll-behavior: auto; } }
