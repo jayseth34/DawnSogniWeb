@@ -242,6 +242,30 @@ window.DS = {
       "print": "back",
       "tee": "images/tee-ds-07-back-mv9in973.webp",
       "teeFront": "images/tee-ds-07-front-mv9iocar.webp"
+    },
+    {
+      "id": "DS-08",
+      "name": "CHOSEN ONE T",
+      "description": "A bold expression of individuality, the Chosen One Tee combines a vibrant royal-blue base with striking red “031” typography, a distressed cosmic orb, and sharp white gothic lettering. The layered graphics create a raw, futuristic aesthetic rooted in underground streetwear and self-expression.",
+      "colorName": "Royal Blue",
+      "cover": "back",
+      "prices": {
+        "regular": 999,
+        "oversized": 1099
+      },
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "printFocus": "50% 45%",
+      "front": "images/tee-ds-08-front-mvc21ojt.webp",
+      "back": "images/tee-ds-08-back-mvc21sc2.webp",
+      "print": "back",
+      "tee": "images/tee-ds-08-back-mvc21sc2.webp",
+      "teeFront": "images/tee-ds-08-front-mvc21ojt.webp"
     }
   ],
   "gallery": []
