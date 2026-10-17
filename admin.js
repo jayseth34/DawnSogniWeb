@@ -317,6 +317,19 @@
       // only upload images that are still used
       const used = new Set([...data.products.flatMap(p => [p.tee, p.teeFront, p.front, p.back]), ...data.gallery.map(a => a.src)]);
       for (const u of [...used]) if (u && u.startsWith("images/")) used.add(u.replace(/^images\//, "images/thumb/"));
+      // safety net: any product image that has no small card version yet gets one now
+      for (const p of data.products) for (const src of [p.front, p.back, p.tee, p.teeFront]) {
+        if (!src || !src.startsWith("images/") || src.startsWith("images/thumb/")) continue;
+        const t = src.replace(/^images\//, "images/thumb/");
+        if (pending.has(t)) continue;
+        let exists = false;
+        try { exists = (await fetch(t + "?check=" + Date.now(), { method: "HEAD", cache: "no-store" })).ok; } catch (e) {}
+        if (exists) continue;
+        try {
+          const full = pending.get(src)?.blob || await (await fetch(src, { cache: "no-store" })).blob();
+          stage(t, await makeThumb(full)); used.add(t);
+        } catch (e) {}
+      }
       for (const [path, { blob }] of pending) {
         if (!used.has(path)) { pending.delete(path); continue; }
         const li = log(`Uploading ${path.split("/").pop()}…`);
