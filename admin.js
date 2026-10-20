@@ -330,11 +330,33 @@
           stage(t, await makeThumb(full)); used.add(t);
         } catch (e) {}
       }
+      // link previews: one small page + picture per product, rebuilt only when that product changed
+      const shares = [];
+      if (window.DSShare) {
+        const li0 = log("Checking link previews…");
+        const urlFor = src => pending.has(src) ? URL.createObjectURL(pending.get(src).blob) : src;
+        for (const p of data.products) {
+          try {
+            const path = `p/${DSShare.slug(p.id)}.html`, old = await getFile(path);
+            if (old && old.text && old.text.includes(`ds-share:${DSShare.sig(p)}`)) continue;
+            shares.push({ ...(await DSShare.build(p, urlFor)), sha: old && old.sha, name: p.name });
+          } catch (e) { /* a preview is never worth stopping a publish for */ }
+        }
+        li0.textContent = shares.length ? `${shares.length} link preview${shares.length > 1 ? "s" : ""} to update` : "Link previews up to date"; li0.className = "ok";
+      }
       for (const [path, { blob }] of pending) {
         if (!used.has(path)) { pending.delete(path); continue; }
         const li = log(`Uploading ${path.split("/").pop()}…`);
         await putFile(path, await blobToB64(blob), `Admin: add ${path}`);
         li.textContent = `Uploaded ${path.split("/").pop()}`; li.className = "ok"; pending.delete(path);
+      }
+      for (const sh of shares) {
+        const l = log(`Link preview: ${sh.name}…`);
+        try {
+          await putFile(sh.imgPath, await blobToB64(sh.jpg), `Admin: link preview ${sh.imgPath}`);
+          await putFile(sh.htmlPath, b64encodeText(sh.html), `Admin: link preview ${sh.htmlPath}`, sh.sha);
+          l.textContent = `Link preview: ${sh.name}`; l.className = "ok";
+        } catch (e) { l.textContent = `Link preview skipped: ${sh.name}`; }
       }
       let li = log("Saving catalogue…");
       const text = HEADER + "window.DS = " + JSON.stringify(data, null, 2) + ";\n";

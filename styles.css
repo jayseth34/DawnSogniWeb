@@ -354,3 +354,5 @@ body.loading { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) { .loader { display: none; } .card-loader img { animation: none; } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } html { scroll-behavior: auto; } }
 .custom-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+.link-btn { display: block; margin: 14px auto 0; background: none; border: 0; color: rgba(255,255,255,.7); font: inherit; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; text-decoration: underline; text-underline-offset: 4px; cursor: pointer; }
+.link-btn:hover { color: #fff; }

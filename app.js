@@ -75,6 +75,9 @@
 
   /* ---------- WhatsApp + links ---------- */
   const wa = t => `https://wa.me/${D.whatsapp}?text=${encodeURIComponent(t)}`;
+  // order number: DS-<day><month>-<4 letters>, e.g. DS-2010-K7QP. Easy to read out, no 0/O or 1/I mix-ups.
+  const orderNo = () => { const d = new Date(), A = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"; let r = ""; for (let i = 0; i < 4; i++) r += A[Math.floor(Math.random() * A.length)]; return `DS-${String(d.getDate()).padStart(2, "0")}${String(d.getMonth() + 1).padStart(2, "0")}-${r}`; };
+  const productLink = id => (window.location.origin + window.location.pathname).replace(/index\.html$/, "") + "p/" + String(id).toLowerCase().replace(/[^a-z0-9]+/g, "-") + ".html";
   const WA_TEXT = {
     general: "Hi Dawn Sogni! I'd like to know more about your designs.",
     custom: "Hi Dawn Sogni! I have my own design I'd like printed. I'll attach the file here.\n\nGarment (tee / polo / print only):\nSize:\nPrint size on the garment:"
@@ -203,12 +206,12 @@
   const bagCount = () => bag.reduce((n, i) => n + i.qty, 0);
   const bagTotal = () => bag.reduce((n, i) => n + byId[i.id].prices[i.fit] * i.qty, 0);
   function saveBag() { store.set("ds-bag", bag); renderBag(); }
-  function bagMessage() {
+  function bagMessage(no = orderNo()) {
     const lines = bag.map((i, k) => {
       const p = byId[i.id], price = p.prices[i.fit];
       return `${k + 1}. *${p.name}* (${p.id})\n   ${FIT[i.fit] || i.fit}, size ${i.size}${p.colorName ? ", " + p.colorName : ""}\n   ${i.qty} × ${rs0(price)} = ${rs0(price * i.qty)}`;
     });
-    return `Hi Dawn Sogni! I'd like to place this order:\n\n${lines.join("\n\n")}\n\n*Total: ${rs0(bagTotal())}* (${bagCount()} ${bagCount() === 1 ? "tee" : "tees"})`;
+    return `Hi Dawn Sogni! I'd like to place this order.\nOrder no: *${no}*\n\n${lines.join("\n\n")}\n\n*Total: ${rs0(bagTotal())}* (${bagCount()} ${bagCount() === 1 ? "tee" : "tees"})`;
   }
   function renderBag() {
     const n = bagCount(), badge = $("#bag-count");
@@ -264,8 +267,8 @@
   function updateOrder() {
     const p = current, price = p.prices[sel.fit];
     $("#sheet-price").textContent = rs(price);
-    const link = location.href.split("#")[0] + "#p=" + p.id;
-    $("#sheet-wa").href = wa(`Hi Dawn Sogni! I'd like to order this design:\n\n*${p.name}* (${p.id})\nFit: ${FIT[sel.fit] || sel.fit}\nSize: ${sel.size}\n${p.colorName ? "Colour: " + p.colorName + "\n" : ""}Price: ${rs0(price)}\n\n${link}`);
+    const link = productLink(p.id);
+    $("#sheet-wa").href = wa(`Hi Dawn Sogni! I'd like to order this design.\nOrder no: *${orderNo()}*\n\n*${p.name}* (${p.id})\nFit: ${FIT[sel.fit] || sel.fit}\nSize: ${sel.size}\n${p.colorName ? "Colour: " + p.colorName + "\n" : ""}Price: ${rs0(price)}\n\n${link}`);
     $("#sheet-chart").innerHTML = chartTable(sel.fit);
   }
   function open(id) {
@@ -328,4 +331,26 @@
     store.set("ds-music-off", userPaused);
   });
   syncBtn();
+
+  /* share one design: the link shows that tee as the preview on WhatsApp / Instagram */
+  $("#sheet-share")?.addEventListener("click", async () => {
+    if (!current) return;
+    const url = productLink(current.id);
+    try { if (navigator.share) { await navigator.share({ title: current.name + " — Dawn Sogni", url }); return; } } catch (e) { if (e.name === "AbortError") return; }
+    try { await navigator.clipboard.writeText(url); toast("Link copied"); } catch (e) { prompt("Copy this link", url); }
+  });
+
+  /* tell Google what is on sale */
+  try {
+    const site = (location.origin + location.pathname).replace(/index\.html$/, "");
+    const ld = { "@context": "https://schema.org", "@graph": [
+      { "@type": "Organization", name: "Dawn Sogni", url: site, logo: site + "images/logo-mark.png", sameAs: D.instagram ? ["https://www.instagram.com/" + D.instagram + "/"] : [] },
+      { "@type": "ItemList", name: "Dawn Sogni tees", itemListElement: D.products.map((p, i) => {
+        const prices = Object.values(p.prices).filter(v => v != null), img = (p.cover === "front" ? p.front : p.back) || p.front || p.back || p.tee;
+        return { "@type": "ListItem", position: i + 1, item: { "@type": "Product", name: p.name, sku: p.id, description: p.description || undefined, color: p.colorName || undefined, image: site + img, url: productLink(p.id), brand: { "@type": "Brand", name: "Dawn Sogni" },
+          offers: { "@type": "AggregateOffer", priceCurrency: "INR", lowPrice: Math.min(...prices), highPrice: Math.max(...prices), offerCount: prices.length, availability: "https://schema.org/InStock" } } };
+      }) }
+    ] };
+    const tag = document.createElement("script"); tag.type = "application/ld+json"; tag.textContent = JSON.stringify(ld); document.head.append(tag);
+  } catch (e) {}
 })();

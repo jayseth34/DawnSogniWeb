@@ -27,3 +27,8 @@ Every "Order" button and the bag open WhatsApp with the design, fit, size, colou
 ## Credits
 Music: "Nocturne", an original track made for Dawn Sogni (audio/nocturne.mp3).
 Fonts: Chakra Petch and Grenze Gotisch (SIL Open Font License).
+
+## Order numbers and link previews
+- Every WhatsApp order carries an order number: `DS-<ddmm>-XXXX` from the shop, `DS-C-<ddmm>-XXXX` from the Design Studio.
+- `p/<id>.html` + `images/og/<id>-*.jpg`: one link-preview page per product (made by `share-pages.js`). Publishing from the admin rebuilds a product's preview only when its name, description, price or cover image changed.
+- `sitemap.xml` can be submitted in Google Search Console.
