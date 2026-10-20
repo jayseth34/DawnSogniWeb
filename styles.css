@@ -353,3 +353,4 @@ body.loading { overflow: hidden; }
 }
 @media (prefers-reduced-motion: reduce) { .loader { display: none; } .card-loader img { animation: none; } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } html { scroll-behavior: auto; } }
+.custom-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
