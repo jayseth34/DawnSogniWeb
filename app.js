@@ -9,15 +9,16 @@
   const FIT = { regular: "Regular", oversized: "Oversized" };
   const byId = Object.fromEntries(D.products.map(p => [p.id, p]));
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  /* ---------- loader: at least 0.9s, gone on load or after 2.5s ---------- */
+  /* ---------- loader: brief, gone once the page has painted (never waits for the tee images) ---------- */
   const loader = $("#loader"), t0 = performance.now();
   document.body.classList.add("loading");
   const hideLoader = () => {
-    const wait = Math.max(0, 900 - (performance.now() - t0));
+    const wait = Math.max(0, 300 - (performance.now() - t0));
     setTimeout(() => { loader.classList.add("done"); document.body.classList.remove("loading"); setTimeout(() => loader.remove(), 700); }, wait);
   };
-  if (document.readyState === "complete") hideLoader(); else addEventListener("load", hideLoader, { once: true });
-  setTimeout(hideLoader, 2500);
+  let loaderGone = false; const hideOnce = () => { if (!loaderGone) { loaderGone = true; hideLoader(); } };
+  if (document.readyState === "complete") hideOnce(); else addEventListener("load", hideOnce, { once: true });
+  setTimeout(hideOnce, Math.max(0, 1200 - performance.now())); // counted from when the page was opened
   const store = {
     get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
@@ -161,24 +162,42 @@
         if (run !== loadRun) return; ready[k] = true; reveal();
       }
     };
-    await Promise.all([worker(), worker(), worker()]); // three at a time
+    await Promise.all(Array.from({ length: 6 }, worker)); // card pictures are ~25 KB, so six at a time
     if (run !== loadRun) return;
-    // hover images come last, quietly
-    for (const img of $$("img.alt", grid)) { if (run !== loadRun) return; await loadImg(img); }
+    cardsDone();
+    // hover images come next, quietly
+    await Promise.all($$("img.alt", grid).map(loadImg));
+    if (run !== loadRun) return;
+    imagesDone();
   }
+  // things that must not compete with the card pictures wait for them
+  let cardsReady, imagesReady;
+  const cardsP = new Promise(r => (cardsReady = r)), imagesP = new Promise(r => (imagesReady = r));
+  const cardsDone = () => cardsReady(), imagesDone = () => imagesReady();
+  cardsP.then(hideOnce);
   function render(fid) {
     const f = FILTERS.find(x => x.id === fid) || FILTERS[0]; grid.innerHTML = D.products.filter(f.test).map(card).join("");
     progressive(++loadRun);
   }
   // warm the cache: hover images and full-size images load quietly after the page is ready,
   // and a product's full image starts loading the moment a finger or mouse touches its card
-  const warm = new Set(), prefetch = src => { if (!src || warm.has(src)) return; warm.add(src); const im = new Image(); im.decoding = "async"; im.src = src; };
+  // background downloads go one at a time, so a picture someone actually asks for never waits behind a queue
+  const warm = new Set(), queue = []; let busy = false;
+  const pump = () => {
+    if (busy || !queue.length) return; busy = true;
+    const im = new Image(); im.decoding = "async"; im.fetchPriority = "low";
+    im.onload = im.onerror = () => { busy = false; pump(); }; im.src = queue.shift();
+  };
+  const prefetch = src => { if (!src || warm.has(src)) return; warm.add(src); queue.push(src); pump(); };
+  const fetchNow = src => { if (!src) return; const i = queue.indexOf(src); if (i > -1) queue.splice(i, 1); if (warm.has(src) && i < 0) return; warm.add(src); const im = new Image(); im.fetchPriority = "high"; im.src = src; };
   const idle = window.requestIdleCallback || (fn => setTimeout(fn, 600));
-  addEventListener("load", () => idle(() => {
+  // big product pictures: first the ones on screen, after all card pictures are in
+  imagesP.then(() => idle(() => {
+    D.products.forEach(p => { const sd = sides(p); prefetch(sd[sd.cover]); });
     D.products.forEach(p => { const sd = sides(p); prefetch(sd.front); prefetch(sd.back); });
   }));
-  grid.addEventListener("pointerover", e => { const c = e.target.closest(".card"); if (!c) return; const sd = sides(byId[c.dataset.id]); prefetch(sd.front); prefetch(sd.back); });
-  grid.addEventListener("touchstart", e => { const c = e.target.closest(".card"); if (!c) return; const sd = sides(byId[c.dataset.id]); prefetch(sd.front); prefetch(sd.back); }, { passive: true });
+  grid.addEventListener("pointerover", e => { const c = e.target.closest(".card"); if (!c) return; const sd = sides(byId[c.dataset.id]); fetchNow(sd[sd.cover]); });
+  grid.addEventListener("touchstart", e => { const c = e.target.closest(".card"); if (!c) return; const sd = sides(byId[c.dataset.id]); fetchNow(sd[sd.cover]); }, { passive: true });
   pills.addEventListener("click", e => {
     const b = e.target.closest(".pill"); if (!b) return;
     $$(".pill", pills).forEach(x => x.setAttribute("aria-selected", x === b));
@@ -261,7 +280,15 @@
     const p = current, sd = sides(p), src = sd[v], img = $("#sheet-img");
     img.classList.remove("is-zoomed");
     img.style.setProperty("--focus", (v === sd.cover ? p.printFocus : null) || "50% 45%");
-    img.innerHTML = `<img class="is-tee" src="${esc(src)}" alt="${esc(p.name)}, ${v}">`;
+    const qi = queue.indexOf(src); if (qi > -1) queue.splice(qi, 1);
+    const big = new Image(); big.decoding = "async"; big.fetchPriority = "high"; big.src = src;
+    if (big.complete && big.naturalWidth) img.innerHTML = `<img class="is-tee" src="${esc(src)}" alt="${esc(p.name)}, ${v}">`;
+    else {
+      img.innerHTML = `<img class="is-tee" src="${esc(thumb(src))}" alt="${esc(p.name)}, ${v}">`;
+      const shown = img.firstElementChild;
+      shown.onerror = () => { shown.onerror = null; shown.src = src; };
+      (big.decode ? big.decode() : new Promise((ok, no) => { big.onload = ok; big.onerror = no; })).then(() => { if (img.firstElementChild === shown) shown.src = src; }).catch(() => {});
+    }
     $$(".view", $("#views")).forEach(b => b.setAttribute("aria-selected", b.dataset.v === v));
   }
   function updateOrder() {
@@ -317,7 +344,7 @@
   bgm.addEventListener("play", syncBtn); bgm.addEventListener("pause", syncBtn);
   // the song is 2 MB, so it only starts loading once the page and tee images are in
   const ensureSrc = () => { if (!bgm.getAttribute("src")) { bgm.src = bgm.dataset.src; bgm.preload = "auto"; } };
-  const tryPlay = () => { ensureSrc(); return bgm.play().catch(() => {}); };
+  const tryPlay = () => { ensureSrc(); return bgm.play().catch(() => { if (bgm.paused && !bgm.currentTime) { bgm.removeAttribute("src"); bgm.preload = "none"; bgm.load(); } }); };
   const EVTS = ["pointerdown", "keydown", "touchstart"];
   const unlock = e => {
     if (e && e.target.closest && e.target.closest("#music-btn")) return;
@@ -325,7 +352,7 @@
     EVTS.forEach(t => removeEventListener(t, unlock, true));
   };
   if (userPaused) bgm.pause();
-  else { const go = () => setTimeout(tryPlay, 300); if (document.readyState === "complete") go(); else addEventListener("load", go, { once: true }); EVTS.forEach(t => addEventListener(t, unlock, true)); }
+  else { imagesP.then(() => setTimeout(tryPlay, 300)); setTimeout(() => imagesReady(), 8000); EVTS.forEach(t => addEventListener(t, unlock, true)); }
   mBtn.addEventListener("click", () => {
     if (bgm.paused) { userPaused = false; tryPlay(); } else { userPaused = true; bgm.pause(); }
     store.set("ds-music-off", userPaused);

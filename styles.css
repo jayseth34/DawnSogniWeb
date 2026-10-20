@@ -164,7 +164,7 @@ body.loading { overflow: hidden; }
 .card-loader { position: absolute; inset: 0; display: grid; place-items: center; perspective: 400px; pointer-events: none; transition: opacity .35s ease; z-index: 1; }
 .card-loader img { width: 34%; height: auto; opacity: .75; animation: ds-spin 1.6s linear infinite; filter: drop-shadow(0 0 6px rgba(210,220,232,.3)); }
 .card.is-loading .card-img img.main { opacity: 0; transform: translateY(14px) scale(.96); }
-.card.is-in .card-img img.main { transition: opacity .6s ease, transform .6s cubic-bezier(.2,.7,.2,1); }
+.card.is-in .card-img img.main { transition: opacity .35s ease, transform .4s cubic-bezier(.2,.7,.2,1); }
 .card.is-in .card-loader { opacity: 0; }
 .card.is-loading .card-name, .card.is-loading .card-price { opacity: .45; }
 .card.is-in .card-name, .card.is-in .card-price { transition: opacity .5s ease; }

@@ -20,11 +20,17 @@
   <meta name="twitter:image" content="https://jayseth34.github.io/DawnSogniWeb/og.jpg?v=202610201510">
   <link rel="icon" href="icon-64.png?v=202610171653" type="image/png">
   <link rel="apple-touch-icon" href="apple-touch-icon.png?v=202610171653">
+  <!-- card-preload: the first shop pictures start downloading straight away (kept up to date by the admin) -->
+  <link rel="preload" as="image" href="images/thumb/tee-ds-01-front-mv9cwsyg.webp" fetchpriority="high">
+  <link rel="preload" as="image" href="images/thumb/tee-ds-02-front-mv9dntg6.webp" fetchpriority="high">
+  <link rel="preload" as="image" href="images/thumb/tee-ds-03-mv9ddx9h.webp" fetchpriority="high">
+  <link rel="preload" as="image" href="images/thumb/tee-ds-04-front-mv9e16v0.webp" fetchpriority="high">
+  <!-- /card-preload -->
   <link rel="preload" href="images/ravenmoon.webp" as="image" media="(min-width: 901px)">
   <link rel="preload" href="images/ravenmoon-1200.webp" as="image" media="(max-width: 900px)">
   <link rel="preload" href="fonts/chakra-petch-latin-700-italic.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="images/logo-mark.webp" as="image">
-  <link rel="stylesheet" href="styles.css?v=202610201510">
+  <link rel="stylesheet" href="styles.css?v=202610201434">
 </head>
 <body>
   <div class="loader" id="loader" aria-hidden="true">
@@ -124,7 +130,7 @@
   </main>
 
   <footer class="foot">
-    <p class="foot-logo"><img src="images/logo-full.webp" alt="Dawn Sogni" width="1000" height="334"></p>
+    <p class="foot-logo"><img loading="lazy" decoding="async" src="images/logo-full.webp" alt="Dawn Sogni" width="1000" height="334"></p>
     <ul class="foot-links">
       <li><a data-wa="general" href="#" target="_blank" rel="noopener">WhatsApp</a></li>
       <li><a id="ig-link" href="#" target="_blank" rel="noopener">Instagram</a></li>
@@ -191,6 +197,6 @@
   </dialog>
 
   <script src="products.js?v=202610190558"></script>
-  <script src="app.js?v=202610201510"></script>
+  <script src="app.js?v=202610201434"></script>
 </body>
 </html>

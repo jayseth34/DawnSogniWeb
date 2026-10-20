@@ -367,7 +367,11 @@
       // bump the version tag so visitors get the new catalogue straight away
       li = log("Refreshing the site's cache tag…");
       const idx = await getFile("index.html"), v = new Date().toISOString().replace(/\D/g, "").slice(0, 12);
-      const html = idx.text.replace(/products\.js\?v=\d+/, `products.js?v=${v}`);
+      // the first four shop pictures are listed in the page head so phones start downloading them immediately
+      const coverOf = p => (p.front || p.back) ? p[p.cover && p[p.cover] ? p.cover : (p.back ? "back" : "front")] : p.tee;
+      const pre = data.products.slice(0, 4).map(coverOf).filter(Boolean).map(src => `  <link rel="preload" as="image" href="${src.replace(/^images\/(?!thumb\/)/, "images/thumb/")}" fetchpriority="high">\n`).join("");
+      const html = idx.text.replace(/products\.js\?v=\d+/, `products.js?v=${v}`)
+        .replace(/(<!-- card-preload[^>]*-->\n)[\s\S]*?(  <!-- \/card-preload -->)/, (m, a, b) => a + pre + b);
       if (html !== idx.text) await putFile("index.html", b64encodeText(html), "Admin: refresh cache tag", idx.sha);
       li.textContent = "Cache tag refreshed"; li.className = "ok";
       dirty = 0; $("#dirty").hidden = true;
