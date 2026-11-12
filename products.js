@@ -504,8 +504,8 @@ window.DS = {
       "colorName": "White",
       "cover": "front",
       "prices": {
-        "regular": 2299,
-        "slim": 2299
+        "regular": 4999,
+        "slim": 4999
       },
       "sizes": [
         "S",
