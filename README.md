@@ -32,3 +32,10 @@ Fonts: Chakra Petch and Grenze Gotisch (SIL Open Font License).
 - Every WhatsApp order carries an order number: `DS-<ddmm>-XXXX` from the shop, `DS-C-<ddmm>-XXXX` from the Design Studio.
 - `p/<id>.html` + `images/og/<id>-*.jpg`: one link-preview page per product (made by `share-pages.js`). Publishing from the admin rebuilds a product's preview only when its name, description, price or cover image changed.
 - `sitemap.xml` can be submitted in Google Search Console.
+
+## Product types
+Tees, shirts, trousers and trackpants (`categories.js` lists each type's fits and sizes; add a type there).
+- In the admin, pick **Type** on a product; the fits, prices and sizes change to suit it.
+- A product without `category` is a tee, so all older products stay exactly as they were.
+- Size charts: `regular` / `oversized` are the tee charts. Other types use `trousers`, `shirts`, `trackpants` (all fits) or e.g. `trousers-baggy` (one fit). Add them under Settings → "Add a size chart for".
+- Once more than one type is in the shop, the filter tabs become All / Tees / Shirts / Trousers / Trackpants.

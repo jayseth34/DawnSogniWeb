@@ -88,3 +88,11 @@ textarea.chart { font-family: ui-monospace, monospace; font-size: 13px; }
 .cover-pick { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
 .cover-pick label { flex-direction: row !important; align-items: center; gap: 6px !important; flex: none !important; font-weight: 600; }
 .cover-pick input:disabled + * , .cover-pick label:has(input:disabled) { opacity: .4; }
+
+.fit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px 16px; }
+.fit-grid label { display: flex; flex-direction: column; gap: 4px; }
+.fit-grid label span { display: flex; align-items: center; gap: 6px; }
+.fit-grid input[type="number"] { width: 100%; }
+.fit-grid input[type="number"]:disabled { opacity: .4; }
+.add-chart { align-items: end; margin: 14px 0 18px; }
+.chart-del { margin-top: 8px; }

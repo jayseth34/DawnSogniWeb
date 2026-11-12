@@ -85,6 +85,11 @@
         <h2>Size charts</h2>
         <p class="muted">One size per line. Separate columns with a vertical bar, e.g. <code>M | 39–40 | 69 | 54</code></p>
         <div id="s-charts"></div>
+        <div class="row add-chart">
+          <label>Add a size chart for<select id="s-chart-cat"></select></label>
+          <label>Fit<select id="s-chart-fit"></select></label>
+          <button class="btn btn-ghost" type="button" id="s-chart-add">Add chart</button>
+        </div>
         <button class="btn btn-ghost" type="submit">Apply settings</button>
       </form>
     </section>
@@ -100,12 +105,10 @@
       </div>
       <label>Description<textarea id="p-desc" rows="3" maxlength="400"></textarea></label>
       <div class="row">
+        <label>Type *<select id="p-cat"></select></label>
         <label>Colour name<input id="p-colour" maxlength="30" placeholder="Black"></label>
       </div>
-      <div class="row">
-        <label class="price"><span><input type="checkbox" id="p-reg-on" checked> Regular fit (Rs.)</span><input type="number" id="p-reg" min="0" step="1" value="999"></label>
-        <label class="price"><span><input type="checkbox" id="p-ovr-on" checked> Oversized fit (Rs.)</span><input type="number" id="p-ovr" min="0" step="1" value="1099"></label>
-      </div>
+      <fieldset class="sizes"><legend>Fits and prices (Rs.) *</legend><div class="fit-grid" id="p-fits"></div></fieldset>
       <fieldset class="sizes"><legend>Sizes *</legend><div id="p-sizes"></div></fieldset>
       <fieldset class="sides">
         <legend>T-shirt images <small>(add at least one side; transparent PNG looks best)</small></legend>
@@ -184,6 +187,7 @@
   </dialog>
 
   <script charset="utf-8" src="share-pages.js?v=202610201500"></script>
-  <script src="admin.js?v=202610202015"></script>
+  <script src="categories.js?v=202611121300"></script>
+  <script src="admin.js?v=202611121300"></script>
 </body>
 </html>

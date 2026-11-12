@@ -6,7 +6,9 @@
   const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const rs = n => "Rs. " + Number(n).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const rs0 = n => "Rs. " + Number(n).toLocaleString("en-IN");
-  const FIT = { regular: "Regular", oversized: "Oversized" };
+  const FIT = window.DS_FITS || { regular: "Regular", oversized: "Oversized" };
+  const CATS = window.DS_CATS || { tees: { name: "Tees", one: "Tee" } };
+  const catOf = p => (CATS[p.category] ? p.category : "tees"); // no category = tee (all older products)
   const byId = Object.fromEntries(D.products.map(p => [p.id, p]));
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   /* ---------- loader: brief, gone once the page has painted (never waits for the tee images) ---------- */
@@ -114,11 +116,12 @@
   const thumb = src => String(src || "").replace(/^images\/(?!thumb\/)/, "images/thumb/");
   const basePrice = p => p.prices.regular ?? Math.min(...Object.values(p.prices));
   const firstFit = p => (p.prices.regular != null ? "regular" : Object.keys(p.prices)[0]);
-  const FILTERS = [
-    { id: "all", name: "All", test: () => true },
-    { id: "back", name: "Back print", test: p => p.print === "back" },
-    { id: "front", name: "Front print", test: p => p.print === "front" }
-  ].filter(f => f.id === "all" || D.products.some(f.test));
+  // tabs: one per product type once there's more than one type, otherwise the front/back print tabs as before
+  const usedCats = Object.keys(CATS).filter(c => D.products.some(p => catOf(p) === c));
+  const FILTERS = [{ id: "all", name: "All", test: () => true }].concat(usedCats.length > 1
+    ? usedCats.map(c => ({ id: c, name: CATS[c].name, test: p => catOf(p) === c }))
+    : [{ id: "back", name: "Back print", test: p => p.print === "back" }, { id: "front", name: "Front print", test: p => p.print === "front" }]
+  ).filter(f => f.id === "all" || D.products.some(f.test));
   const pills = $("#pills"), grid = $("#grid");
   if (D.products.length < 3) { pills.hidden = true; grid.classList.add("few"); }
   pills.innerHTML = FILTERS.map((f, i) => `<button class="pill" role="tab" type="button" data-f="${f.id}" aria-selected="${i === 0}">${f.name}</button>`).join("");
@@ -206,13 +209,18 @@
   render("all");
 
   /* ---------- size charts ---------- */
-  const chartTable = fit => {
-    const c = D.sizeCharts?.[fit]; if (!c) return "";
+  // chart keys: "regular" / "oversized" are the tee charts; other types use "<type>" or "<type>-<fit>"
+  const chartKey = (p, fit) => { const c = catOf(p), S = D.sizeCharts || {}; return [`${c}-${fit}`, c, c === "tees" ? fit : null].find(k => k && S[k]); };
+  const chartTable = key => {
+    const c = key && D.sizeCharts?.[key]; if (!c) return "";
     return `<table class="size-table"><caption>${esc(c.title)}</caption>
       <thead><tr><th scope="col">Size</th>${c.columns.map(x => `<th scope="col">${esc(x)}</th>`).join("")}</tr></thead>
       <tbody>${c.rows.map(r => `<tr><th scope="row">${esc(r[0])}</th>${r.slice(1).map(v => `<td>${esc(v)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
   };
-  $("#size-tables").innerHTML = Object.keys(D.sizeCharts || {}).map(chartTable).join("");
+  // show tee charts and the charts of every type that has products
+  const chartCat = k => (CATS[k] ? k : CATS[k.split("-")[0]] ? k.split("-")[0] : "tees");
+  $("#size-tables").innerHTML = Object.keys(D.sizeCharts || {}).filter(k => chartCat(k) === "tees" || usedCats.includes(chartCat(k)))
+    .sort((a, b) => Object.keys(CATS).indexOf(chartCat(a)) - Object.keys(CATS).indexOf(chartCat(b))).map(chartTable).join("");
 
   /* ---------- toast ---------- */
   let toastT;
@@ -228,9 +236,9 @@
   function bagMessage(no = orderNo()) {
     const lines = bag.map((i, k) => {
       const p = byId[i.id], price = p.prices[i.fit];
-      return `${k + 1}. *${p.name}* (${p.id})\n   ${FIT[i.fit] || i.fit}, size ${i.size}${p.colorName ? ", " + p.colorName : ""}\n   ${i.qty} × ${rs0(price)} = ${rs0(price * i.qty)}`;
+      return `${k + 1}. *${p.name}* (${p.id})\n   ${CATS[catOf(p)].one}, ${FIT[i.fit] || i.fit}, size ${i.size}${p.colorName ? ", " + p.colorName : ""}\n   ${i.qty} × ${rs0(price)} = ${rs0(price * i.qty)}`;
     });
-    return `Hi Dawn Sogni! I'd like to place this order.\nOrder no: *${no}*\n\n${lines.join("\n\n")}\n\n*Total: ${rs0(bagTotal())}* (${bagCount()} ${bagCount() === 1 ? "tee" : "tees"})`;
+    return `Hi Dawn Sogni! I'd like to place this order.\nOrder no: *${no}*\n\n${lines.join("\n\n")}\n\n*Total: ${rs0(bagTotal())}* (${bagCount()} ${bagCount() === 1 ? "item" : "items"})`;
   }
   function renderBag() {
     const n = bagCount(), badge = $("#bag-count");
@@ -245,8 +253,8 @@
     items.innerHTML = bag.map(i => {
       const p = byId[i.id], price = p.prices[i.fit];
       return `<div class="bag-item" data-key="${esc(lineKey(i))}">
-        <img src="${esc(thumb(p.tee))}" alt="" onerror="this.onerror=null;this.src='${esc(p.tee)}'">
-        <div><h3>${esc(p.name)}</h3><p>${FIT[i.fit] || esc(i.fit)}, ${esc(i.size)}</p>
+        ${(() => { const sd = sides(p), src = sd[sd.cover] || p.tee; return `<img src="${esc(thumb(src))}" alt="" onerror="this.onerror=null;this.src='${esc(src)}'">`; })()}
+        <div><h3>${esc(p.name)}</h3><p>${Object.keys(p.prices).length > 1 ? (FIT[i.fit] || esc(i.fit)) + ", " : ""}${esc(i.size)}</p>
           <div class="qty"><button type="button" data-q="-1" aria-label="One less">−</button><span>${i.qty}</span><button type="button" data-q="1" aria-label="One more">+</button></div></div>
         <div class="bag-line"><span>${rs0(price * i.qty)}</span><button class="link-btn" type="button" data-remove>Remove</button></div>
       </div>`;
@@ -295,13 +303,14 @@
     const p = current, price = p.prices[sel.fit];
     $("#sheet-price").textContent = rs(price);
     const link = productLink(p.id);
-    $("#sheet-wa").href = wa(`Hi Dawn Sogni! I'd like to order this design.\nOrder no: *${orderNo()}*\n\n*${p.name}* (${p.id})\nFit: ${FIT[sel.fit] || sel.fit}\nSize: ${sel.size}\n${p.colorName ? "Colour: " + p.colorName + "\n" : ""}Price: ${rs0(price)}\n\n${link}`);
-    $("#sheet-chart").innerHTML = chartTable(sel.fit);
+    $("#sheet-wa").href = wa(`Hi Dawn Sogni! I'd like to order this design.\nOrder no: *${orderNo()}*\n\n*${p.name}* (${p.id})\nItem: ${CATS[catOf(p)].one}\nFit: ${FIT[sel.fit] || sel.fit}\nSize: ${sel.size}\n${p.colorName ? "Colour: " + p.colorName + "\n" : ""}Price: ${rs0(price)}\n\n${link}`);
+    $("#sheet-chart").innerHTML = chartTable(chartKey(p, sel.fit));
   }
   function open(id) {
     const p = byId[id]; if (!p) return;
     current = p;
-    sel = { fit: firstFit(p), size: p.sizes.includes("M") ? "M" : p.sizes[0] };
+    sel = { fit: firstFit(p), size: ["M", "32"].find(s => p.sizes.includes(s)) || p.sizes[0] };
+    $("#size-row").closest("fieldset").querySelector("legend").textContent = p.sizes.every(s => /^\d+$/.test(s)) ? "Waist (in)" : "Size";
     const sd = sides(p);
     $("#views").innerHTML = sd.front && sd.back ? `<button class="view" type="button" role="tab" data-v="front">Front</button><button class="view" type="button" role="tab" data-v="back">Back</button>` : "";
     showView(sd.cover);
@@ -323,7 +332,7 @@
   $("#sheet-add").addEventListener("click", () => {
     addToBag(current.id, sel.fit, sel.size);
     sheet.close();
-    toast(`Added: ${current.name}, ${FIT[sel.fit]} ${sel.size}`);
+    toast(`Added: ${current.name}, ${Object.keys(current.prices).length > 1 ? (FIT[sel.fit] || sel.fit) + " " : ""}${sel.size}`);
   });
   $("#sheet-close").addEventListener("click", () => sheet.close());
   sheet.addEventListener("click", e => { if (e.target === sheet) sheet.close(); });

@@ -3,7 +3,8 @@
   const $ = s => document.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
   const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-  const SIZES = ["XS", "S", "M", "L", "XL", "XXL", "3XL"];
+  const CATS = window.DS_CATS, FITS = window.DS_FITS;
+  const catOf = p => (CATS[p.category] ? p.category : "tees"); // no category = tee (all older products)
   const HEADER = `/* Dawn Sogni catalogue.\n   Edit it from admin.html, or by hand. Everything after "window.DS = " must stay valid JSON.\n   Field guide: see README.md. */\n`;
 
   let cfg = null, data = null, catalogSha = null;
@@ -77,9 +78,9 @@
     const L = data.products; $("#p-count").textContent = `(${L.length})`;
     $("#p-list").innerHTML = L.length ? L.map((p, i) => `
       <li class="item" data-i="${i}">
-        <img src="${esc(imgUrl(p.tee))}" alt="">
+        <img src="${esc(imgUrl(p[p.cover] || p.tee || p.front || p.back))}" alt="">
         <div><b>${esc(p.name)}${pending.has(p.tee) ? '<span class="new">new image</span>' : ""}</b>
-          <small>${esc(p.id)} · ${Object.entries(p.prices).map(([f, v]) => `${f} Rs. ${v}`).join(" / ")} · ${esc(p.sizes.join(" "))}</small></div>
+          <small>${esc(p.id)} · ${esc(CATS[catOf(p)].one)} · ${Object.entries(p.prices).map(([f, v]) => `${f} Rs. ${v}`).join(" / ")} · ${esc(p.sizes.join(" "))}</small></div>
         <div class="acts">
           <button type="button" data-a="up" ${i === 0 ? "disabled" : ""} aria-label="Move up">↑</button>
           <button type="button" data-a="down" ${i === L.length - 1 ? "disabled" : ""} aria-label="Move down">↓</button>
@@ -141,7 +142,26 @@
 
   /* ---------- product editor ---------- */
   const pe = $("#p-editor"); let editIdx = -1, draft = null;
-  $("#p-sizes").innerHTML = SIZES.map(s => `<label><input type="checkbox" value="${s}"> ${s}</label>`).join("");
+  $("#p-cat").innerHTML = Object.entries(CATS).map(([k, c]) => `<option value="${k}">${esc(c.name)}</option>`).join("");
+  // fits, prices and sizes follow the chosen type; anything the product already had is kept on screen too
+  function renderTypeFields(cat, prices, sizes) {
+    const C = CATS[cat], fits = [...new Set([...C.fits, ...Object.keys(prices)])];
+    $("#p-fits").innerHTML = fits.map(f => `<label><span><input type="checkbox" data-fit="${esc(f)}" ${prices[f] != null ? "checked" : ""}> ${esc(FITS[f] || f)}</span><input type="number" min="0" step="1" data-price="${esc(f)}" value="${prices[f] ?? ""}" placeholder="Price" ${prices[f] != null ? "" : "disabled"}></label>`).join("");
+    const all = [...new Set([...C.sizes, ...sizes])];
+    $("#p-sizes").innerHTML = all.map(z => `<label><input type="checkbox" value="${esc(z)}" ${sizes.includes(z) ? "checked" : ""}> ${esc(z)}</label>`).join("");
+  }
+  const readPrices = () => Object.fromEntries($$("#p-fits [data-fit]").filter(c => c.checked).map(c => [c.dataset.fit, $(`#p-fits [data-price="${c.dataset.fit}"]`).value === "" ? NaN : Math.round(+$(`#p-fits [data-price="${c.dataset.fit}"]`).value)]));
+  $("#p-fits").addEventListener("change", e => {
+    const f = e.target.dataset.fit; if (!f) return;
+    const box = $(`#p-fits [data-price="${f}"]`); box.disabled = !e.target.checked; if (e.target.checked) box.focus();
+  });
+  $("#p-cat").addEventListener("change", () => {
+    const cat = $("#p-cat").value, C = CATS[cat], cur = readPrices();
+    // keep prices typed for fits this type also has; otherwise start from the type's defaults
+    const prices = {}; C.fits.forEach(f => { if (cur[f] > 0) prices[f] = cur[f]; });
+    if (!Object.keys(prices).length) Object.assign(prices, Object.keys(C.prices).length ? C.prices : { [C.fits[0]]: "" });
+    renderTypeFields(cat, prices, [...C.defaults]); // sizes start from the new type's usual set
+  });
   function nextId() { let n = 1; const ids = new Set(data.products.map(p => p.id)); while (ids.has(`DS-${String(n).padStart(2, "0")}`)) n++; return `DS-${String(n).padStart(2, "0")}`; }
   const SIDES = ["front", "back"], other = s => (s === "front" ? "back" : "front");
   // older products only have tee (+ teeFront): turn them into front/back + cover
@@ -169,12 +189,11 @@
   }
   function openProduct(i) {
     editIdx = i; const p = i >= 0 ? data.products[i] : null;
-    draft = p ? normalise(JSON.parse(JSON.stringify(p))) : { id: nextId(), name: "", description: "", colorName: "", cover: "back", prices: { regular: 999, oversized: 1099 }, sizes: ["S", "M", "L", "XL", "XXL"], printFocus: "50% 45%" };
+    draft = p ? normalise(JSON.parse(JSON.stringify(p))) : { id: nextId(), name: "", description: "", colorName: "", cover: "back", prices: { ...CATS.tees.prices }, sizes: [...CATS.tees.defaults], printFocus: "50% 45%" };
     $("#p-title").textContent = p ? `Edit ${p.name}` : "New product";
     $("#p-name").value = draft.name; $("#p-id").value = draft.id; $("#p-desc").value = draft.description || ""; $("#p-colour").value = draft.colorName || "";
-    $("#p-reg-on").checked = draft.prices.regular != null; $("#p-reg").value = draft.prices.regular ?? 999;
-    $("#p-ovr-on").checked = draft.prices.oversized != null; $("#p-ovr").value = draft.prices.oversized ?? 1099;
-    $$("#p-sizes input").forEach(cb => (cb.checked = draft.sizes.includes(cb.value)));
+    $("#p-cat").value = catOf(draft);
+    renderTypeFields(catOf(draft), draft.prices, draft.sizes);
     $("#p-tee-warn").hidden = true; $("#p-error").textContent = "";
     refreshSides();
     pe.showModal(); $("#p-name").focus();
@@ -213,9 +232,7 @@
     e.preventDefault(); const err = $("#p-error");
     const name = $("#p-name").value.trim(), id = $("#p-id").value.trim().toUpperCase();
     const sizes = $$("#p-sizes input:checked").map(c => c.value);
-    const prices = {};
-    if ($("#p-reg-on").checked) prices.regular = Math.round(+$("#p-reg").value);
-    if ($("#p-ovr-on").checked) prices.oversized = Math.round(+$("#p-ovr").value);
+    const prices = readPrices(), cat = $("#p-cat").value;
     if (!name) return (err.textContent = "Give the product a name.");
     if (!/^[A-Z0-9-]+$/.test(id)) return (err.textContent = "Code can only use letters, numbers and dashes.");
     if (data.products.some((p, k) => p.id === id && k !== editIdx)) return (err.textContent = `Another product already uses the code ${id}.`);
@@ -224,6 +241,7 @@
     if (!draft.front && !draft.back) return (err.textContent = "Add a front or back image.");
     const cover = draft[draft.cover] ? draft.cover : (draft.front ? "front" : "back");
     Object.assign(draft, { id, name, description: $("#p-desc").value.trim(), colorName: $("#p-colour").value.trim(), prices, sizes, cover, print: cover });
+    if (cat === "tees") delete draft.category; else draft.category = cat; // tees stay exactly as before
     // keep the older fields the shop also reads
     draft.tee = draft[cover]; if (draft[other(cover)]) draft.teeFront = draft[other(cover)]; else delete draft.teeFront;
     SIDES.forEach(s => { if (!draft[s]) delete draft[s]; });
@@ -288,14 +306,42 @@
   function renderSettings() {
     $("#s-wa").value = data.whatsapp || ""; $("#s-ig").value = data.instagram || "";
     $("#s-charts").innerHTML = Object.entries(data.sizeCharts).map(([fit, c]) => `
-      <fieldset class="chart-box" data-fit="${esc(fit)}"><legend>${esc(fit === "regular" ? "Regular fit" : fit === "oversized" ? "Oversized fit" : fit)}</legend>
+      <fieldset class="chart-box" data-fit="${esc(fit)}"><legend>${esc(chartLabel(fit))}</legend>
         <div class="form">
           <label>Title<input data-k="title" value="${esc(c.title)}"></label>
           <label>Columns after "Size" (separate with |)<input data-k="columns" value="${esc(c.columns.join(" | "))}"></label>
           <label>Rows<textarea class="chart" data-k="rows" rows="6">${esc(c.rows.map(r => r.join(" | ")).join("\n"))}</textarea></label>
+          ${fit === "regular" || fit === "oversized" ? "" : `<button class="btn btn-ghost chart-del" type="button" data-del-chart="${esc(fit)}">Remove this chart</button>`}
         </div>
       </fieldset>`).join("");
   }
+  // chart keys: "regular" / "oversized" are the tee charts; other types use "<type>" (all fits) or "<type>-<fit>"
+  function chartLabel(k) {
+    if (k === "regular" || k === "oversized") return `Tees · ${FITS[k]} fit`;
+    const [c, f] = k.split("-"); return CATS[c] ? CATS[c].name + (f ? ` · ${FITS[f] || f} fit` : " · all fits") : k;
+  }
+  $("#s-chart-cat").innerHTML = Object.entries(CATS).filter(([k]) => k !== "tees").map(([k, c]) => `<option value="${k}">${esc(c.name)}</option>`).join("");
+  const chartFits = () => { const c = CATS[$("#s-chart-cat").value]; $("#s-chart-fit").innerHTML = `<option value="">All fits</option>` + c.fits.map(f => `<option value="${f}">${esc(FITS[f] || f)}</option>`).join(""); };
+  $("#s-chart-cat").addEventListener("change", chartFits); chartFits();
+  const keepCharts = () => $$("#s-charts fieldset").forEach(fs => { // remember what's typed before redrawing
+    const c = data.sizeCharts[fs.dataset.fit]; if (!c) return;
+    c.title = fs.querySelector('[data-k="title"]').value.trim();
+    c.columns = fs.querySelector('[data-k="columns"]').value.split("|").map(s => s.trim()).filter(Boolean);
+    c.rows = fs.querySelector('[data-k="rows"]').value.split("\n").map(l => l.split("|").map(s => s.trim())).filter(r => r[0]);
+  });
+  $("#s-chart-add").addEventListener("click", () => {
+    const cat = $("#s-chart-cat").value, fit = $("#s-chart-fit").value, key = fit ? `${cat}-${fit}` : cat;
+    keepCharts();
+    if (data.sizeCharts[key]) return alert("That chart already exists. Edit it above.");
+    const top = cat === "shirts"; // shirts are measured at the chest, bottoms at the waist
+    data.sizeCharts[key] = { title: `${CATS[cat].name}${fit ? " · " + FITS[fit] + " fit" : ""}`, columns: [top ? "Chest (in)" : "Waist (in)", "Length (in)"], rows: CATS[cat].defaults.map(z => [z, "", ""]) };
+    markDirty(); renderSettings();
+  });
+  $("#s-charts").addEventListener("click", e => {
+    const b = e.target.closest("[data-del-chart]"); if (!b) return;
+    if (!confirm(`Remove the "${chartLabel(b.dataset.delChart)}" size chart?`)) return;
+    keepCharts(); delete data.sizeCharts[b.dataset.delChart]; markDirty(); renderSettings();
+  });
   $("#s-form").addEventListener("submit", e => {
     e.preventDefault();
     data.whatsapp = $("#s-wa").value.replace(/\D/g, ""); data.instagram = $("#s-ig").value.trim().replace(/^@/, "");
