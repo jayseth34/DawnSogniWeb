@@ -267,6 +267,30 @@ window.DS = {
       "print": "back",
       "tee": "images/tee-ds-08-back-mvc21sc2.webp",
       "teeFront": "images/tee-ds-08-front-mvc21ojt.webp"
+    },
+    {
+      "id": "DS-09",
+      "name": "GODFORBID  T",
+      "description": "Dark aesthetics. Unapologetic identity.\n\nThe Godforbid Tee brings together bold gothic artwork and underground streetwear aesthetics. Featuring a striking chrome fang-and-grill graphic layered over aggressive red Godforbid lettering on the front, paired with the signature cream-white Dawn Sogni graffiti logo across the back, this tee makes a statement from every angle.\n\nThe contrast between metall",
+      "colorName": "Charcoal",
+      "cover": "front",
+      "prices": {
+        "regular": 999,
+        "oversized": 1099
+      },
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "printFocus": "50% 45%",
+      "front": "images/tee-ds-09-front-mwdj6qyq.webp",
+      "back": "images/tee-ds-09-back-mwdj6vg3.webp",
+      "print": "front",
+      "tee": "images/tee-ds-09-front-mwdj6qyq.webp",
+      "teeFront": "images/tee-ds-09-back-mwdj6vg3.webp"
     }
   ],
   "gallery": []
