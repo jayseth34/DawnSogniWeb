@@ -316,6 +316,31 @@ window.DS = {
       "tee": "images/tee-ds-10-front-mwdk1szz.webp",
       "back": "images/tee-ds-10-back-mwdkcmxg.webp",
       "teeFront": "images/tee-ds-10-back-mwdkcmxg.webp"
+    },
+    {
+      "id": "DS-11",
+      "name": "ARTFORM SHIRT",
+      "description": "Wear art. Break patterns.\n\nThe Artform Shirt transforms classic white tailoring into a canvas of artistic expression. Featuring intricate navy-blue embroidered illustrations, abstract faces, geometric patchwork, spirals, stars and playful linework, every detail contributes to a distinctive handcrafted aesthetic.\n\nThe contrast between the crisp white fabric and detailed navy artwork creates a state",
+      "colorName": "White",
+      "cover": "front",
+      "prices": {
+        "regular": 2299,
+        "slim": 2299
+      },
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "printFocus": "50% 45%",
+      "front": "images/tee-ds-11-front-mwdkfcdr.webp",
+      "back": "images/tee-ds-11-back-mwdkffkz.webp",
+      "print": "front",
+      "category": "shirts",
+      "tee": "images/tee-ds-11-front-mwdkfcdr.webp",
+      "teeFront": "images/tee-ds-11-back-mwdkffkz.webp"
     }
   ],
   "gallery": []
