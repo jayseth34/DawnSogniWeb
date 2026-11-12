@@ -356,3 +356,7 @@ body.loading { overflow: hidden; }
 .custom-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
 .link-btn { display: block; margin: 14px auto 0; background: none; border: 0; color: rgba(255,255,255,.7); font: inherit; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; text-decoration: underline; text-underline-offset: 4px; cursor: pointer; }
 .link-btn:hover { color: #fff; }
+
+.card-lead { margin-top: 4px; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.55); }
+.sheet-lead { margin: -4px 0 14px; padding: 8px 12px; border: 1px solid rgba(255,255,255,.16); border-radius: 10px; font-size: 13px; color: rgba(255,255,255,.82); }
+.sheet-lead::before { content: "✦ "; color: #fff; }

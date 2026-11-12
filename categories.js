@@ -2,7 +2,8 @@
    A product without a "category" is a tee, so older products need no change.
    fits:    which fits the admin offers for this type (each fit gets its own price)
    sizes:   which sizes the admin offers; defaults: which are ticked for a new product
-   prices:  starting prices filled in for a new product (blank = you type them) */
+   prices:  starting prices filled in for a new product (blank = you type them)
+   lead:    making time shown on the shop and in the WhatsApp order (a product can override it in the admin) */
 window.DS_FITS = { regular: "Regular", oversized: "Oversized", relaxed: "Relaxed", baggy: "Baggy", slim: "Slim" };
 window.DS_CATS = {
   tees: {
@@ -12,6 +13,7 @@ window.DS_CATS = {
   },
   shirts: {
     name: "Shirts", one: "Shirt",
+    lead: "7–8 days", leadNote: "Made to order with embroidery",
     fits: ["regular", "oversized", "slim"], prices: {},
     sizes: ["XS", "S", "M", "L", "XL", "XXL", "3XL"], defaults: ["S", "M", "L", "XL", "XXL"]
   },

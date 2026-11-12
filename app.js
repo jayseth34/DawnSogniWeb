@@ -9,6 +9,9 @@
   const FIT = window.DS_FITS || { regular: "Regular", oversized: "Oversized" };
   const CATS = window.DS_CATS || { tees: { name: "Tees", one: "Tee" } };
   const catOf = p => (CATS[p.category] ? p.category : "tees"); // no category = tee (all older products)
+  // making time: the product's own value, else its type's (shirts: 7–8 days, embroidered to order)
+  const leadOf = p => p.leadTime || CATS[catOf(p)].lead || "";
+  const leadNote = p => CATS[catOf(p)].leadNote || "Made to order";
   const byId = Object.fromEntries(D.products.map(p => [p.id, p]));
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   /* ---------- loader: brief, gone once the page has painted (never waits for the tee images) ---------- */
@@ -83,7 +86,7 @@
   const productLink = id => (window.location.origin + window.location.pathname).replace(/index\.html$/, "") + "p/" + String(id).toLowerCase().replace(/[^a-z0-9]+/g, "-") + ".html";
   const WA_TEXT = {
     general: "Hi Dawn Sogni! I'd like to know more about your designs.",
-    custom: "Hi Dawn Sogni! I have my own design I'd like printed. I'll attach the file here.\n\nGarment (tee / polo / print only):\nSize:\nPrint size on the garment:"
+    custom: "Hi Dawn Sogni! I have my own design I'd like printed or embroidered. I'll attach the file here.\n\nGarment (tee / polo / embroidered shirt / print only):\nSize:\nPrint size on the garment:"
   };
   $$("[data-wa]").forEach(a => (a.href = wa(WA_TEXT[a.dataset.wa])));
   const ig = `https://instagram.com/${D.instagram}`;
@@ -138,6 +141,7 @@
         </span>
         <span class="card-name">${esc(p.name)}</span>
         <span class="card-price">${rs(basePrice(p))}</span>
+        ${leadOf(p) ? `<span class="card-lead">Ready in ${esc(leadOf(p))}</span>` : ""}
       </button>`;
   }
   let loadRun = 0;
@@ -236,7 +240,7 @@
   function bagMessage(no = orderNo()) {
     const lines = bag.map((i, k) => {
       const p = byId[i.id], price = p.prices[i.fit];
-      return `${k + 1}. *${p.name}* (${p.id})\n   ${CATS[catOf(p)].one}, ${FIT[i.fit] || i.fit}, size ${i.size}${p.colorName ? ", " + p.colorName : ""}\n   ${i.qty} × ${rs0(price)} = ${rs0(price * i.qty)}`;
+      return `${k + 1}. *${p.name}* (${p.id})\n   ${CATS[catOf(p)].one}, ${FIT[i.fit] || i.fit}, size ${i.size}${p.colorName ? ", " + p.colorName : ""}\n   ${i.qty} × ${rs0(price)} = ${rs0(price * i.qty)}${leadOf(p) ? `\n   Ready in ${leadOf(p)} (${leadNote(p).toLowerCase()})` : ""}`;
     });
     return `Hi Dawn Sogni! I'd like to place this order.\nOrder no: *${no}*\n\n${lines.join("\n\n")}\n\n*Total: ${rs0(bagTotal())}* (${bagCount()} ${bagCount() === 1 ? "item" : "items"})`;
   }
@@ -302,8 +306,9 @@
   function updateOrder() {
     const p = current, price = p.prices[sel.fit];
     $("#sheet-price").textContent = rs(price);
+    const lead = leadOf(p), le = $("#sheet-lead"); le.hidden = !lead; le.textContent = lead ? `${leadNote(p)} · ready in ${lead}` : "";
     const link = productLink(p.id);
-    $("#sheet-wa").href = wa(`Hi Dawn Sogni! I'd like to order this design.\nOrder no: *${orderNo()}*\n\n*${p.name}* (${p.id})\nItem: ${CATS[catOf(p)].one}\nFit: ${FIT[sel.fit] || sel.fit}\nSize: ${sel.size}\n${p.colorName ? "Colour: " + p.colorName + "\n" : ""}Price: ${rs0(price)}\n\n${link}`);
+    $("#sheet-wa").href = wa(`Hi Dawn Sogni! I'd like to order this design.\nOrder no: *${orderNo()}*\n\n*${p.name}* (${p.id})\nItem: ${CATS[catOf(p)].one}\nFit: ${FIT[sel.fit] || sel.fit}\nSize: ${sel.size}\n${p.colorName ? "Colour: " + p.colorName + "\n" : ""}Price: ${rs0(price)}\n${leadOf(p) ? `Ready in: ${leadOf(p)} (${leadNote(p).toLowerCase()})\n` : ""}\n${link}`);
     $("#sheet-chart").innerHTML = chartTable(chartKey(p, sel.fit));
   }
   function open(id) {

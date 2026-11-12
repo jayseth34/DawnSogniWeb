@@ -161,6 +161,7 @@
     const prices = {}; C.fits.forEach(f => { if (cur[f] > 0) prices[f] = cur[f]; });
     if (!Object.keys(prices).length) Object.assign(prices, Object.keys(C.prices).length ? C.prices : { [C.fits[0]]: "" });
     renderTypeFields(cat, prices, [...C.defaults]); // sizes start from the new type's usual set
+    $("#p-lead").placeholder = C.lead || "Leave empty";
   });
   function nextId() { let n = 1; const ids = new Set(data.products.map(p => p.id)); while (ids.has(`DS-${String(n).padStart(2, "0")}`)) n++; return `DS-${String(n).padStart(2, "0")}`; }
   const SIDES = ["front", "back"], other = s => (s === "front" ? "back" : "front");
@@ -192,7 +193,7 @@
     draft = p ? normalise(JSON.parse(JSON.stringify(p))) : { id: nextId(), name: "", description: "", colorName: "", cover: "back", prices: { ...CATS.tees.prices }, sizes: [...CATS.tees.defaults], printFocus: "50% 45%" };
     $("#p-title").textContent = p ? `Edit ${p.name}` : "New product";
     $("#p-name").value = draft.name; $("#p-id").value = draft.id; $("#p-desc").value = draft.description || ""; $("#p-colour").value = draft.colorName || "";
-    $("#p-cat").value = catOf(draft);
+    $("#p-cat").value = catOf(draft); $("#p-lead").value = draft.leadTime || ""; $("#p-lead").placeholder = CATS[catOf(draft)].lead || "Leave empty";
     renderTypeFields(catOf(draft), draft.prices, draft.sizes);
     $("#p-tee-warn").hidden = true; $("#p-error").textContent = "";
     refreshSides();
@@ -242,6 +243,7 @@
     const cover = draft[draft.cover] ? draft.cover : (draft.front ? "front" : "back");
     Object.assign(draft, { id, name, description: $("#p-desc").value.trim(), colorName: $("#p-colour").value.trim(), prices, sizes, cover, print: cover });
     if (cat === "tees") delete draft.category; else draft.category = cat; // tees stay exactly as before
+    const lead = $("#p-lead").value.trim(); if (lead) draft.leadTime = lead; else delete draft.leadTime;
     // keep the older fields the shop also reads
     draft.tee = draft[cover]; if (draft[other(cover)]) draft.teeFront = draft[other(cover)]; else delete draft.teeFront;
     SIDES.forEach(s => { if (!draft[s]) delete draft[s]; });
