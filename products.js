@@ -313,7 +313,9 @@ window.DS = {
       "front": "images/tee-ds-10-front-mwdk1szz.webp",
       "print": "front",
       "category": "shirts",
-      "tee": "images/tee-ds-10-front-mwdk1szz.webp"
+      "tee": "images/tee-ds-10-front-mwdk1szz.webp",
+      "back": "images/tee-ds-10-back-mwdkcmxg.webp",
+      "teeFront": "images/tee-ds-10-back-mwdkcmxg.webp"
     }
   ],
   "gallery": []
