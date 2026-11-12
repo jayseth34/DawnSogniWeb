@@ -291,6 +291,29 @@ window.DS = {
       "print": "front",
       "tee": "images/tee-ds-09-front-mwdj6qyq.webp",
       "teeFront": "images/tee-ds-09-back-mwdj6vg3.webp"
+    },
+    {
+      "id": "DS-10",
+      "name": "VARSITY EDGE SHIRT",
+      "description": "Classic tailoring. Unconventional attitude.\n\nRedefining the classic white shirt with a bold street-luxe aesthetic. The Varsity Edge Shirt features striking navy geometric panels running across the chest and sleeves, highlighted by sharp red piping that creates a distinctive chevron-inspired silhouette.\n\nThe clean white base balances the bold colour blocking, while the open collar and turned-up cuf",
+      "colorName": "White",
+      "cover": "front",
+      "prices": {
+        "regular": 2299,
+        "slim": 2294
+      },
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "printFocus": "50% 45%",
+      "front": "images/tee-ds-10-front-mwdk1szz.webp",
+      "print": "front",
+      "category": "shirts",
+      "tee": "images/tee-ds-10-front-mwdk1szz.webp"
     }
   ],
   "gallery": []
