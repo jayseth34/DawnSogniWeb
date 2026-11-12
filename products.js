@@ -521,6 +521,31 @@ window.DS = {
       "category": "shirts",
       "tee": "images/tee-ds-11-front-mwdkfcdr.webp",
       "teeFront": "images/tee-ds-11-back-mwdkffkz.webp"
+    },
+    {
+      "id": "DS-12",
+      "name": "WAVEFORM SHIRT",
+      "description": "Where contrasts meet, style takes shape.\n\nThe Waveform Shirt reimagines classic button-down styling through bold colour blocking and fluid design. Featuring a deep navy-blue and soft ivory combination, the shirt is defined by an unconventional wave-inspired panel running across the front and back, finished with distinctive double-dashed contrast stitching.\n\nThe asymmetric colour placement across t",
+      "colorName": "White",
+      "cover": "front",
+      "prices": {
+        "regular": 2499,
+        "slim": 2499
+      },
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "printFocus": "50% 45%",
+      "front": "images/tee-ds-12-front-mwdu3mkp.png",
+      "back": "images/tee-ds-12-back-mwdu3z2n.png",
+      "print": "front",
+      "category": "shirts",
+      "tee": "images/tee-ds-12-front-mwdu3mkp.png",
+      "teeFront": "images/tee-ds-12-back-mwdu3z2n.png"
     }
   ],
   "gallery": []
