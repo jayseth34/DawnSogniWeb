@@ -540,11 +540,11 @@ window.DS = {
         "XXL"
       ],
       "printFocus": "50% 45%",
-      "front": "images/tee-ds-12-front-mwdu3mkp.png",
+      "front": "images/tee-ds-12-front-mwdu9ea0.png",
       "back": "images/tee-ds-12-back-mwdu3z2n.png",
       "print": "front",
       "category": "shirts",
-      "tee": "images/tee-ds-12-front-mwdu3mkp.png",
+      "tee": "images/tee-ds-12-front-mwdu9ea0.png",
       "teeFront": "images/tee-ds-12-back-mwdu3z2n.png"
     }
   ],
