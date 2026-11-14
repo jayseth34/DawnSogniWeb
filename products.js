@@ -546,6 +546,30 @@ window.DS = {
       "category": "shirts",
       "tee": "images/tee-ds-12-front-mwdu9ea0.png",
       "teeFront": "images/tee-ds-12-back-mwdu3z2n.png"
+    },
+    {
+      "id": "DS-13",
+      "name": "NOT FAMOUS T",
+      "description": "Not everyone knows me. Someone knows everything about me.\n\nA playful take on everyday streetwear, the Not Famous Tee combines minimal aesthetics with a statement that speaks volumes. Featuring handwritten burgundy typography across the back of a crisp white oversized tee, the design carries a relatable, witty message with a touch of personality.\n\nThe clean white base lets the bold lettering take c",
+      "colorName": "White",
+      "cover": "back",
+      "prices": {
+        "regular": 999,
+        "oversized": 1099
+      },
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "printFocus": "50% 45%",
+      "front": "images/tee-ds-13-front-mwg50ytv.png",
+      "back": "images/tee-ds-13-back-mwg513zs.png",
+      "print": "back",
+      "tee": "images/tee-ds-13-back-mwg513zs.png",
+      "teeFront": "images/tee-ds-13-front-mwg50ytv.png"
     }
   ],
   "gallery": []
