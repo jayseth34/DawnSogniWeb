@@ -42,7 +42,7 @@
   };
 
   /* ---------- background: ravens, ruins and a full moon in fog. The picture is a fixed CSS layer (no repainting);
-     the canvas above it only draws drifting mist and the odd raven, and pauses while the page is scrolling ---------- */
+     the canvas above it only draws drifting mist, and pauses while the page is scrolling ---------- */
   const cv = $("#stars"), cx = cv.getContext("2d");
   let W = 0, H = 0, mist = [], motes = [], nextBat = 3000, scrolling = false, scrollT;
   function mistSprite(a) { // one pre-rendered fog blob (a soft circle, stretched when drawn), reused every frame
@@ -65,7 +65,7 @@
       const span = W + m.w, x = (((m.x + (t / 1000) * m.v) % span) + span) % span - m.w / 2;
       cx.drawImage(m.img, x - m.w / 2, m.y - m.h / 2, m.w, m.h);
     }
-    if (t > nextBat && motes.length < 2) {
+    if (false) { // flying birds removed
       const dir = Math.random() < 0.5 ? 1 : -1;
       motes.push({ x: dir > 0 ? -60 : W + 60, y: H * (0.08 + Math.random() * 0.35), vx: dir * (W / (9 + Math.random() * 5)), wob: Math.random() * 6.28, s: 0.7 + Math.random() * 0.6 });
       nextBat = t + 6000 + Math.random() * 9000;
@@ -351,7 +351,7 @@
   $("#bag-clear").addEventListener("click", () => { bag = []; saveBag(); });
   renderBag();
 
-  /* ---------- extra motion: ravens, scroll zoom, tilt, star burst, logo wipe (all skipped with reduced motion) ---------- */
+  /* ---------- extra motion: scroll zoom, tilt, star burst, logo wipe (all skipped with reduced motion) ---------- */
   // star burst: little four-point stars thrown out from a point
   const STAR = '<svg viewBox="-10 -10 20 20"><path d="M0-10C1 -3 3 -1 10 0C3 1 1 3 0 10C-1 3 -3 1 -10 0C-3 -1 -1 -3 0-10Z"/></svg>';
   function burst(x, y, n = 14) {
@@ -373,35 +373,6 @@
   $("#bag-send").addEventListener("click", e => { if (bagCount()) burstAt(e.currentTarget); });
 
   if (!reduce) {
-    // ravens: a few cross the moon now and then, high up in the background
-    // two skies: in front of the gothic hall while you're at the top, behind the tees once you've scrolled down
-    const mkSky = cls => { const d = document.createElement("div"); d.className = cls; d.setAttribute("aria-hidden", "true"); document.body.prepend(d); return d; };
-    const skyBack = mkSky("sky"), skyFront = mkSky("sky sky-front"), heroEl = $(".hero");
-    // raven seen from the side: body with beak and tail, two broad wings that beat
-    const RAVEN = '<svg viewBox="-60 -34 120 60"><g class="wing"><path d="M-2 0C-10 -16 -26 -30 -52 -30C-42 -24 -36 -18 -32 -12C-38 -12 -44 -9 -48 -4C-36 -6 -22 -4 -8 6Z"/><path d="M4 0C10 -14 24 -26 46 -27C38 -21 33 -16 30 -10C36 -10 41 -7 44 -3C33 -5 20 -3 8 6Z" opacity=".8"/></g><path d="M-26 6C-16 1 -4 -1 8 0C14 0 18 -2 22 -5C26 -6 30 -5 33 -3L42 -2L33 1C30 4 25 6 18 8C8 11 -8 11 -20 9L-34 14L-30 8L-38 7Z"/></svg>';
-    function flock() {
-      if (document.hidden) return setTimeout(flock, 4000);
-      const n = 1 + Math.floor(Math.random() * 3), ltr = Math.random() < .5, W = innerWidth, H = innerHeight;
-      const sky = heroEl && scrollY < heroEl.offsetHeight * .45 ? skyFront : skyBack;
-      const y0 = H * (.08 + Math.random() * .3), dur = 9000 + Math.random() * 5000;
-      for (let i = 0; i < n; i++) {
-        const r = document.createElement("span"); r.className = "raven"; r.innerHTML = RAVEN;
-        const size = (W < 700 ? 40 : 58) + Math.random() * 18; r.style.width = size + "px";
-        r.style.setProperty("--flap", (.32 + Math.random() * .14).toFixed(2) + "s");
-        sky.append(r);
-        const dy = (i * 14) + (Math.random() - .5) * 10, lag = i * (380 + Math.random() * 300), x0 = ltr ? -60 - i * 26 : W + 60 + i * 26, x1 = ltr ? W + 80 : -80;
-        const rise = (Math.random() - .6) * H * .12, flip = ltr ? 1 : -1;
-        r.animate([
-          { transform: `translate(${x0}px, ${y0 + dy}px) scaleX(${flip})` },
-          { transform: `translate(${x0 + (x1 - x0) * .35}px, ${y0 + dy + rise * .3 - 12}px) scaleX(${flip})`, offset: .35 },
-          { transform: `translate(${x0 + (x1 - x0) * .7}px, ${y0 + dy + rise * .7 + 8}px) scaleX(${flip})`, offset: .7 },
-          { transform: `translate(${x1}px, ${y0 + dy + rise}px) scaleX(${flip})` }
-        ], { duration: dur, delay: lag, easing: "linear" }).finished.then(() => r.remove(), () => r.remove());
-      }
-      setTimeout(flock, dur + 6000 + Math.random() * 9000);
-    }
-    setTimeout(flock, 2600);
-
     // scroll zoom: the hall leans in and darkens as you scroll down, and the DS mark comes through
     const hero = $(".hero");
     if (hero) {
@@ -410,30 +381,27 @@
       addEventListener("scroll", onScroll, { passive: true }); onScroll();
     }
 
-    // 3D tilt: tees lean toward the mouse; on phones they follow how the phone is held
-    const fine = matchMedia("(hover: hover) and (pointer: fine)").matches;
-    if (fine) {
-      grid.addEventListener("pointermove", e => {
-        const c = e.target.closest(".card"); if (!c) return;
-        const box = c.querySelector(".card-img"), r = box.getBoundingClientRect();
-        const x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5;
-        box.style.setProperty("--ry", (x * 16).toFixed(2) + "deg"); box.style.setProperty("--rx", (-y * 16).toFixed(2) + "deg");
-        box.style.setProperty("--gl", `${(x + .5) * 100}% ${(y + .5) * 100}%`);
-      });
-      grid.addEventListener("pointerout", e => { const c = e.target.closest(".card"); if (c && !c.contains(e.relatedTarget)) { const b = c.querySelector(".card-img"); b.style.removeProperty("--rx"); b.style.removeProperty("--ry"); } });
-    } else if ("DeviceOrientationEvent" in window) {
-      let base = null, raf = 0, gx = 0, gy = 0;
-      const listen = () => addEventListener("deviceorientation", e => {
-        if (e.beta == null) return;
-        if (!base) base = { b: e.beta, g: e.gamma };
-        base.b += (e.beta - base.b) * .01; base.g += (e.gamma - base.g) * .01; // slowly re-centre on how the phone is usually held
-        gx = Math.max(-1, Math.min(1, (e.beta - base.b) / 25)); gy = Math.max(-1, Math.min(1, (e.gamma - base.g) / 25));
-        if (!raf) raf = requestAnimationFrame(() => { raf = 0; grid.style.setProperty("--tx", (-gx * 9).toFixed(2) + "deg"); grid.style.setProperty("--ty", (gy * 9).toFixed(2) + "deg"); });
-      });
-      const ios = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-      if (typeof DeviceOrientationEvent.requestPermission !== "function") listen();
-      else if (!ios) // Android Chrome grants this without asking; iPhones would show a pop-up, so they skip it
-        addEventListener("pointerdown", () => DeviceOrientationEvent.requestPermission().then(r => { if (r === "granted") listen(); }, () => {}), { once: true });
+    // 3D tilt. Computer: the tee leans toward the mouse and lifts, its shadow moving the other way.
+    // Phones (no permission needed): tees tilt as they scroll through the screen, and lean toward a pressing finger.
+    const tilt = (box, x, y, k) => { // x, y from -0.5 to 0.5
+      box.style.setProperty("--ry", (x * k).toFixed(2) + "deg"); box.style.setProperty("--rx", (-y * k).toFixed(2) + "deg");
+      box.style.setProperty("--sx", (-x * 22).toFixed(1) + "px"); box.style.setProperty("--sy", (14 - y * 16).toFixed(1) + "px");
+    };
+    const untilt = box => ["--rx", "--ry", "--sx", "--sy"].forEach(v => box.style.removeProperty(v));
+    const fromEvent = (box, e) => { const r = box.getBoundingClientRect(); return [(e.clientX - r.left) / r.width - .5, (e.clientY - r.top) / r.height - .5]; };
+    if (matchMedia("(hover: hover) and (pointer: fine)").matches) {
+      grid.addEventListener("pointermove", e => { const c = e.target.closest(".card"); if (!c) return; const box = c.querySelector(".card-img"); tilt(box, ...fromEvent(box, e), 26); });
+      grid.addEventListener("pointerout", e => { const c = e.target.closest(".card"); if (c && !c.contains(e.relatedTarget)) untilt(c.querySelector(".card-img")); });
+    } else {
+      const seen = new Set(), io = new IntersectionObserver(es => es.forEach(x => x.isIntersecting ? seen.add(x.target) : seen.delete(x.target)), { rootMargin: "60px 0px" });
+      new MutationObserver(() => { seen.clear(); io.disconnect(); $$(".card-img", grid).forEach(b => io.observe(b)); }).observe(grid, { childList: true });
+      $$(".card-img", grid).forEach(b => io.observe(b));
+      let raf = 0;
+      const wave = () => { raf = 0; const mid = innerHeight / 2; seen.forEach(b => { const r = b.getBoundingClientRect(), off = Math.max(-1, Math.min(1, (r.top + r.height / 2 - mid) / mid)); b.style.setProperty("--tx", (off * 18).toFixed(2) + "deg"); }); };
+      addEventListener("scroll", () => { if (!raf) raf = requestAnimationFrame(wave); }, { passive: true });
+      grid.addEventListener("pointerdown", e => { const c = e.target.closest(".card"); if (!c) return; const box = c.querySelector(".card-img"); tilt(box, ...fromEvent(box, e), 22); });
+      grid.addEventListener("pointermove", e => { if (!e.buttons && e.pointerType !== "touch") return; const c = e.target.closest(".card"); if (!c) return; const box = c.querySelector(".card-img"); tilt(box, ...fromEvent(box, e), 22); });
+      ["pointerup", "pointercancel", "pointerleave"].forEach(t => grid.addEventListener(t, e => { const c = e.target.closest && e.target.closest(".card"); if (c) untilt(c.querySelector(".card-img")); }));
     }
 
     // logo wipe: going to the Design Studio, the DS mark sweeps across first
