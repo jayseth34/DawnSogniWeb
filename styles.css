@@ -432,3 +432,7 @@ body.loading { overflow: hidden; }
 .card:active .card-img { transform: scale(.975); }
 .card .card-img { transition: transform .2s ease; }
 @media (prefers-reduced-motion: reduce) { .fly { display: none; } }
+
+/* "New" tag: outlined, so it never competes with the solid "Sold out" one */
+.card-badge.is-new { background: rgba(0,0,0,.55); color: #fff; border: 1px solid rgba(255,255,255,.75); backdrop-filter: blur(4px); }
+.sheet-new { margin-left: 8px; padding: 2px 9px; border: 1px solid rgba(255,255,255,.75); border-radius: 999px; color: #fff; font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; vertical-align: 1px; }

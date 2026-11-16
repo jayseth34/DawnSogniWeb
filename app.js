@@ -14,6 +14,9 @@
   const leadNote = p => CATS[catOf(p)].leadNote || "Made to order";
   // sold out: the whole product (soldOut) or single sizes (soldOutSizes), both set in the admin
   const sizeOut = (p, s) => !!p.soldOut || (p.soldOutSizes || []).includes(s);
+  // "New" tag: shown until the product's newUntil date (set in the admin, 3 weeks by default)
+  const today = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; })();
+  const isNew = p => !!p.newUntil && p.newUntil >= today;
   const isOut = p => !!p.soldOut || (p.sizes.length > 0 && p.sizes.every(s => sizeOut(p, s)));
   const byId = Object.fromEntries(D.products.map(p => [p.id, p]));
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -143,7 +146,7 @@
     const sd = sides(p), cov = sd[sd.cover], alt = sd[sd.cover === "front" ? "back" : "front"], swap = !!alt;
     return `
       <button class="card ${swap ? "swap" : "zoom"} is-loading${isOut(p) ? " is-soldout" : ""}" type="button" data-id="${esc(p.id)}" data-i="${i}" style="--focus:${esc(p.printFocus || "50% 45%")}" aria-label="${esc(p.name)}, ${isOut(p) ? "sold out" : rs(basePrice(p))}. View details">
-        <span class="card-img">${isOut(p) ? `<span class="card-badge">Sold out</span>` : ""}
+        <span class="card-img">${isOut(p) ? `<span class="card-badge">Sold out</span>` : isNew(p) ? `<span class="card-badge is-new">New</span>` : ""}
           <span class="card-loader" aria-hidden="true"><img src="images/logo-mark.webp" alt=""></span>
           <img class="main" data-src="${esc(thumb(cov))}" data-full="${esc(cov)}" alt="" width="560" height="560" decoding="async">
           ${swap ? `<img class="alt" data-src="${esc(thumb(alt))}" data-full="${esc(alt)}" alt="" width="560" height="560" decoding="async">` : ""}
@@ -429,7 +432,7 @@
     $("#sheet-img").innerHTML = "";
     showView(sd.cover);
     const otherSide = sd.cover === "front" ? "back" : "front"; if (sd[otherSide]) { fetchNow(thumb(sd[otherSide])); fetchNow(sd[otherSide]); }
-    $("#sheet-code").textContent = p.id;
+    $("#sheet-code").innerHTML = esc(p.id) + (isNew(p) && !isOut(p) ? ` <span class="sheet-new">New</span>` : "");
     $("#sheet-name").textContent = p.name;
     $("#sheet-desc").textContent = p.description || "";
     $("#sheet-colour").textContent = p.colorName ? "Colour: " + p.colorName : "";

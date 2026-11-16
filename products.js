@@ -970,7 +970,8 @@ window.DS = {
       "back": "images/tee-ds-09-back-mwdj6vg3.webp",
       "print": "front",
       "tee": "images/tee-ds-09-front-mwdj6qyq.webp",
-      "teeFront": "images/tee-ds-09-back-mwdj6vg3.webp"
+      "teeFront": "images/tee-ds-09-back-mwdj6vg3.webp",
+      "newUntil": "2026-12-03"
     },
     {
       "id": "DS-10",
@@ -995,7 +996,8 @@ window.DS = {
       "category": "shirts",
       "tee": "images/tee-ds-10-front-mwdk1szz.webp",
       "back": "images/tee-ds-10-back-mwdkcmxg.webp",
-      "teeFront": "images/tee-ds-10-back-mwdkcmxg.webp"
+      "teeFront": "images/tee-ds-10-back-mwdkcmxg.webp",
+      "newUntil": "2026-12-03"
     },
     {
       "id": "DS-11",
@@ -1020,7 +1022,8 @@ window.DS = {
       "print": "front",
       "category": "shirts",
       "tee": "images/tee-ds-11-front-mwdkfcdr.webp",
-      "teeFront": "images/tee-ds-11-back-mwdkffkz.webp"
+      "teeFront": "images/tee-ds-11-back-mwdkffkz.webp",
+      "newUntil": "2026-12-03"
     },
     {
       "id": "DS-12",
@@ -1045,7 +1048,8 @@ window.DS = {
       "print": "front",
       "category": "shirts",
       "tee": "images/tee-ds-12-front-mwdu9ea0.webp",
-      "teeFront": "images/tee-ds-12-back-mwdu3z2n.webp"
+      "teeFront": "images/tee-ds-12-back-mwdu3z2n.webp",
+      "newUntil": "2026-12-03"
     },
     {
       "id": "DS-13",
@@ -1069,7 +1073,8 @@ window.DS = {
       "back": "images/tee-ds-13-back-mwg513zs.webp",
       "print": "back",
       "tee": "images/tee-ds-13-back-mwg513zs.webp",
-      "teeFront": "images/tee-ds-13-front-mwg50ytv.webp"
+      "teeFront": "images/tee-ds-13-front-mwg50ytv.webp",
+      "newUntil": "2026-12-05"
     }
   ],
   "gallery": []

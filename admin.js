@@ -5,6 +5,11 @@
   const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const CATS = window.DS_CATS, FITS = window.DS_FITS;
   const catOf = p => (CATS[p.category] ? p.category : "tees"); // no category = tee (all older products)
+  // "New" tag: lasts 3 weeks from the day it is switched on
+  const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const isNew = p => !!p.newUntil && p.newUntil >= ymd(new Date());
+  const newUntilFrom = () => { const d = new Date(); d.setDate(d.getDate() + 21); return ymd(d); };
+  const niceDate = s => new Date(s + "T00:00").toLocaleDateString("en-IN", { day: "numeric", month: "short" });
   const HEADER = `/* Dawn Sogni catalogue.\n   Edit it from admin.html, or by hand. Everything after "window.DS = " must stay valid JSON.\n   Field guide: see README.md. */\n`;
 
   let cfg = null, data = null, catalogSha = null;
@@ -79,7 +84,7 @@
     $("#p-list").innerHTML = L.length ? L.map((p, i) => `
       <li class="item" data-i="${i}">
         <img src="${esc(imgUrl(p[p.cover] || p.tee || p.front || p.back))}" alt="">
-        <div><b>${esc(p.name)}${pending.has(p.tee) ? '<span class="new">new image</span>' : ""}${p.soldOut ? '<span class="out">sold out</span>' : (p.soldOutSizes || []).length ? `<span class="out">${esc(p.soldOutSizes.join(" "))} sold out</span>` : ""}</b>
+        <div><b>${esc(p.name)}${pending.has(p.tee) ? '<span class="new">new image</span>' : ""}${isNew(p) ? `<span class="new">new until ${niceDate(p.newUntil)}</span>` : ""}${p.soldOut ? '<span class="out">sold out</span>' : (p.soldOutSizes || []).length ? `<span class="out">${esc(p.soldOutSizes.join(" "))} sold out</span>` : ""}</b>
           <small>${esc(p.id)} · ${esc(CATS[catOf(p)].one)} · ${Object.entries(p.prices).map(([f, v]) => `${f} Rs. ${v}`).join(" / ")} · ${esc(p.sizes.join(" "))}</small></div>
         <div class="acts">
           <button type="button" data-a="up" ${i === 0 ? "disabled" : ""} aria-label="Move up">↑</button>
@@ -210,10 +215,11 @@
   }
   function openProduct(i) {
     editIdx = i; const p = i >= 0 ? data.products[i] : null;
-    draft = p ? normalise(JSON.parse(JSON.stringify(p))) : { id: nextId(), name: "", description: "", colorName: "", cover: "back", prices: { ...CATS.tees.prices }, sizes: [...CATS.tees.defaults], printFocus: "50% 45%" };
+    draft = p ? normalise(JSON.parse(JSON.stringify(p))) : { id: nextId(), name: "", description: "", colorName: "", cover: "back", prices: { ...CATS.tees.prices }, sizes: [...CATS.tees.defaults], printFocus: "50% 45%", newUntil: newUntilFrom() };
     $("#p-title").textContent = p ? `Edit ${p.name}` : "New product";
     $("#p-name").value = draft.name; $("#p-id").value = draft.id; $("#p-desc").value = draft.description || ""; $("#p-colour").value = draft.colorName || "";
     $("#p-soldout").checked = !!draft.soldOut;
+    $("#p-new").checked = isNew(draft); $("#p-new-until").textContent = isNew(draft) ? `(shown until ${niceDate(draft.newUntil)})` : "";
     $("#p-cat").value = catOf(draft); $("#p-lead").value = draft.leadTime || ""; $("#p-lead").placeholder = CATS[catOf(draft)].lead || "Leave empty";
     renderTypeFields(catOf(draft), draft.prices, draft.sizes);
     renderOutSizes(draft.soldOutSizes || []);
@@ -267,6 +273,7 @@
     if (cat === "tees") delete draft.category; else draft.category = cat; // tees stay exactly as before
     const lead = $("#p-lead").value.trim(); if (lead) draft.leadTime = lead; else delete draft.leadTime;
     if ($("#p-soldout").checked) draft.soldOut = true; else delete draft.soldOut;
+    if (!$("#p-new").checked) delete draft.newUntil; else if (!isNew(draft)) draft.newUntil = newUntilFrom(); // keep an end date that is still running
     const outSizes = $("#p-soldout").checked ? (draft.soldOutSizes || []).filter(z => sizes.includes(z)) : $$("#p-outsizes input:checked").map(c => c.value).filter(z => sizes.includes(z));
     if (outSizes.length) draft.soldOutSizes = outSizes; else delete draft.soldOutSizes;
     // keep the older fields the shop also reads
