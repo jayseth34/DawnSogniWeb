@@ -351,6 +351,105 @@
   $("#bag-clear").addEventListener("click", () => { bag = []; saveBag(); });
   renderBag();
 
+  /* ---------- extra motion: ravens, scroll zoom, tilt, star burst, logo wipe (all skipped with reduced motion) ---------- */
+  // star burst: little four-point stars thrown out from a point
+  const STAR = '<svg viewBox="-10 -10 20 20"><path d="M0-10C1 -3 3 -1 10 0C3 1 1 3 0 10C-1 3 -3 1 -10 0C-3 -1 -1 -3 0-10Z"/></svg>';
+  function burst(x, y, n = 14) {
+    if (reduce || !document.body.animate) return;
+    for (let i = 0; i < n; i++) {
+      const s = document.createElement("span"); s.className = "spark"; s.innerHTML = STAR;
+      const size = 7 + Math.random() * 11; Object.assign(s.style, { left: x - size / 2 + "px", top: y - size / 2 + "px", width: size + "px", height: size + "px" });
+      document.body.append(s);
+      const ang = (i / n) * Math.PI * 2 + Math.random() * .5, dist = 46 + Math.random() * 70, spin = (Math.random() - .5) * 320;
+      s.animate([
+        { transform: "translate(0,0) scale(.2) rotate(0deg)", opacity: 1 },
+        { transform: `translate(${Math.cos(ang) * dist * .7}px, ${Math.sin(ang) * dist * .7}px) scale(1) rotate(${spin * .6}deg)`, opacity: 1, offset: .45 },
+        { transform: `translate(${Math.cos(ang) * dist}px, ${Math.sin(ang) * dist + 18}px) scale(0) rotate(${spin}deg)`, opacity: 0 }
+      ], { duration: 650 + Math.random() * 350, easing: "cubic-bezier(.2,.7,.3,1)" }).finished.then(() => s.remove(), () => s.remove());
+    }
+  }
+  const burstAt = el => { const r = el.getBoundingClientRect(); burst(r.left + r.width / 2, r.top + r.height / 2); };
+  $("#sheet-wa").addEventListener("click", e => { if (!e.currentTarget.classList.contains("is-disabled")) burstAt(e.currentTarget); });
+  $("#bag-send").addEventListener("click", e => { if (bagCount()) burstAt(e.currentTarget); });
+
+  if (!reduce) {
+    // ravens: a few cross the moon now and then, high up in the background
+    // two skies: in front of the gothic hall while you're at the top, behind the tees once you've scrolled down
+    const mkSky = cls => { const d = document.createElement("div"); d.className = cls; d.setAttribute("aria-hidden", "true"); document.body.prepend(d); return d; };
+    const skyBack = mkSky("sky"), skyFront = mkSky("sky sky-front"), heroEl = $(".hero");
+    // raven seen from the side: body with beak and tail, two broad wings that beat
+    const RAVEN = '<svg viewBox="-60 -34 120 60"><g class="wing"><path d="M-2 0C-10 -16 -26 -30 -52 -30C-42 -24 -36 -18 -32 -12C-38 -12 -44 -9 -48 -4C-36 -6 -22 -4 -8 6Z"/><path d="M4 0C10 -14 24 -26 46 -27C38 -21 33 -16 30 -10C36 -10 41 -7 44 -3C33 -5 20 -3 8 6Z" opacity=".8"/></g><path d="M-26 6C-16 1 -4 -1 8 0C14 0 18 -2 22 -5C26 -6 30 -5 33 -3L42 -2L33 1C30 4 25 6 18 8C8 11 -8 11 -20 9L-34 14L-30 8L-38 7Z"/></svg>';
+    function flock() {
+      if (document.hidden) return setTimeout(flock, 4000);
+      const n = 1 + Math.floor(Math.random() * 3), ltr = Math.random() < .5, W = innerWidth, H = innerHeight;
+      const sky = heroEl && scrollY < heroEl.offsetHeight * .45 ? skyFront : skyBack;
+      const y0 = H * (.08 + Math.random() * .3), dur = 9000 + Math.random() * 5000;
+      for (let i = 0; i < n; i++) {
+        const r = document.createElement("span"); r.className = "raven"; r.innerHTML = RAVEN;
+        const size = (W < 700 ? 40 : 58) + Math.random() * 18; r.style.width = size + "px";
+        r.style.setProperty("--flap", (.32 + Math.random() * .14).toFixed(2) + "s");
+        sky.append(r);
+        const dy = (i * 14) + (Math.random() - .5) * 10, lag = i * (380 + Math.random() * 300), x0 = ltr ? -60 - i * 26 : W + 60 + i * 26, x1 = ltr ? W + 80 : -80;
+        const rise = (Math.random() - .6) * H * .12, flip = ltr ? 1 : -1;
+        r.animate([
+          { transform: `translate(${x0}px, ${y0 + dy}px) scaleX(${flip})` },
+          { transform: `translate(${x0 + (x1 - x0) * .35}px, ${y0 + dy + rise * .3 - 12}px) scaleX(${flip})`, offset: .35 },
+          { transform: `translate(${x0 + (x1 - x0) * .7}px, ${y0 + dy + rise * .7 + 8}px) scaleX(${flip})`, offset: .7 },
+          { transform: `translate(${x1}px, ${y0 + dy + rise}px) scaleX(${flip})` }
+        ], { duration: dur, delay: lag, easing: "linear" }).finished.then(() => r.remove(), () => r.remove());
+      }
+      setTimeout(flock, dur + 6000 + Math.random() * 9000);
+    }
+    setTimeout(flock, 2600);
+
+    // scroll zoom: the hall leans in and darkens as you scroll down, and the DS mark comes through
+    const hero = $(".hero");
+    if (hero) {
+      let ticking = false;
+      const onScroll = () => { if (ticking) return; ticking = true; requestAnimationFrame(() => { ticking = false; const p = Math.min(1, Math.max(0, scrollY / (hero.offsetHeight * .8))); hero.style.setProperty("--p", p.toFixed(3)); }); };
+      addEventListener("scroll", onScroll, { passive: true }); onScroll();
+    }
+
+    // 3D tilt: tees lean toward the mouse; on phones they follow how the phone is held
+    const fine = matchMedia("(hover: hover) and (pointer: fine)").matches;
+    if (fine) {
+      grid.addEventListener("pointermove", e => {
+        const c = e.target.closest(".card"); if (!c) return;
+        const box = c.querySelector(".card-img"), r = box.getBoundingClientRect();
+        const x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5;
+        box.style.setProperty("--ry", (x * 16).toFixed(2) + "deg"); box.style.setProperty("--rx", (-y * 16).toFixed(2) + "deg");
+        box.style.setProperty("--gl", `${(x + .5) * 100}% ${(y + .5) * 100}%`);
+      });
+      grid.addEventListener("pointerout", e => { const c = e.target.closest(".card"); if (c && !c.contains(e.relatedTarget)) { const b = c.querySelector(".card-img"); b.style.removeProperty("--rx"); b.style.removeProperty("--ry"); } });
+    } else if ("DeviceOrientationEvent" in window) {
+      let base = null, raf = 0, gx = 0, gy = 0;
+      const listen = () => addEventListener("deviceorientation", e => {
+        if (e.beta == null) return;
+        if (!base) base = { b: e.beta, g: e.gamma };
+        base.b += (e.beta - base.b) * .01; base.g += (e.gamma - base.g) * .01; // slowly re-centre on how the phone is usually held
+        gx = Math.max(-1, Math.min(1, (e.beta - base.b) / 25)); gy = Math.max(-1, Math.min(1, (e.gamma - base.g) / 25));
+        if (!raf) raf = requestAnimationFrame(() => { raf = 0; grid.style.setProperty("--tx", (-gx * 9).toFixed(2) + "deg"); grid.style.setProperty("--ty", (gy * 9).toFixed(2) + "deg"); });
+      });
+      const ios = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+      if (typeof DeviceOrientationEvent.requestPermission !== "function") listen();
+      else if (!ios) // Android Chrome grants this without asking; iPhones would show a pop-up, so they skip it
+        addEventListener("pointerdown", () => DeviceOrientationEvent.requestPermission().then(r => { if (r === "granted") listen(); }, () => {}), { once: true });
+    }
+
+    // logo wipe: going to the Design Studio, the DS mark sweeps across first
+    const wipe = document.createElement("div"); wipe.className = "wipe"; wipe.innerHTML = '<img src="images/logo-mark.webp" alt="">'; document.body.append(wipe);
+    document.addEventListener("click", e => {
+      const a = e.target.closest('a[href*="/printcanvas"]');
+      if (!a || e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || !wipe.animate) return;
+      e.preventDefault();
+      try { sessionStorage.setItem("ds-wipe", "1"); } catch (_) {}
+      wipe.classList.add("on");
+      wipe.animate([{ clipPath: "inset(0 0 0 100%)" }, { clipPath: "inset(0 0 0 0)" }], { duration: 480, easing: "cubic-bezier(.7,0,.2,1)", fill: "forwards" })
+        .finished.then(() => { location.href = a.href; });
+    });
+    addEventListener("pageshow", e => { if (e.persisted) { wipe.getAnimations().forEach(x => x.cancel()); wipe.classList.remove("on"); } });
+  }
+
   /* ---------- product sheet ---------- */
   const sheet = $("#sheet");
   let current = null, sel = {};
@@ -465,7 +564,7 @@
     if (from && from.width && bagBtn.animate) {
       const t = bagBtn.getBoundingClientRect(), size = 26, to = { left: t.left + t.width / 2 - size / 2, top: t.top + t.height / 2 - size / 2, width: size, height: size };
       fly(src, from, to, { duration: 620, toOpacity: .25, easing: "cubic-bezier(.5,0,.2,1)" })
-        .then(() => badge.animate([{ transform: "scale(1)" }, { transform: "scale(1.7)" }, { transform: "scale(1)" }], { duration: 380, easing: "cubic-bezier(.2,.7,.2,1)" }), () => {});
+        .then(() => { burstAt(bagBtn); badge.animate([{ transform: "scale(1)" }, { transform: "scale(1.7)" }, { transform: "scale(1)" }], { duration: 380, easing: "cubic-bezier(.2,.7,.2,1)" }); }, () => {});
     }
     toast(`Added: ${current.name}, ${Object.keys(current.prices).length > 1 ? (FIT[sel.fit] || sel.fit) + " " : ""}${sel.size}`);
   });
