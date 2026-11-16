@@ -228,8 +228,54 @@
   const chartCat = k => (CATS[k] ? k : CATS[k.split("-")[0]] ? k.split("-")[0] : "tees");
   const chartSold = k => { const c = chartCat(k); if (c === "tees") return true; const fit = CATS[k] ? null : k.split("-").slice(1).join("-");
     return D.products.some(p => catOf(p) === c && (!fit || p.prices[fit] != null)); };
-  $("#size-tables").innerHTML = Object.keys(D.sizeCharts || {}).filter(chartSold)
-    .sort((a, b) => Object.keys(CATS).indexOf(chartCat(a)) - Object.keys(CATS).indexOf(chartCat(b))).map(chartTable).join("");
+  /* size charts: one card, pick a type and a fit (or swipe), the table slides across */
+  const chartFit = k => (k === "regular" || k === "oversized" ? k : CATS[k] ? "" : k.split("-").slice(1).join("-"));
+  const keys = Object.keys(D.sizeCharts || {}).filter(chartSold)
+    .sort((a, b) => Object.keys(CATS).indexOf(chartCat(a)) - Object.keys(CATS).indexOf(chartCat(b)));
+  const szCats = [...new Set(keys.map(chartCat))];
+  const sz = $("#size-tables");
+  sz.innerHTML = `
+    <div class="sz-types pills" role="tablist" aria-label="Product type" ${szCats.length < 2 ? "hidden" : ""}>${szCats.map(c => `<button class="pill" type="button" role="tab" data-c="${c}">${esc(CATS[c].name)}</button>`).join("")}</div>
+    <div class="sz-fits" role="tablist" aria-label="Fit"></div>
+    <div class="sz-find"><label><span class="sz-find-l">Your chest (in)</span><input type="number" inputmode="decimal" min="20" max="60" step="0.5" placeholder="e.g. 39"></label><p class="sz-find-r" aria-live="polite"></p></div>
+    <div class="sz-track" tabindex="0" aria-label="Size charts, swipe for more">${keys.map(k => `<div class="sz-slide" data-k="${esc(k)}">${chartTable(k)}</div>`).join("")}</div>
+    <div class="sz-nav"><button type="button" class="sz-arrow" data-d="-1" aria-label="Previous chart">‹</button><span class="sz-dots">${keys.map(() => "<i></i>").join("")}</span><button type="button" class="sz-arrow" data-d="1" aria-label="Next chart">›</button></div>`;
+  const track = $(".sz-track", sz), slides = $$(".sz-slide", sz);
+  let szIdx = 0;
+  const szGo = (i, smooth = true) => { i = Math.max(0, Math.min(slides.length - 1, i)); track.scrollTo({ left: slides[i].offsetLeft - track.offsetLeft, behavior: smooth && !reduce ? "smooth" : "auto" }); szSet(i); };
+  function szSet(i) {
+    if (i === szIdx && sz.dataset.ready) return; szIdx = i; sz.dataset.ready = 1;
+    const k = keys[i], c = chartCat(k);
+    $$(".sz-types .pill", sz).forEach(b => b.setAttribute("aria-selected", b.dataset.c === c));
+    const fits = keys.filter(x => chartCat(x) === c);
+    $(".sz-fits", sz).innerHTML = fits.length > 1 ? fits.map(x => `<button type="button" role="tab" data-k="${esc(x)}" aria-selected="${x === k}">${esc(FIT[chartFit(x)] || "All fits")}</button>`).join("") : "";
+    $$(".sz-dots i", sz).forEach((d, j) => d.classList.toggle("on", j === i));
+    track.style.height = slides[i].offsetHeight + "px"; // the card grows and shrinks with the chart
+    $$(".sz-arrow", sz).forEach(b => (b.disabled = b.dataset.d < 0 ? i === 0 : i === slides.length - 1));
+    const first = (D.sizeCharts[k].columns[0] || "").toLowerCase();
+    $(".sz-find-l", sz).textContent = /waist/.test(first) ? "Your waist (in)" : "Your chest (in)";
+    szFind();
+  }
+  // "find my size": highlight the row that matches a measurement
+  function szFind() {
+    const v = parseFloat($(".sz-find input", sz).value), slide = slides[szIdx], out = $(".sz-find-r", sz);
+    $$("tr.hit", sz).forEach(r => r.classList.remove("hit"));
+    if (!(v > 0)) { out.textContent = ""; return; }
+    const rows = D.sizeCharts[keys[szIdx]].rows, nums = rows.map(r => String(r[1] || "").split(/[–-]/).map(parseFloat).filter(n => n > 0));
+    let hit = nums.findIndex(n => n.length && v >= n[0] - .25 && v <= (n[1] ?? n[0]) + .25);
+    if (hit < 0) hit = nums.findIndex(n => n.length && v <= (n[1] ?? n[0])); // between sizes: go up one
+    if (hit < 0) { out.textContent = "That's outside this chart. Message us and we'll help."; return; }
+    $$("tbody tr", slide)[hit].classList.add("hit");
+    out.textContent = `Go for ${rows[hit][0]}` + (chartFit(keys[szIdx]) === "oversized" ? " (or a size down for a less baggy look)" : "");
+  }
+  $(".sz-find input", sz).addEventListener("input", szFind);
+  $(".sz-types", sz).addEventListener("click", e => { const b = e.target.closest("[data-c]"); if (b) szGo(keys.findIndex(k => chartCat(k) === b.dataset.c)); });
+  $(".sz-fits", sz).addEventListener("click", e => { const b = e.target.closest("[data-k]"); if (b) szGo(keys.indexOf(b.dataset.k)); });
+  $(".sz-nav", sz).addEventListener("click", e => { const b = e.target.closest(".sz-arrow"); if (b) szGo(szIdx + Number(b.dataset.d)); });
+  track.addEventListener("keydown", e => { if (e.key === "ArrowRight" || e.key === "ArrowLeft") { e.preventDefault(); szGo(szIdx + (e.key === "ArrowRight" ? 1 : -1)); } });
+  let szT; track.addEventListener("scroll", () => { clearTimeout(szT); szT = setTimeout(() => szSet(Math.round(track.scrollLeft / track.clientWidth)), 60); }, { passive: true });
+  if (slides.length) szSet(0); else $("#sizes").hidden = true;
+  addEventListener("resize", () => { if (slides.length) track.style.height = slides[szIdx].offsetHeight + "px"; });
 
   /* ---------- toast ---------- */
   let toastT;
