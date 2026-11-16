@@ -19,10 +19,16 @@
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   /* ---------- loader: brief, gone once the page has painted (never waits for the tee images) ---------- */
   const loader = $("#loader"), t0 = performance.now();
+  // motion: one opening moment for the hero, the rest only answers what the visitor does
+  if (!reduce) {
+    document.documentElement.classList.add("anim");
+    const line = $(".hero-line");
+    if (line) line.innerHTML = line.textContent.trim().split(/\s+/).map((w, i) => `<span class="w" style="--i:${i}"><i>${esc(w)}</i></span>`).join(" ");
+  }
   document.body.classList.add("loading");
   const hideLoader = () => {
     const wait = Math.max(0, 300 - (performance.now() - t0));
-    setTimeout(() => { loader.classList.add("done"); document.body.classList.remove("loading"); setTimeout(() => loader.remove(), 700); }, wait);
+    setTimeout(() => { loader.classList.add("done"); document.body.classList.remove("loading"); document.documentElement.classList.add("is-ready"); setTimeout(() => loader.remove(), 700); }, wait);
   };
   let loaderGone = false; const hideOnce = () => { if (!loaderGone) { loaderGone = true; hideLoader(); } };
   if (document.readyState === "complete") hideOnce(); else addEventListener("load", hideOnce, { once: true });
@@ -355,11 +361,19 @@
     img.style.setProperty("--focus", (v === sd.cover ? p.printFocus : null) || "50% 45%");
     $$(".view", $("#views")).forEach(b => b.setAttribute("aria-selected", b.dataset.v === v));
     const qi = queue.indexOf(src); if (qi > -1) queue.splice(qi, 1);
+    // changing side turns the tee over, like the DS mark; the first picture of a product just appears
+    let turn = !reduce && !!img.querySelector("img.is-tee") && img.dataset.v && img.dataset.v !== v;
+    img.dataset.v = v;
     const put = s => {
       if (run !== viewRun) return;
       let el = img.querySelector("img.is-tee");
       if (!el) { img.insertAdjacentHTML("afterbegin", `<img class="is-tee" alt="">`); el = img.querySelector("img.is-tee"); }
-      el.src = s; el.alt = `${p.name}, ${v}`;
+      const set = () => { el.src = s; el.alt = `${p.name}, ${v}`; };
+      if (!turn || !el.animate) return set();
+      turn = false;
+      el.animate([{ transform: "perspective(900px) rotateY(0deg)" }, { transform: "perspective(900px) rotateY(90deg)" }], { duration: 170, easing: "ease-in" }).finished
+        .then(() => { if (run !== viewRun) return; set(); el.animate([{ transform: "perspective(900px) rotateY(-90deg)" }, { transform: "perspective(900px) rotateY(0deg)" }], { duration: 300, easing: "cubic-bezier(.2,.7,.2,1)" }); })
+        .catch(set);
     };
     const big = new Image(); big.fetchPriority = "high"; big.src = src;
     if (big.complete && big.naturalWidth) { img.classList.remove("is-switching"); return put(src); }
@@ -384,8 +398,28 @@
     $("#sheet-wa").href = wa(`Hi Dawn Sogni! I'd like to order this design.\nOrder no: *${orderNo()}*\n\n*${p.name}* (${p.id})\nItem: ${CATS[catOf(p)].one}\nFit: ${FIT[sel.fit] || sel.fit}\nSize: ${sel.size}\n${p.colorName ? "Colour: " + p.colorName + "\n" : ""}Price: ${rs0(price)}\n${leadOf(p) ? `Ready in: ${leadOf(p)} (${leadNote(p).toLowerCase()})\n` : ""}\n${link}`);
     $("#sheet-chart").innerHTML = chartTable(chartKey(p, sel.fit));
   }
-  function open(id) {
+  // a picture that travels across the screen: card -> product view, product view -> bag
+  function fly(src, from, to, opts, host = document.body) {
+    const g = document.createElement("img"); g.src = src; g.alt = ""; g.className = "fly";
+    Object.assign(g.style, { left: to.left + "px", top: to.top + "px", width: to.width + "px", height: to.height + "px" });
+    host.append(g);
+    const a = g.animate([
+      { transform: `translate(${from.left - to.left}px, ${from.top - to.top}px) scale(${from.width / to.width}, ${from.height / to.height})`, opacity: opts.fromOpacity ?? 1 },
+      { transform: "none", opacity: opts.toOpacity ?? 1 }
+    ], { duration: opts.duration, easing: opts.easing || "cubic-bezier(.2,.8,.2,1)" });
+    const done = () => g.remove(); a.finished.then(done, done); return a.finished;
+  }
+  function closeSheet() {
+    if (reduce || !sheet.animate || !sheet.open) return sheet.close();
+    const mobile = matchMedia("(max-width: 820px)").matches;
+    sheet.animate([{ opacity: 1, transform: "none" }, { opacity: mobile ? 1 : 0, transform: mobile ? "translateY(100%)" : "translateY(14px) scale(.985)" }], { duration: mobile ? 240 : 170, easing: "ease-in" })
+      .finished.then(() => sheet.close(), () => sheet.close());
+  }
+  function open(id, card) {
     const p = byId[id]; if (!p) return;
+    const fromImg = card && !reduce ? card.querySelector(".card-img img.main") : null;
+    const fromRect = fromImg && fromImg.complete && fromImg.naturalWidth ? fromImg.getBoundingClientRect() : null;
+    $("#sheet-img").dataset.v = "";
     current = p;
     const inStock = p.sizes.filter(s => !sizeOut(p, s));
     sel = { fit: firstFit(p), size: ["M", "32"].find(s => inStock.includes(s)) || inStock[0] || ["M", "32"].find(s => p.sizes.includes(s)) || p.sizes[0] };
@@ -406,17 +440,34 @@
     updateOrder();
     sheet.showModal(); sheet.scrollTop = 0;
     history.replaceState(null, "", "#p=" + p.id);
+    if (!reduce && sheet.animate) {
+      sheet.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 240, easing: "ease-out" });
+      if (fromRect) { // the tapped tee glides into place in the product view
+        const box = $("#sheet-img"), b = box.getBoundingClientRect(), pad = b.width * .05;
+        const to = { left: b.left + pad, top: b.top + pad, width: b.width * .9, height: b.height * .9 };
+        box.classList.add("is-morphing");
+        fly(fromImg.currentSrc || fromImg.src, fromRect, to, { duration: 460 }, sheet).then(() => box.classList.remove("is-morphing"), () => box.classList.remove("is-morphing"));
+      }
+    }
   }
-  document.addEventListener("click", e => { const b = e.target.closest(".card"); if (b) open(b.dataset.id); });
+  document.addEventListener("click", e => { const b = e.target.closest(".card"); if (b) open(b.dataset.id, b); });
   $("#views").addEventListener("click", e => { const b = e.target.closest(".view"); if (b) showView(b.dataset.v); });
   $("#sheet-img").addEventListener("click", () => $("#sheet-img").classList.toggle("is-zoomed"));
   $("#sheet-add").addEventListener("click", () => {
     addToBag(current.id, sel.fit, sel.size);
+    // the tee drops into the bag, and the count gives a small bump
+    const teeEl = $("#sheet-img img.is-tee"), bagBtn = $("#bag-btn"), badge = $("#bag-count");
+    const from = teeEl && !reduce ? teeEl.getBoundingClientRect() : null, src = teeEl && (teeEl.currentSrc || teeEl.src);
     sheet.close();
+    if (from && from.width && bagBtn.animate) {
+      const t = bagBtn.getBoundingClientRect(), size = 26, to = { left: t.left + t.width / 2 - size / 2, top: t.top + t.height / 2 - size / 2, width: size, height: size };
+      fly(src, from, to, { duration: 620, toOpacity: .25, easing: "cubic-bezier(.5,0,.2,1)" })
+        .then(() => badge.animate([{ transform: "scale(1)" }, { transform: "scale(1.7)" }, { transform: "scale(1)" }], { duration: 380, easing: "cubic-bezier(.2,.7,.2,1)" }), () => {});
+    }
     toast(`Added: ${current.name}, ${Object.keys(current.prices).length > 1 ? (FIT[sel.fit] || sel.fit) + " " : ""}${sel.size}`);
   });
-  $("#sheet-close").addEventListener("click", () => sheet.close());
-  sheet.addEventListener("click", e => { if (e.target === sheet) sheet.close(); });
+  $("#sheet-close").addEventListener("click", closeSheet);
+  sheet.addEventListener("click", e => { if (e.target === sheet) closeSheet(); });
   sheet.addEventListener("close", () => history.replaceState(null, "", location.pathname + location.search));
   sheet.addEventListener("change", e => {
     if (e.target.name === "fit") sel.fit = e.target.value;
