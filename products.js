@@ -1020,8 +1020,7 @@ window.DS = {
       "print": "front",
       "category": "shirts",
       "tee": "images/tee-ds-11-front-mwdkfcdr.webp",
-      "teeFront": "images/tee-ds-11-back-mwdkffkz.webp",
-      "soldOut": true
+      "teeFront": "images/tee-ds-11-back-mwdkffkz.webp"
     },
     {
       "id": "DS-12",
