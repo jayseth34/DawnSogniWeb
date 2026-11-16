@@ -103,6 +103,15 @@
   /* ---------- image processing ---------- */
   const loadImg = src => new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = () => rej(new Error("That image couldn't be read.")); im.src = src; });
   const toBlob = (c, type, q) => new Promise(res => c.toBlob(res, type, q));
+  // WebP keeps tee pictures ~10x lighter than PNG. iPhone Safari can't save WebP, so it uses the bundled encoder instead.
+  async function webpBlob(c, q) {
+    const b = await toBlob(c, "image/webp", q); if (b && b.type === "image/webp") return b;
+    try {
+      const { default: enc } = await import("./vendor/webp/encode.js?v=1");
+      const buf = await enc(c.getContext("2d").getImageData(0, 0, c.width, c.height), { quality: Math.round(q * 100) });
+      return new Blob([buf], { type: "image/webp" });
+    } catch (e) { console.warn("WebP encoder unavailable", e); return null; }
+  }
   // Tee: trim empty edges, centre on a transparent 1000×1000 square, export WebP (PNG if the browser can't).
   async function processTee(file) {
     const url = URL.createObjectURL(file), im = await loadImg(url); URL.revokeObjectURL(url);
@@ -116,8 +125,8 @@
     const bw = x1 - x0 + 1, bh = y1 - y0 + 1, S = 1000, fit = S * 0.9 / Math.max(bw, bh);
     const c = document.createElement("canvas"); c.width = c.height = S; const g = c.getContext("2d"); g.imageSmoothingQuality = "high";
     g.drawImage(c0, x0, y0, bw, bh, (S - bw * fit) / 2, (S - bh * fit) / 2, bw * fit, bh * fit);
-    let blob = await toBlob(c, "image/webp", 0.88); let ext = "webp";
-    if (!blob || blob.type !== "image/webp") { blob = await toBlob(c, "image/png"); ext = "png"; }
+    let blob = await webpBlob(c, 0.88); let ext = "webp";
+    if (!blob) { blob = await toBlob(c, "image/png"); ext = "png"; }
     return { blob, ext, hasAlpha };
   }
   // small card image with the glow baked in (the shop shows these on the cards)
@@ -126,7 +135,7 @@
     const S = 560, c = document.createElement("canvas"); c.width = c.height = S; const g = c.getContext("2d");
     g.shadowColor = "rgba(255,255,255,.42)"; g.shadowBlur = 18; g.drawImage(im, 0, 0, S, S);
     g.shadowBlur = 0; g.shadowColor = "transparent"; g.drawImage(im, 0, 0, S, S);
-    let t = await toBlob(c, "image/webp", 0.8); if (!t || t.type !== "image/webp") t = await toBlob(c, "image/png");
+    let t = await webpBlob(c, 0.8); if (!t) t = await toBlob(c, "image/png");
     return t;
   }
   async function processArt(file) {

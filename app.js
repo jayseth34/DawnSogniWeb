@@ -345,20 +345,28 @@
   /* ---------- product sheet ---------- */
   const sheet = $("#sheet");
   let current = null, sel = {};
+  // switching front/back never blanks the picture: the current one stays (dimmed, with the DS loader)
+  // until the other side is ready, small version first, then the sharp one
+  let viewRun = 0;
+  const ready = src => new Promise(ok => { const im = new Image(); im.decoding = "async"; im.onload = im.onerror = () => ok(im.naturalWidth ? src : null); im.src = src; });
   function showView(v) {
-    const p = current, sd = sides(p), src = sd[v], img = $("#sheet-img");
+    const p = current, sd = sides(p), src = sd[v], img = $("#sheet-img"), run = ++viewRun;
     img.classList.remove("is-zoomed");
     img.style.setProperty("--focus", (v === sd.cover ? p.printFocus : null) || "50% 45%");
-    const qi = queue.indexOf(src); if (qi > -1) queue.splice(qi, 1);
-    const big = new Image(); big.decoding = "async"; big.fetchPriority = "high"; big.src = src;
-    if (big.complete && big.naturalWidth) img.innerHTML = `<img class="is-tee" src="${esc(src)}" alt="${esc(p.name)}, ${v}">`;
-    else {
-      img.innerHTML = `<img class="is-tee" src="${esc(thumb(src))}" alt="${esc(p.name)}, ${v}">`;
-      const shown = img.firstElementChild;
-      shown.onerror = () => { shown.onerror = null; shown.src = src; };
-      (big.decode ? big.decode() : new Promise((ok, no) => { big.onload = ok; big.onerror = no; })).then(() => { if (img.firstElementChild === shown) shown.src = src; }).catch(() => {});
-    }
     $$(".view", $("#views")).forEach(b => b.setAttribute("aria-selected", b.dataset.v === v));
+    const qi = queue.indexOf(src); if (qi > -1) queue.splice(qi, 1);
+    const put = s => {
+      if (run !== viewRun) return;
+      let el = img.querySelector("img.is-tee");
+      if (!el) { img.insertAdjacentHTML("afterbegin", `<img class="is-tee" alt="">`); el = img.querySelector("img.is-tee"); }
+      el.src = s; el.alt = `${p.name}, ${v}`;
+    };
+    const big = new Image(); big.fetchPriority = "high"; big.src = src;
+    if (big.complete && big.naturalWidth) { img.classList.remove("is-switching"); return put(src); }
+    if (!img.querySelector("img.is-tee")) img.innerHTML = ""; // first open: nothing to keep yet
+    img.classList.add("is-switching");
+    ready(thumb(src)).then(s => { if (s && run === viewRun && !big.complete) { put(s); img.classList.remove("is-switching"); } });
+    ready(src).then(s => { if (run !== viewRun) return; put(s || thumb(src)); img.classList.remove("is-switching"); });
   }
   function updateOrder() {
     const p = current, price = p.prices[sel.fit];
@@ -384,7 +392,9 @@
     $("#size-row").closest("fieldset").querySelector("legend").textContent = p.sizes.every(s => /^\d+$/.test(s)) ? "Waist (in)" : "Size";
     const sd = sides(p);
     $("#views").innerHTML = sd.front && sd.back ? `<button class="view" type="button" role="tab" data-v="front">Front</button><button class="view" type="button" role="tab" data-v="back">Back</button>` : "";
+    $("#sheet-img").innerHTML = "";
     showView(sd.cover);
+    const otherSide = sd.cover === "front" ? "back" : "front"; if (sd[otherSide]) { fetchNow(thumb(sd[otherSide])); fetchNow(sd[otherSide]); }
     $("#sheet-code").textContent = p.id;
     $("#sheet-name").textContent = p.name;
     $("#sheet-desc").textContent = p.description || "";

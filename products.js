@@ -1041,12 +1041,12 @@ window.DS = {
         "XXL"
       ],
       "printFocus": "50% 45%",
-      "front": "images/tee-ds-12-front-mwdu9ea0.png",
-      "back": "images/tee-ds-12-back-mwdu3z2n.png",
+      "front": "images/tee-ds-12-front-mwdu9ea0.webp",
+      "back": "images/tee-ds-12-back-mwdu3z2n.webp",
       "print": "front",
       "category": "shirts",
-      "tee": "images/tee-ds-12-front-mwdu9ea0.png",
-      "teeFront": "images/tee-ds-12-back-mwdu3z2n.png"
+      "tee": "images/tee-ds-12-front-mwdu9ea0.webp",
+      "teeFront": "images/tee-ds-12-back-mwdu3z2n.webp"
     },
     {
       "id": "DS-13",
@@ -1066,11 +1066,11 @@ window.DS = {
         "XXL"
       ],
       "printFocus": "50% 45%",
-      "front": "images/tee-ds-13-front-mwg50ytv.png",
-      "back": "images/tee-ds-13-back-mwg513zs.png",
+      "front": "images/tee-ds-13-front-mwg50ytv.webp",
+      "back": "images/tee-ds-13-back-mwg513zs.webp",
       "print": "back",
-      "tee": "images/tee-ds-13-back-mwg513zs.png",
-      "teeFront": "images/tee-ds-13-front-mwg50ytv.png"
+      "tee": "images/tee-ds-13-back-mwg513zs.webp",
+      "teeFront": "images/tee-ds-13-front-mwg50ytv.webp"
     }
   ],
   "gallery": []
