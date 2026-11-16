@@ -237,54 +237,120 @@
   const chartCat = k => (CATS[k] ? k : CATS[k.split("-")[0]] ? k.split("-")[0] : "tees");
   const chartSold = k => { const c = chartCat(k); if (c === "tees") return true; const fit = CATS[k] ? null : k.split("-").slice(1).join("-");
     return D.products.some(p => catOf(p) === c && (!fit || p.prices[fit] != null)); };
-  /* size charts: one card, pick a type and a fit (or swipe), the table slides across */
+  /* ---------- size guide: pick a size, see where each measurement is taken on the garment ---------- */
   const chartFit = k => (k === "regular" || k === "oversized" ? k : CATS[k] ? "" : k.split("-").slice(1).join("-"));
   const keys = Object.keys(D.sizeCharts || {}).filter(chartSold)
     .sort((a, b) => Object.keys(CATS).indexOf(chartCat(a)) - Object.keys(CATS).indexOf(chartCat(b)));
   const szCats = [...new Set(keys.map(chartCat))];
   const sz = $("#size-tables");
+  // garment outlines (viewBox 0 0 400 440) and where each kind of measurement sits on them
+  const GARMENTS = {
+    top: { body: "M150 30Q200 60 250 30L330 58L392 142L338 170L318 146L318 410L82 410L82 146L62 170L8 142L70 58Z",
+      extra: "M150 30Q200 60 250 30",
+      lines: { shoulder: [[70, 44], [330, 44], "up"], chest: [[84, 186], [316, 186], "up"], length: [[294, 62], [294, 408], "side"], sleeve: [[344, 64], [398, 136], "side"] } },
+    shirt: { body: "M150 28L200 74L250 28L322 52L384 330L344 342L300 160L300 410L100 410L100 160L56 342L16 330L78 52Z",
+      extra: "M150 28L176 70L200 74L224 70L250 28M200 74L200 410M207 120a3 3 0 1 0 .1 0M207 180a3 3 0 1 0 .1 0M207 240a3 3 0 1 0 .1 0M207 300a3 3 0 1 0 .1 0M207 360a3 3 0 1 0 .1 0",
+      lines: { shoulder: [[78, 18], [322, 18], "up"], chest: [[102, 196], [298, 196], "up"], length: [[280, 82], [280, 408], "side"], sleeve: [[338, 70], [394, 326], "side"], collar: [[200, 74], [200, 74], "dot"] } },
+    bottom: { body: "M110 20L290 20L300 62L332 410L234 410L203 160L197 160L166 410L68 410L100 62Z",
+      extra: "M108 34L292 34",
+      lines: { waist: [[110, 14], [290, 14], "up"], hip: [[101, 92], [299, 92], "up"], thigh: [[94, 200], [196, 200], "up"], opening: [[70, 396], [164, 396], "up"], inseam: [[208, 168], [238, 404], "side"], length: [[352, 20], [352, 410], "side"] } }
+  };
+  const garmentOf = c => (c === "shirts" ? "shirt" : c === "trousers" || c === "trackpants" ? "bottom" : "top");
+  // read a chart column: which line it belongs to, or whether it's the wearer's own measurement
+  const colInfo = name => {
+    const n = name.toLowerCase(), unit = /\(cm\)/.test(n) ? " cm" : "″";
+    const body = /your|fits/.test(n);
+    const kind = ["shoulder", "sleeve", "collar", "inseam", "thigh", "opening", "hip", "waist", "length", "chest"].find(k => n.includes(k));
+    return { name: name.replace(/\s*\((in|cm)\)\s*/i, "").replace(/,/g, ""), unit, body, kind };
+  };
+  const num = v => { const m = String(v).match(/[\d.]+/); return m ? parseFloat(m[0]) : null; };
   sz.innerHTML = `
-    <div class="sz-types pills" role="tablist" aria-label="Product type" ${szCats.length < 2 ? "hidden" : ""}>${szCats.map(c => `<button class="pill" type="button" role="tab" data-c="${c}">${esc(CATS[c].name)}</button>`).join("")}</div>
-    <div class="sz-fits" role="tablist" aria-label="Fit"></div>
-    <div class="sz-find"><label><span class="sz-find-l">Your chest (in)</span><input type="number" inputmode="decimal" min="20" max="60" step="0.5" placeholder="e.g. 39"></label><p class="sz-find-r" aria-live="polite"></p></div>
-    <div class="sz-track" tabindex="0" aria-label="Size charts, swipe for more">${keys.map(k => `<div class="sz-slide" data-k="${esc(k)}">${chartTable(k)}</div>`).join("")}</div>
-    <div class="sz-nav"><button type="button" class="sz-arrow" data-d="-1" aria-label="Previous chart">‹</button><span class="sz-dots">${keys.map(() => "<i></i>").join("")}</span><button type="button" class="sz-arrow" data-d="1" aria-label="Next chart">›</button></div>`;
-  const track = $(".sz-track", sz), slides = $$(".sz-slide", sz);
-  let szIdx = 0;
-  const szGo = (i, smooth = true) => { i = Math.max(0, Math.min(slides.length - 1, i)); track.scrollTo({ left: slides[i].offsetLeft - track.offsetLeft, behavior: smooth && !reduce ? "smooth" : "auto" }); szSet(i); };
-  function szSet(i) {
-    if (i === szIdx && sz.dataset.ready) return; szIdx = i; sz.dataset.ready = 1;
-    const k = keys[i], c = chartCat(k);
+    <div class="sg-pick">
+      <div class="sz-types pills" role="tablist" aria-label="Product type" ${szCats.length < 2 ? "hidden" : ""}>${szCats.map(c => `<button class="pill" type="button" role="tab" data-c="${c}">${esc(CATS[c].name)}</button>`).join("")}</div>
+      <div class="sz-fits" role="tablist" aria-label="Fit"></div>
+    </div>
+    <div class="sg">
+      <figure class="sg-fig"><svg viewBox="-24 -16 448 452" aria-hidden="true"><path class="sg-body"/><path class="sg-extra"/><g class="sg-lines"></g></svg></figure>
+      <div class="sg-panel">
+        <div class="sg-sizes" role="radiogroup" aria-label="Size"></div>
+        <p class="sg-fitline" aria-live="polite"></p>
+        <dl class="sg-list"></dl>
+        <div class="sz-find"><label><span class="sz-find-l">Your chest (in)</span><input type="number" inputmode="decimal" min="20" max="60" step="0.5" placeholder="e.g. 39"></label><p class="sz-find-r" aria-live="polite"></p></div>
+      </div>
+    </div>
+    <details class="sg-all"><summary>See all sizes</summary><div class="sg-table"></div></details>`;
+  const svg = $(".sg-fig svg", sz), linesG = $(".sg-lines", sz);
+  let szKey = keys[0], szRow = 0, shown = {};
+  function drawGarment(k, animate) {
+    const c = chartCat(k), G = GARMENTS[garmentOf(c)], cols = D.sizeCharts[k].columns.map(colInfo);
+    $(".sg-body", sz).setAttribute("d", G.body); $(".sg-extra", sz).setAttribute("d", G.extra);
+    linesG.innerHTML = cols.map((ci, j) => {
+      if (ci.body || !ci.kind || !G.lines[ci.kind]) return "";
+      const [[x1, y1], [x2, y2], pos] = G.lines[ci.kind];
+      if (pos === "dot") return `<g data-j="${j}"><circle cx="${x1}" cy="${y1 - 4}" r="4.5"/><text x="${x1 + 12}" y="${y1 + 22}" text-anchor="start">0</text></g>`;
+      const mx = (x1 + x2) / 2, my = (y1 + y2) / 2, vert = Math.abs(x2 - x1) < Math.abs(y2 - y1);
+      const tx = vert ? mx + 14 : mx, ty = vert ? my : my - 10, rot = vert ? `rotate(${(Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI) - 90} ${tx} ${ty})` : "";
+      return `<g data-j="${j}"><line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" pathLength="1"/><line class="tick" x1="${x1 - (vert ? 6 : 0)}" y1="${y1 - (vert ? 0 : 6)}" x2="${x1 + (vert ? 6 : 0)}" y2="${y1 + (vert ? 0 : 6)}"/><line class="tick" x1="${x2 - (vert ? 6 : 0)}" y1="${y2 - (vert ? 0 : 6)}" x2="${x2 + (vert ? 6 : 0)}" y2="${y2 + (vert ? 0 : 6)}"/><text x="${tx}" y="${ty}" text-anchor="middle" ${vert ? `dominant-baseline="middle" transform="${rot}"` : ""}>0</text></g>`;
+    }).join("");
+    if (animate && !reduce) {
+      svg.querySelector(".sg-body").animate([{ opacity: 0, transform: "scale(.94)" }, { opacity: 1, transform: "none" }], { duration: 450, easing: "cubic-bezier(.2,.7,.2,1)" });
+      $$("g[data-j] line:not(.tick)", linesG).forEach((l, i) => l.animate([{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], { duration: 600, delay: 150 + i * 90, easing: "cubic-bezier(.2,.7,.2,1)", fill: "backwards" }));
+    }
+    shown = {};
+  }
+  // numbers count from the old size to the new one
+  function setText(el, to, unit, key) {
+    const from = shown[key], n = num(to), plain = n == null || /[–-]/.test(String(to));
+    shown[key] = n;
+    if (plain || from == null || reduce) { el.textContent = to + (n != null ? unit : ""); return; }
+    const t0 = performance.now(), dec = String(to).includes(".") ? 1 : 0;
+    const step = t => { const k = Math.min(1, (t - t0) / 380), v = from + (n - from) * (1 - Math.pow(1 - k, 3)); el.textContent = v.toFixed(dec) + unit; if (k < 1) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
+  }
+  function showRow(i) {
+    const C = D.sizeCharts[szKey], row = C.rows[i]; if (!row) return; szRow = i;
+    $$(".sg-sizes button", sz).forEach((b, j) => b.setAttribute("aria-checked", j === i));
+    const cols = C.columns.map(colInfo);
+    const bodyCol = cols.findIndex(c => c.body);
+    $(".sg-fitline", sz).innerHTML = bodyCol > -1 ? `Fits ${esc(cols[bodyCol].name.replace(/^(your|fits)\s*/i, "").toLowerCase())} <b>${esc(row[bodyCol + 1] || "")}${cols[bodyCol].unit}</b>` : "";
+    $(".sg-list", sz).innerHTML = cols.map((c, j) => c.body ? "" : `<div><dt>${esc(c.name)}</dt><dd data-j="${j}"></dd></div>`).join("");
+    cols.forEach((c, j) => {
+      if (c.body) return; const v = row[j + 1] || "–";
+      const dd = $(`.sg-list dd[data-j="${j}"]`, sz); if (dd) setText(dd, v, c.unit, "l" + j);
+      const t = $(`g[data-j="${j}"] text`, linesG); if (t) setText(t, v, c.unit, "g" + j);
+    });
+    if (!reduce) $$("g[data-j] text", linesG).forEach(t => t.animate([{ opacity: .3 }, { opacity: 1 }], { duration: 300 }));
+  }
+  function szSet(k) {
+    szKey = k; const c = chartCat(k), C = D.sizeCharts[k];
     $$(".sz-types .pill", sz).forEach(b => b.setAttribute("aria-selected", b.dataset.c === c));
     const fits = keys.filter(x => chartCat(x) === c);
     $(".sz-fits", sz).innerHTML = fits.length > 1 ? fits.map(x => `<button type="button" role="tab" data-k="${esc(x)}" aria-selected="${x === k}">${esc(FIT[chartFit(x)] || "All fits")}</button>`).join("") : "";
-    $$(".sz-dots i", sz).forEach((d, j) => d.classList.toggle("on", j === i));
-    track.style.height = slides[i].offsetHeight + "px"; // the card grows and shrinks with the chart
-    $$(".sz-arrow", sz).forEach(b => (b.disabled = b.dataset.d < 0 ? i === 0 : i === slides.length - 1));
-    const first = (D.sizeCharts[k].columns[0] || "").toLowerCase();
+    $(".sg-sizes", sz).innerHTML = C.rows.map((r, j) => `<button type="button" role="radio" data-i="${j}">${esc(r[0])}</button>`).join("");
+    $(".sg-table", sz).innerHTML = chartTable(k);
+    const first = (C.columns[0] || "").toLowerCase();
     $(".sz-find-l", sz).textContent = /waist/.test(first) ? "Your waist (in)" : "Your chest (in)";
+    drawGarment(k, true);
+    const mid = C.rows.findIndex(r => r[0] === "M" || r[0] === "32"); showRow(mid > -1 ? mid : Math.floor(C.rows.length / 2));
     szFind();
   }
-  // "find my size": highlight the row that matches a measurement
+  // "find my size": picks the size that matches a measurement
   function szFind() {
-    const v = parseFloat($(".sz-find input", sz).value), slide = slides[szIdx], out = $(".sz-find-r", sz);
-    $$("tr.hit", sz).forEach(r => r.classList.remove("hit"));
+    const v = parseFloat($(".sz-find input", sz).value), out = $(".sz-find-r", sz);
     if (!(v > 0)) { out.textContent = ""; return; }
-    const rows = D.sizeCharts[keys[szIdx]].rows, nums = rows.map(r => String(r[1] || "").split(/[–-]/).map(parseFloat).filter(n => n > 0));
+    const rows = D.sizeCharts[szKey].rows, nums = rows.map(r => String(r[1] || "").split(/[–-]/).map(parseFloat).filter(n => n > 0));
     let hit = nums.findIndex(n => n.length && v >= n[0] - .25 && v <= (n[1] ?? n[0]) + .25);
-    if (hit < 0) hit = nums.findIndex(n => n.length && v <= (n[1] ?? n[0])); // between sizes: go up one
+    if (hit < 0) hit = nums.findIndex(n => n.length && v <= (n[1] ?? n[0]));
     if (hit < 0) { out.textContent = "That's outside this chart. Message us and we'll help."; return; }
-    $$("tbody tr", slide)[hit].classList.add("hit");
-    out.textContent = `Go for ${rows[hit][0]}` + (chartFit(keys[szIdx]) === "oversized" ? " (or a size down for a less baggy look)" : "");
+    out.textContent = `Go for ${rows[hit][0]}` + (chartFit(szKey) === "oversized" ? " (or a size down for a less baggy look)" : "");
+    showRow(hit);
   }
   $(".sz-find input", sz).addEventListener("input", szFind);
-  $(".sz-types", sz).addEventListener("click", e => { const b = e.target.closest("[data-c]"); if (b) szGo(keys.findIndex(k => chartCat(k) === b.dataset.c)); });
-  $(".sz-fits", sz).addEventListener("click", e => { const b = e.target.closest("[data-k]"); if (b) szGo(keys.indexOf(b.dataset.k)); });
-  $(".sz-nav", sz).addEventListener("click", e => { const b = e.target.closest(".sz-arrow"); if (b) szGo(szIdx + Number(b.dataset.d)); });
-  track.addEventListener("keydown", e => { if (e.key === "ArrowRight" || e.key === "ArrowLeft") { e.preventDefault(); szGo(szIdx + (e.key === "ArrowRight" ? 1 : -1)); } });
-  let szT; track.addEventListener("scroll", () => { clearTimeout(szT); szT = setTimeout(() => szSet(Math.round(track.scrollLeft / track.clientWidth)), 60); }, { passive: true });
-  if (slides.length) szSet(0); else $("#sizes").hidden = true;
-  addEventListener("resize", () => { if (slides.length) track.style.height = slides[szIdx].offsetHeight + "px"; });
+  $(".sz-types", sz).addEventListener("click", e => { const b = e.target.closest("[data-c]"); if (b) szSet(keys.find(k => chartCat(k) === b.dataset.c)); });
+  $(".sz-fits", sz).addEventListener("click", e => { const b = e.target.closest("[data-k]"); if (b) szSet(b.dataset.k); });
+  $(".sg-sizes", sz).addEventListener("click", e => { const b = e.target.closest("[data-i]"); if (b) showRow(+b.dataset.i); });
+  $(".sg-sizes", sz).addEventListener("keydown", e => { if (e.key === "ArrowRight" || e.key === "ArrowLeft") { e.preventDefault(); const n = D.sizeCharts[szKey].rows.length; showRow((szRow + (e.key === "ArrowRight" ? 1 : n - 1)) % n); $$(".sg-sizes button", sz)[szRow].focus(); } });
+  if (keys.length) szSet(keys[0]); else $("#sizes").hidden = true;
 
   /* ---------- toast ---------- */
   let toastT;
