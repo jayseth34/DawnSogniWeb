@@ -79,11 +79,12 @@
     $("#p-list").innerHTML = L.length ? L.map((p, i) => `
       <li class="item" data-i="${i}">
         <img src="${esc(imgUrl(p[p.cover] || p.tee || p.front || p.back))}" alt="">
-        <div><b>${esc(p.name)}${pending.has(p.tee) ? '<span class="new">new image</span>' : ""}</b>
+        <div><b>${esc(p.name)}${pending.has(p.tee) ? '<span class="new">new image</span>' : ""}${p.soldOut ? '<span class="out">sold out</span>' : (p.soldOutSizes || []).length ? `<span class="out">${esc(p.soldOutSizes.join(" "))} sold out</span>` : ""}</b>
           <small>${esc(p.id)} · ${esc(CATS[catOf(p)].one)} · ${Object.entries(p.prices).map(([f, v]) => `${f} Rs. ${v}`).join(" / ")} · ${esc(p.sizes.join(" "))}</small></div>
         <div class="acts">
           <button type="button" data-a="up" ${i === 0 ? "disabled" : ""} aria-label="Move up">↑</button>
           <button type="button" data-a="down" ${i === L.length - 1 ? "disabled" : ""} aria-label="Move down">↓</button>
+          <button type="button" data-a="stock" class="${p.soldOut ? "on" : ""}">${p.soldOut ? "Back in stock" : "Mark sold out"}</button>
           <button type="button" data-a="edit">Edit</button>
           <button type="button" data-a="del" class="del">Delete</button>
         </div>
@@ -94,6 +95,7 @@
     if (b.dataset.a === "up" && i > 0) [L[i - 1], L[i]] = [L[i], L[i - 1]];
     else if (b.dataset.a === "down" && i < L.length - 1) [L[i + 1], L[i]] = [L[i], L[i + 1]];
     else if (b.dataset.a === "edit") return openProduct(i);
+    else if (b.dataset.a === "stock") { if (L[i].soldOut) delete L[i].soldOut; else L[i].soldOut = true; }
     else if (b.dataset.a === "del") { if (!confirm(`Delete "${L[i].name}" from the site?`)) return; L.splice(i, 1); }
     markDirty(); renderProducts();
   });
@@ -149,7 +151,16 @@
     $("#p-fits").innerHTML = fits.map(f => `<label><span><input type="checkbox" data-fit="${esc(f)}" ${prices[f] != null ? "checked" : ""}> ${esc(FITS[f] || f)}</span><input type="number" min="0" step="1" data-price="${esc(f)}" value="${prices[f] ?? ""}" placeholder="Price" ${prices[f] != null ? "" : "disabled"}></label>`).join("");
     const all = [...new Set([...C.sizes, ...sizes])];
     $("#p-sizes").innerHTML = all.map(z => `<label><input type="checkbox" value="${esc(z)}" ${sizes.includes(z) ? "checked" : ""}> ${esc(z)}</label>`).join("");
+    renderOutSizes();
   }
+  // stock: sold-out sizes are picked from the sizes that are switched on
+  function renderOutSizes(out) {
+    out = out || $$("#p-outsizes input:checked").map(c => c.value);
+    const on = $$("#p-sizes input:checked").map(c => c.value), all = $("#p-soldout").checked;
+    $("#p-outsizes").innerHTML = on.map(z => `<label><input type="checkbox" value="${esc(z)}" ${out.includes(z) || all ? "checked" : ""} ${all ? "disabled" : ""}> ${esc(z)}</label>`).join("") || "<small>Turn on sizes first.</small>";
+  }
+  $("#p-sizes").addEventListener("change", () => renderOutSizes());
+  $("#p-soldout").addEventListener("change", () => renderOutSizes(draft.soldOutSizes || []));
   const readPrices = () => Object.fromEntries($$("#p-fits [data-fit]").filter(c => c.checked).map(c => [c.dataset.fit, $(`#p-fits [data-price="${c.dataset.fit}"]`).value === "" ? NaN : Math.round(+$(`#p-fits [data-price="${c.dataset.fit}"]`).value)]));
   $("#p-fits").addEventListener("change", e => {
     const f = e.target.dataset.fit; if (!f) return;
@@ -193,8 +204,10 @@
     draft = p ? normalise(JSON.parse(JSON.stringify(p))) : { id: nextId(), name: "", description: "", colorName: "", cover: "back", prices: { ...CATS.tees.prices }, sizes: [...CATS.tees.defaults], printFocus: "50% 45%" };
     $("#p-title").textContent = p ? `Edit ${p.name}` : "New product";
     $("#p-name").value = draft.name; $("#p-id").value = draft.id; $("#p-desc").value = draft.description || ""; $("#p-colour").value = draft.colorName || "";
+    $("#p-soldout").checked = !!draft.soldOut;
     $("#p-cat").value = catOf(draft); $("#p-lead").value = draft.leadTime || ""; $("#p-lead").placeholder = CATS[catOf(draft)].lead || "Leave empty";
     renderTypeFields(catOf(draft), draft.prices, draft.sizes);
+    renderOutSizes(draft.soldOutSizes || []);
     $("#p-tee-warn").hidden = true; $("#p-error").textContent = "";
     refreshSides();
     pe.showModal(); $("#p-name").focus();
@@ -244,6 +257,9 @@
     Object.assign(draft, { id, name, description: $("#p-desc").value.trim(), colorName: $("#p-colour").value.trim(), prices, sizes, cover, print: cover });
     if (cat === "tees") delete draft.category; else draft.category = cat; // tees stay exactly as before
     const lead = $("#p-lead").value.trim(); if (lead) draft.leadTime = lead; else delete draft.leadTime;
+    if ($("#p-soldout").checked) draft.soldOut = true; else delete draft.soldOut;
+    const outSizes = $("#p-soldout").checked ? (draft.soldOutSizes || []).filter(z => sizes.includes(z)) : $$("#p-outsizes input:checked").map(c => c.value).filter(z => sizes.includes(z));
+    if (outSizes.length) draft.soldOutSizes = outSizes; else delete draft.soldOutSizes;
     // keep the older fields the shop also reads
     draft.tee = draft[cover]; if (draft[other(cover)]) draft.teeFront = draft[other(cover)]; else delete draft.teeFront;
     SIDES.forEach(s => { if (!draft[s]) delete draft[s]; });

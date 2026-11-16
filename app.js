@@ -12,6 +12,9 @@
   // making time: the product's own value, else its type's (shirts: 7–8 days, embroidered to order)
   const leadOf = p => p.leadTime || CATS[catOf(p)].lead || "";
   const leadNote = p => CATS[catOf(p)].leadNote || "Made to order";
+  // sold out: the whole product (soldOut) or single sizes (soldOutSizes), both set in the admin
+  const sizeOut = (p, s) => !!p.soldOut || (p.soldOutSizes || []).includes(s);
+  const isOut = p => !!p.soldOut || (p.sizes.length > 0 && p.sizes.every(s => sizeOut(p, s)));
   const byId = Object.fromEntries(D.products.map(p => [p.id, p]));
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   /* ---------- loader: brief, gone once the page has painted (never waits for the tee images) ---------- */
@@ -133,15 +136,15 @@
   function card(p, i) {
     const sd = sides(p), cov = sd[sd.cover], alt = sd[sd.cover === "front" ? "back" : "front"], swap = !!alt;
     return `
-      <button class="card ${swap ? "swap" : "zoom"} is-loading" type="button" data-id="${esc(p.id)}" data-i="${i}" style="--focus:${esc(p.printFocus || "50% 45%")}" aria-label="${esc(p.name)}, ${rs(basePrice(p))}. View details">
-        <span class="card-img">
+      <button class="card ${swap ? "swap" : "zoom"} is-loading${isOut(p) ? " is-soldout" : ""}" type="button" data-id="${esc(p.id)}" data-i="${i}" style="--focus:${esc(p.printFocus || "50% 45%")}" aria-label="${esc(p.name)}, ${isOut(p) ? "sold out" : rs(basePrice(p))}. View details">
+        <span class="card-img">${isOut(p) ? `<span class="card-badge">Sold out</span>` : ""}
           <span class="card-loader" aria-hidden="true"><img src="images/logo-mark.webp" alt=""></span>
           <img class="main" data-src="${esc(thumb(cov))}" data-full="${esc(cov)}" alt="" width="560" height="560" decoding="async">
           ${swap ? `<img class="alt" data-src="${esc(thumb(alt))}" data-full="${esc(alt)}" alt="" width="560" height="560" decoding="async">` : ""}
         </span>
         <span class="card-name">${esc(p.name)}</span>
         <span class="card-price">${rs(basePrice(p))}</span>
-        ${leadOf(p) ? `<span class="card-lead">Ready in ${esc(leadOf(p))}</span>` : ""}
+        ${isOut(p) ? `<span class="card-lead">Sold out</span>` : leadOf(p) ? `<span class="card-lead">Ready in ${esc(leadOf(p))}</span>` : ""}
       </button>`;
   }
   let loadRun = 0;
@@ -183,7 +186,7 @@
   const cardsDone = () => cardsReady(), imagesDone = () => imagesReady();
   cardsP.then(hideOnce);
   function render(fid) {
-    const f = FILTERS.find(x => x.id === fid) || FILTERS[0]; grid.innerHTML = D.products.filter(f.test).map(card).join("");
+    const f = FILTERS.find(x => x.id === fid) || FILTERS[0]; grid.innerHTML = D.products.filter(f.test).sort((a, b) => isOut(a) - isOut(b)).map(card).join(""); // sold out goes last
     progressive(++loadRun);
   }
   // warm the cache: hover images and full-size images load quietly after the page is ready,
@@ -223,7 +226,9 @@
   };
   // show tee charts and the charts of every type that has products
   const chartCat = k => (CATS[k] ? k : CATS[k.split("-")[0]] ? k.split("-")[0] : "tees");
-  $("#size-tables").innerHTML = Object.keys(D.sizeCharts || {}).filter(k => chartCat(k) === "tees" || usedCats.includes(chartCat(k)))
+  const chartSold = k => { const c = chartCat(k); if (c === "tees") return true; const fit = CATS[k] ? null : k.split("-").slice(1).join("-");
+    return D.products.some(p => catOf(p) === c && (!fit || p.prices[fit] != null)); };
+  $("#size-tables").innerHTML = Object.keys(D.sizeCharts || {}).filter(chartSold)
     .sort((a, b) => Object.keys(CATS).indexOf(chartCat(a)) - Object.keys(CATS).indexOf(chartCat(b))).map(chartTable).join("");
 
   /* ---------- toast ---------- */
@@ -234,11 +239,13 @@
   let bag = store.get("ds-bag", []).filter(i => byId[i.id] && byId[i.id].prices[i.fit] != null);
   const bagEl = $("#bag");
   const lineKey = i => `${i.id}|${i.fit}|${i.size}`;
-  const bagCount = () => bag.reduce((n, i) => n + i.qty, 0);
-  const bagTotal = () => bag.reduce((n, i) => n + byId[i.id].prices[i.fit] * i.qty, 0);
+  const lineOut = i => sizeOut(byId[i.id], i.size);
+  const live = () => bag.filter(i => !lineOut(i));
+  const bagCount = () => live().reduce((n, i) => n + i.qty, 0);
+  const bagTotal = () => live().reduce((n, i) => n + byId[i.id].prices[i.fit] * i.qty, 0);
   function saveBag() { store.set("ds-bag", bag); renderBag(); }
   function bagMessage(no = orderNo()) {
-    const lines = bag.map((i, k) => {
+    const lines = live().map((i, k) => {
       const p = byId[i.id], price = p.prices[i.fit];
       return `${k + 1}. *${p.name}* (${p.id})\n   ${CATS[catOf(p)].one}, ${FIT[i.fit] || i.fit}, size ${i.size}${p.colorName ? ", " + p.colorName : ""}\n   ${i.qty} × ${rs0(price)} = ${rs0(price * i.qty)}${leadOf(p) ? `\n   Ready in ${leadOf(p)} (${leadNote(p).toLowerCase()})` : ""}`;
     });
@@ -256,17 +263,20 @@
     $("#bag-foot").hidden = false;
     items.innerHTML = bag.map(i => {
       const p = byId[i.id], price = p.prices[i.fit];
-      return `<div class="bag-item" data-key="${esc(lineKey(i))}">
+      return `<div class="bag-item${lineOut(i) ? " is-out" : ""}" data-key="${esc(lineKey(i))}">
         ${(() => { const sd = sides(p), src = sd[sd.cover] || p.tee; return `<img src="${esc(thumb(src))}" alt="" onerror="this.onerror=null;this.src='${esc(src)}'">`; })()}
         <div><h3>${esc(p.name)}</h3><p>${Object.keys(p.prices).length > 1 ? (FIT[i.fit] || esc(i.fit)) + ", " : ""}${esc(i.size)}</p>
           <div class="qty"><button type="button" data-q="-1" aria-label="One less">−</button><span>${i.qty}</span><button type="button" data-q="1" aria-label="One more">+</button></div></div>
-        <div class="bag-line"><span>${rs0(price * i.qty)}</span><button class="link-btn" type="button" data-remove>Remove</button></div>
+        <div class="bag-line"><span>${lineOut(i) ? "Sold out" : rs0(price * i.qty)}</span><button class="link-btn" type="button" data-remove>Remove</button></div>
       </div>`;
     }).join("");
     $("#bag-total").textContent = rs(bagTotal());
-    $("#bag-send").href = wa(bagMessage());
+    const send = $("#bag-send"), ok = bagCount() > 0;
+    send.href = ok ? wa(bagMessage()) : "#"; send.classList.toggle("is-disabled", !ok); send.setAttribute("aria-disabled", !ok);
+    $("#bag-out").hidden = !bag.some(lineOut);
   }
   function addToBag(id, fit, size) {
+    if (sizeOut(byId[id], size)) return;
     const k = `${id}|${fit}|${size}`, ex = bag.find(i => lineKey(i) === k);
     if (ex) ex.qty = Math.min(ex.qty + 1, 20); else bag.push({ id, fit, size, qty: 1 });
     saveBag();
@@ -282,6 +292,7 @@
     if (q) { it.qty = Math.max(0, Math.min(20, it.qty + Number(q.dataset.q))); if (!it.qty) bag = bag.filter(i => i !== it); saveBag(); }
     if (e.target.closest("[data-remove]")) { bag = bag.filter(i => i !== it); saveBag(); }
   });
+  $("#bag-send").addEventListener("click", e => { if (!bagCount()) e.preventDefault(); });
   $("#bag-clear").addEventListener("click", () => { bag = []; saveBag(); });
   renderBag();
 
@@ -307,14 +318,23 @@
     const p = current, price = p.prices[sel.fit];
     $("#sheet-price").textContent = rs(price);
     const lead = leadOf(p), le = $("#sheet-lead"); le.hidden = !lead; le.textContent = lead ? `${leadNote(p)} · ready in ${lead}` : "";
-    const link = productLink(p.id);
+    const link = productLink(p.id), out = sizeOut(p, sel.size), all = isOut(p);
+    $("#sheet-out").hidden = !out;
+    $("#sheet-out").textContent = all ? "Sold out" : `Size ${sel.size} is sold out`;
+    const add = $("#sheet-add"); add.disabled = out; add.textContent = out ? "Sold out" : "Add to bag";
+    $("#sheet-wa span").textContent = out ? "Ask about a restock" : "Order just this on WhatsApp";
+    if (out) { // not an order: just a question about when it's back
+      $("#sheet-wa").href = wa(`Hi Dawn Sogni! Is *${p.name}* (${p.id}) coming back${all ? "" : " in size " + sel.size}? Please let me know when it's available again.\n\n${link}`);
+      $("#sheet-chart").innerHTML = chartTable(chartKey(p, sel.fit)); return;
+    }
     $("#sheet-wa").href = wa(`Hi Dawn Sogni! I'd like to order this design.\nOrder no: *${orderNo()}*\n\n*${p.name}* (${p.id})\nItem: ${CATS[catOf(p)].one}\nFit: ${FIT[sel.fit] || sel.fit}\nSize: ${sel.size}\n${p.colorName ? "Colour: " + p.colorName + "\n" : ""}Price: ${rs0(price)}\n${leadOf(p) ? `Ready in: ${leadOf(p)} (${leadNote(p).toLowerCase()})\n` : ""}\n${link}`);
     $("#sheet-chart").innerHTML = chartTable(chartKey(p, sel.fit));
   }
   function open(id) {
     const p = byId[id]; if (!p) return;
     current = p;
-    sel = { fit: firstFit(p), size: ["M", "32"].find(s => p.sizes.includes(s)) || p.sizes[0] };
+    const inStock = p.sizes.filter(s => !sizeOut(p, s));
+    sel = { fit: firstFit(p), size: ["M", "32"].find(s => inStock.includes(s)) || inStock[0] || ["M", "32"].find(s => p.sizes.includes(s)) || p.sizes[0] };
     $("#size-row").closest("fieldset").querySelector("legend").textContent = p.sizes.every(s => /^\d+$/.test(s)) ? "Waist (in)" : "Size";
     const sd = sides(p);
     $("#views").innerHTML = sd.front && sd.back ? `<button class="view" type="button" role="tab" data-v="front">Front</button><button class="view" type="button" role="tab" data-v="back">Back</button>` : "";
@@ -326,7 +346,7 @@
     const fits = Object.keys(p.prices);
     $("#opt-fit").hidden = fits.length < 2;
     $("#fit-row").innerHTML = fits.map(f => `<label><input type="radio" name="fit" value="${esc(f)}" ${f === sel.fit ? "checked" : ""}><span>${FIT[f] || esc(f)} <small>${rs0(p.prices[f])}</small></span></label>`).join("");
-    $("#size-row").innerHTML = p.sizes.map(s => `<label><input type="radio" name="size" value="${esc(s)}" ${s === sel.size ? "checked" : ""}><span>${esc(s)}</span></label>`).join("");
+    $("#size-row").innerHTML = p.sizes.map(s => `<label class="${sizeOut(p, s) ? "is-out" : ""}" title="${sizeOut(p, s) ? "Sold out" : ""}"><input type="radio" name="size" value="${esc(s)}" ${s === sel.size ? "checked" : ""}><span>${esc(s)}</span></label>`).join("");
     updateOrder();
     sheet.showModal(); sheet.scrollTop = 0;
     history.replaceState(null, "", "#p=" + p.id);
@@ -389,7 +409,7 @@
       { "@type": "ItemList", name: "Dawn Sogni tees", itemListElement: D.products.map((p, i) => {
         const prices = Object.values(p.prices).filter(v => v != null), img = (p.cover === "front" ? p.front : p.back) || p.front || p.back || p.tee;
         return { "@type": "ListItem", position: i + 1, item: { "@type": "Product", name: p.name, sku: p.id, description: p.description || undefined, color: p.colorName || undefined, image: site + img, url: productLink(p.id), brand: { "@type": "Brand", name: "Dawn Sogni" },
-          offers: { "@type": "AggregateOffer", priceCurrency: "INR", lowPrice: Math.min(...prices), highPrice: Math.max(...prices), offerCount: prices.length, availability: "https://schema.org/InStock" } } };
+          offers: { "@type": "AggregateOffer", priceCurrency: "INR", lowPrice: Math.min(...prices), highPrice: Math.max(...prices), offerCount: prices.length, availability: isOut(p) ? "https://schema.org/OutOfStock" : "https://schema.org/InStock" } } };
       }) }
     ] };
     const tag = document.createElement("script"); tag.type = "application/ld+json"; tag.textContent = JSON.stringify(ld); document.head.append(tag);

@@ -39,3 +39,10 @@ Tees, shirts, trousers and trackpants (`categories.js` lists each type's fits an
 - A product without `category` is a tee, so all older products stay exactly as they were.
 - Size charts: `regular` / `oversized` are the tee charts. Other types use `trousers`, `shirts`, `trackpants` (all fits) or e.g. `trousers-baggy` (one fit). Add them under Settings → "Add a size chart for".
 - Once more than one type is in the shop, the filter tabs become All / Tees / Shirts / Trousers / Trackpants.
+
+## Sold out
+- Products list → **Mark sold out** / **Back in stock** (whole product), or Edit → Stock → tick single sizes.
+- Stored as `soldOut: true` and `soldOutSizes: ["M"]`. The shop greys the card, moves it to the end, blocks "Add to bag", and turns the WhatsApp button into "Ask about a restock". Sold-out lines already in someone's bag are left out of their order.
+
+## Size charts per fit
+Each type has one chart per fit (`shirts-regular`, `shirts-slim`, `trousers-baggy`, …). The shop only shows charts for fits that a product actually sells.

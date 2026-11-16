@@ -7,7 +7,7 @@
   <title>Dawn Sogni — Admin</title>
   <link rel="icon" href="icon-64.png" type="image/png">
   <meta http-equiv="Cache-Control" content="no-cache">
-  <link rel="stylesheet" href="admin.css?v=202610171243">
+  <link rel="stylesheet" href="admin.css?v=202611160443">
 </head>
 <body>
   <header class="top">
@@ -111,6 +111,11 @@
       </div>
       <fieldset class="sizes"><legend>Fits and prices (Rs.) *</legend><div class="fit-grid" id="p-fits"></div></fieldset>
       <fieldset class="sizes"><legend>Sizes *</legend><div id="p-sizes"></div></fieldset>
+      <fieldset class="sizes stock"><legend>Stock</legend>
+        <label class="soldout-all"><input type="checkbox" id="p-soldout"> Sold out (whole product)</label>
+        <p class="hint">Or tick just the sizes that are sold out:</p>
+        <div id="p-outsizes"></div>
+      </fieldset>
       <fieldset class="sides">
         <legend>T-shirt images <small>(add at least one side; transparent PNG looks best)</small></legend>
         <div class="row imgs">
@@ -189,6 +194,6 @@
 
   <script charset="utf-8" src="share-pages.js?v=202610201500"></script>
   <script src="categories.js?v=202611121329"></script>
-  <script src="admin.js?v=202611121329"></script>
+  <script src="admin.js?v=202611160443"></script>
 </body>
 </html>
