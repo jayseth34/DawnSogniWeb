@@ -1077,5 +1077,6 @@ window.DS = {
       "newUntil": "2026-12-05"
     }
   ],
-  "gallery": []
+  "gallery": [],
+  "analytics": "G-2S3Z4FEYL2"
 };
