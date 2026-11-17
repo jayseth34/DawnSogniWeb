@@ -338,7 +338,7 @@
 
   /* ---------- settings ---------- */
   function renderSettings() {
-    $("#s-wa").value = data.whatsapp || ""; $("#s-ig").value = data.instagram || "";
+    $("#s-wa").value = data.whatsapp || ""; $("#s-ig").value = data.instagram || ""; $("#s-ga").value = data.analytics || "";
     $("#s-charts").innerHTML = Object.entries(data.sizeCharts).map(([fit, c]) => `
       <fieldset class="chart-box" data-fit="${esc(fit)}"><legend>${esc(chartLabel(fit))}</legend>
         <div class="form">
@@ -379,6 +379,7 @@
   $("#s-form").addEventListener("submit", e => {
     e.preventDefault();
     data.whatsapp = $("#s-wa").value.replace(/\D/g, ""); data.instagram = $("#s-ig").value.trim().replace(/^@/, "");
+    const ga = $("#s-ga").value.trim().toUpperCase(); if (ga) data.analytics = ga; else delete data.analytics;
     $$("#s-charts fieldset").forEach(fs => {
       const c = data.sizeCharts[fs.dataset.fit];
       c.title = fs.querySelector('[data-k="title"]').value.trim();
@@ -462,4 +463,15 @@
     btn.disabled = false; $("#pub-close").hidden = false;
   });
   $("#pub-close").addEventListener("click", () => pub.close());
+
+  /* visitor numbers from the public counter (same one the shop footer shows) */
+  (async () => {
+    const C = "https://abacus.jasoncameron.dev/get/dawnsogni-web/", day = off => { const d = new Date(); d.setDate(d.getDate() - off); return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`; };
+    const get = k => fetch(C + k, { cache: "no-store" }).then(r => r.json()).then(j => j.value ?? 0).catch(() => null);
+    const [t, a0, a1] = await Promise.all([get("visitors"), get("day-" + day(0)), get("day-" + day(1))]);
+    const f = v => v == null ? "–" : Number(v).toLocaleString("en-IN");
+    $("#st-total").textContent = f(t); $("#st-today").textContent = f(a0); $("#st-yday").textContent = f(a1);
+  })();
+  const gaLink = () => { $("#st-ga").hidden = !(data && data.analytics); };
+  setInterval(gaLink, 2000);
 })();

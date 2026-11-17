@@ -102,3 +102,9 @@ textarea.chart { font-family: ui-monospace, monospace; font-size: 13px; }
 .stock .soldout-all { display: flex; align-items: center; gap: 8px; font-weight: 600; }
 .stock .hint { margin: 10px 0 6px; font-size: 13px; opacity: .7; }
 #p-outsizes { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+
+.stats { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 36px; }
+.stats > div { display: flex; flex-direction: column; gap: 2px; }
+.stats b { font-size: 30px; font-style: italic; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.st-ga { margin-left: auto; font-weight: 600; text-decoration: underline; text-underline-offset: 4px; }
+.stats { margin-bottom: 28px; padding-bottom: 22px; border-bottom: 1px solid rgba(255,255,255,.12); }

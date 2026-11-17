@@ -7,7 +7,7 @@
   <title>Dawn Sogni — Admin</title>
   <link rel="icon" href="icon-64.png" type="image/png">
   <meta http-equiv="Cache-Control" content="no-cache">
-  <link rel="stylesheet" href="admin.css?v=202611160443">
+  <link rel="stylesheet" href="admin.css?v=202611170356">
 </head>
 <body>
   <header class="top">
@@ -23,6 +23,13 @@
   </header>
 
   <main>
+    <!-- visitors (public counter, no login needed) -->
+    <section class="panel stats" id="stats" aria-live="polite">
+      <div><span class="muted">Visitors so far</span><b id="st-total">–</b></div>
+      <div><span class="muted">Today</span><b id="st-today">–</b></div>
+      <div><span class="muted">Yesterday</span><b id="st-yday">–</b></div>
+      <a id="st-ga" class="st-ga" href="https://analytics.google.com/" target="_blank" rel="noopener" hidden>Open Google Analytics</a>
+    </section>
     <!-- connect -->
     <section class="panel" id="connect">
       <h1>Connect to your site</h1>
@@ -80,6 +87,11 @@
           </label>
           <label>Instagram handle
             <input id="s-ig" placeholder="dawn.sogni">
+          </label>
+        </div>
+        <div class="row">
+          <label>Google Analytics code (starts with G-)
+            <input id="s-ga" placeholder="G-XXXXXXXXXX" pattern="G-[A-Za-z0-9]{4,}" autocapitalize="characters">
           </label>
         </div>
         <h2>Size charts</h2>
@@ -197,6 +209,6 @@
 
   <script charset="utf-8" src="share-pages.js?v=202610201500"></script>
   <script src="categories.js?v=202611121329"></script>
-  <script src="admin.js?v=202611160713"></script>
+  <script src="admin.js?v=202611170356"></script>
 </body>
 </html>

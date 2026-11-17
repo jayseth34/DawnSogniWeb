@@ -398,6 +398,7 @@
   }
   function addToBag(id, fit, size) {
     if (sizeOut(byId[id], size)) return;
+    gtag("event", "add_to_cart", { currency: "INR", value: byId[id].prices[fit], items: [gaItem(byId[id], fit)] });
     const k = `${id}|${fit}|${size}`, ex = bag.find(i => lineKey(i) === k);
     if (ex) ex.qty = Math.min(ex.qty + 1, 20); else bag.push({ id, fit, size, qty: 1 });
     saveBag();
@@ -417,6 +418,44 @@
   $("#bag-clear").addEventListener("click", () => { bag = []; saveBag(); });
   renderBag();
 
+  /* ---------- visitors ----------
+     Public count: each browser is counted once (free Abacus counter, no account), shown in the footer.
+     Detailed reports: Google Analytics, switched on by pasting the G- code in Admin → Settings. */
+  const COUNTER = "https://abacus.jasoncameron.dev", NS = "dawnsogni-web";
+  const ymd = () => { const d = new Date(); return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`; };
+  (async () => {
+    const box = $("#visitors"); if (!box) return;
+    const store = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } };
+    const isNew = !store("ds-visited"), day = ymd(), newToday = store("ds-day") !== day;
+    try {
+      const r = await fetch(`${COUNTER}/${isNew ? "hit" : "get"}/${NS}/visitors`, { cache: "no-store" });
+      const j = await r.json(); if (!(j.value > 0)) return;
+      if (isNew) store("ds-visited", "1");
+      if (newToday) { store("ds-day", day); fetch(`${COUNTER}/hit/${NS}/day-${day}`).catch(() => {}); }
+      const n = j.value, out = $("#visitors-n", box);
+      if (n === 1) $("#visitors-t", box).textContent = "person has visited Dawn Sogni";
+      box.hidden = false;
+      // count up when the footer comes into view
+      const run = () => {
+        if (reduce) { out.textContent = n.toLocaleString("en-IN"); return; }
+        const t0 = performance.now(), from = Math.max(0, Math.floor(n * .6));
+        const step = t => { const k = Math.min(1, (t - t0) / 1400); out.textContent = Math.round(from + (n - from) * (1 - Math.pow(1 - k, 3))).toLocaleString("en-IN"); if (k < 1) requestAnimationFrame(step); };
+        requestAnimationFrame(step);
+      };
+      out.textContent = n.toLocaleString("en-IN");
+      const io = new IntersectionObserver(es => { if (es[0].isIntersecting) { io.disconnect(); run(); } }); io.observe(box);
+    } catch (e) { /* counter unreachable: the line just stays hidden */ }
+  })();
+  // Google Analytics (only once a G- code is set in the admin)
+  const GA = /^G-[A-Z0-9]{4,}$/.test(D.analytics || "") ? D.analytics : null;
+  window.dataLayer = window.dataLayer || [];
+  const gtag = function () { if (GA) window.dataLayer.push(arguments); };
+  if (GA) {
+    const g = document.createElement("script"); g.async = true; g.src = `https://www.googletagmanager.com/gtag/js?id=${GA}`; document.head.append(g);
+    gtag("js", new Date()); gtag("config", GA);
+  }
+  const gaItem = (p, fit) => ({ item_id: p.id, item_name: p.name, item_category: CATS[catOf(p)].name, item_variant: fit, price: fit ? p.prices[fit] : basePrice(p) });
+
   /* ---------- extra motion: scroll zoom, tilt, star burst, logo wipe (all skipped with reduced motion) ---------- */
   // star burst: little four-point stars thrown out from a point
   const STAR = '<svg viewBox="-10 -10 20 20"><path d="M0-10C1 -3 3 -1 10 0C3 1 1 3 0 10C-1 3 -3 1 -10 0C-3 -1 -1 -3 0-10Z"/></svg>';
@@ -435,8 +474,12 @@
     }
   }
   const burstAt = el => { const r = el.getBoundingClientRect(); burst(r.left + r.width / 2, r.top + r.height / 2); };
-  $("#sheet-wa").addEventListener("click", e => { if (!e.currentTarget.classList.contains("is-disabled")) burstAt(e.currentTarget); });
-  $("#bag-send").addEventListener("click", e => { if (bagCount()) burstAt(e.currentTarget); });
+  $("#sheet-wa").addEventListener("click", e => {
+    if (e.currentTarget.classList.contains("is-disabled")) return; burstAt(e.currentTarget);
+    if (current && !sizeOut(current, sel.size)) gtag("event", "whatsapp_order", { currency: "INR", value: current.prices[sel.fit], items: [gaItem(current, sel.fit)] });
+  });
+  $("#bag-send").addEventListener("click", e => { if (!bagCount()) return; burstAt(e.currentTarget); gtag("event", "whatsapp_order", { currency: "INR", value: bagTotal(), items: live().map(i => ({ ...gaItem(byId[i.id], i.fit), quantity: i.qty })) }); });
+  document.addEventListener("click", e => { if (e.target.closest('a[href*="/printcanvas"]')) gtag("event", "open_design_studio"); }, true);
 
   if (!reduce) {
     // scroll zoom: the hall leans in and darkens as you scroll down, and the DS mark comes through
@@ -553,6 +596,7 @@
   }
   function open(id, card) {
     const p = byId[id]; if (!p) return;
+    gtag("event", "view_item", { currency: "INR", value: basePrice(p), items: [gaItem(p)] });
     const fromImg = card && !reduce ? card.querySelector(".card-img img.main") : null;
     const fromRect = fromImg && fromImg.complete && fromImg.naturalWidth ? fromImg.getBoundingClientRect() : null;
     $("#sheet-img").dataset.v = "";
