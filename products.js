@@ -1079,5 +1079,6 @@ window.DS = {
   ],
   "gallery": [],
   "analytics": "G-2S3Z4FEYL2",
-  "gaClientId": "404744926434-cq3s7gv8qhlu993b4s3bgs5l1o3ieco8.apps.googleusercontent.com"
+  "gaClientId": "404744926434-cq3s7gv8qhlu993b4s3bgs5l1o3ieco8.apps.googleusercontent.com",
+  "gaPropertyId": "564772530"
 };
