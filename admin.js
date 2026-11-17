@@ -338,7 +338,7 @@
 
   /* ---------- settings ---------- */
   function renderSettings() {
-    $("#s-wa").value = data.whatsapp || ""; $("#s-ig").value = data.instagram || ""; $("#s-ga").value = data.analytics || "";
+    $("#s-wa").value = data.whatsapp || ""; $("#s-ig").value = data.instagram || ""; $("#s-ga").value = data.analytics || ""; $("#s-ga-client").value = data.gaClientId || ""; $("#s-ga-prop").value = data.gaPropertyId || "";
     $("#s-charts").innerHTML = Object.entries(data.sizeCharts).map(([fit, c]) => `
       <fieldset class="chart-box" data-fit="${esc(fit)}"><legend>${esc(chartLabel(fit))}</legend>
         <div class="form">
@@ -380,6 +380,8 @@
     e.preventDefault();
     data.whatsapp = $("#s-wa").value.replace(/\D/g, ""); data.instagram = $("#s-ig").value.trim().replace(/^@/, "");
     const ga = $("#s-ga").value.trim().toUpperCase(); if (ga) data.analytics = ga; else delete data.analytics;
+    const gc = $("#s-ga-client").value.trim(), gp = $("#s-ga-prop").value.replace(/\D/g, "");
+    if (gc) data.gaClientId = gc; else delete data.gaClientId; if (gp) data.gaPropertyId = gp; else delete data.gaPropertyId;
     $$("#s-charts fieldset").forEach(fs => {
       const c = data.sizeCharts[fs.dataset.fit];
       c.title = fs.querySelector('[data-k="title"]').value.trim();

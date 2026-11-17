@@ -7,7 +7,7 @@
   <title>Dawn Sogni — Admin</title>
   <link rel="icon" href="icon-64.png" type="image/png">
   <meta http-equiv="Cache-Control" content="no-cache">
-  <link rel="stylesheet" href="admin.css?v=202611170356">
+  <link rel="stylesheet" href="admin.css?v=202611170527">
 </head>
 <body>
   <header class="top">
@@ -29,6 +29,18 @@
       <div><span class="muted">Today</span><b id="st-today">–</b></div>
       <div><span class="muted">Yesterday</span><b id="st-yday">–</b></div>
       <a id="st-ga" class="st-ga" href="https://analytics.google.com/" target="_blank" rel="noopener" hidden>Open Google Analytics</a>
+    </section>
+    <!-- Google Analytics (sign in with Google; separate from the GitHub connection) -->
+    <section class="panel ga" id="ga">
+      <div class="ga-head">
+        <h2>Analytics</h2>
+        <div class="ga-range" role="group" aria-label="Period">
+          <button type="button" data-days="7" aria-pressed="true">7 days</button>
+          <button type="button" data-days="28" aria-pressed="false">28 days</button>
+          <button type="button" data-days="90" aria-pressed="false">90 days</button>
+        </div>
+      </div>
+      <div class="ga-body"></div>
     </section>
     <!-- connect -->
     <section class="panel" id="connect">
@@ -92,6 +104,14 @@
         <div class="row">
           <label>Google Analytics code (starts with G-)
             <input id="s-ga" placeholder="G-XXXXXXXXXX" pattern="G-[A-Za-z0-9]{4,}" autocapitalize="characters">
+          </label>
+        </div>
+        <div class="row">
+          <label>Google sign-in Client ID (for the Analytics section)
+            <input id="s-ga-client" placeholder="1234-abc.apps.googleusercontent.com">
+          </label>
+          <label>Analytics Property ID (a number)
+            <input id="s-ga-prop" inputmode="numeric" placeholder="512345678">
           </label>
         </div>
         <h2>Size charts</h2>
@@ -209,6 +229,7 @@
 
   <script charset="utf-8" src="share-pages.js?v=202610201500"></script>
   <script src="categories.js?v=202611121329"></script>
-  <script src="admin.js?v=202611170356"></script>
+  <script src="admin.js?v=202611170527"></script>
+  <script src="admin-analytics.js?v=202611170527"></script>
 </body>
 </html>
