@@ -657,6 +657,24 @@
   const m = location.hash.match(/^#p=(.+)$/);
   if (m) open(decodeURIComponent(m[1]));
 
+  /* ---------- the 3D gallery (gallery.js) ---------- */
+  const openGallery = () => {
+    if (!window.DSGallery) return;
+    if (location.hash !== "#gallery") history.replaceState(null, "", "#gallery");
+    gtag("event", "open_gallery");
+    window.DSGallery.open({
+      products: D.products, sides, thumb, isOut, isNew,
+      price: p => "₹" + Number(basePrice(p)).toLocaleString("en-IN"),
+      open: id => open(id),
+      onSheetClose: fn => sheet.addEventListener("close", fn)
+    });
+  };
+  document.addEventListener("click", e => {
+    const t = e.target.closest("[data-open-gallery]"); if (!t) return;
+    e.preventDefault(); if (!$("#menu").hidden) $("#menu-close").click(); openGallery();
+  });
+  if (location.hash === "#gallery") addEventListener("load", openGallery);
+
   /* ---------- background music: plays by default, starts on first interaction if the browser blocks autoplay ---------- */
   const bgm = $("#bgm"), mBtn = $("#music-btn");
   let userPaused = store.get("ds-music-off", false);
