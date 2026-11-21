@@ -30,7 +30,7 @@
   <link rel="preload" href="images/ravenmoon-1200.webp" as="image" media="(max-width: 900px)">
   <link rel="preload" href="fonts/chakra-petch-latin-700-italic.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="images/logo-mark.webp" as="image">
-  <link rel="stylesheet" href="styles.css?v=202611211045">
+  <link rel="stylesheet" href="styles.css?v=202611211055">
 </head>
 <body>
   <div class="loader" id="loader" aria-hidden="true">
@@ -211,7 +211,11 @@
       <button class="gl-back" type="button">Back to shop</button>
       <span class="gl-count" aria-live="polite"></span>
     </div>
-    <p class="gl-hint">Scroll or swipe to walk · Tap a design to see it</p>
+    <p class="gl-hint">Scroll to walk · Click a design to open it</p>
+    <div class="gl-cap">
+      <div class="gl-cap-text"><b class="gl-cap-name"></b><span class="gl-cap-price"></span></div>
+      <button class="gl-view" type="button">View</button>
+    </div>
     <div class="gl-nav">
       <button class="gl-prev" type="button" aria-label="Previous design">‹</button>
       <span class="gl-progress"><i></i></span>
@@ -219,7 +223,7 @@
     </div>
     <div class="gl-loading"><img src="images/logo-mark.webp" alt=""><span>Opening the gallery…</span></div>
   </div>
-  <script src="gallery.js?v=202611211045" defer></script>
+  <script src="gallery.js?v=202611211055" defer></script>
   <script src="categories.js?v=202611121329"></script>
   <script src="app.js?v=202611211045"></script>
 </body>

@@ -507,3 +507,12 @@ html.gallery-on, html.gallery-on body { overflow: hidden; }
 .gl-loading img { width: 84px; height: auto; animation: ds-spin 1.6s linear infinite; }
 .gl-loading.done { opacity: 0; pointer-events: none; }
 .gallery button:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+
+/* gallery caption: the design you're facing, with a big View button */
+.gl-cap { position: absolute; left: 50%; bottom: calc(82px + env(safe-area-inset-bottom)); transform: translateX(-50%); display: flex; align-items: center; gap: 14px; width: min(92vw, 420px); padding: 10px 10px 10px 18px; border: 1px solid rgba(255,255,255,.18); border-radius: 18px; background: rgba(0,0,0,.6); backdrop-filter: blur(10px); }
+.gl-cap-text { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.gl-cap-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 16px; font-style: italic; letter-spacing: .02em; }
+.gl-cap-price { color: rgba(255,255,255,.65); font-size: 13px; }
+.gl-view { flex: none; min-width: 96px; height: 46px; padding: 0 20px; border: 0; border-radius: 12px; background: #fff; color: #000; font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; }
+.gl-hint { bottom: calc(158px + env(safe-area-inset-bottom)); }
+.gl-nav button:disabled { opacity: .3; cursor: default; }

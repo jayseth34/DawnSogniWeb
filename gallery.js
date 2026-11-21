@@ -152,51 +152,86 @@
     function tweenTo(pos, lookAt, ms, done) {
       tw = { from: camera.position.clone(), to: pos, lf: look.clone(), lt: lookAt, t0: performance.now(), ms: reduce ? 1 : ms, done };
     }
+
+    // ---------- navigation: one stop in front of each design, then the end wall ----------
+    const stops = frames.map(f => clamp(f.world.z + 2.6)).concat(walkMax);
+    const touchUI = matchMedia("(pointer: coarse)").matches;
+    let cur = 0, snapT = 0;
+    const countEl = root.querySelector(".gl-count"), bar = root.querySelector(".gl-progress i");
+    const cap = root.querySelector(".gl-cap"), capName = root.querySelector(".gl-cap-name"), capPrice = root.querySelector(".gl-cap-price"), viewBtn = root.querySelector(".gl-view");
+    const hint = root.querySelector(".gl-hint"); let hinted = false;
+    const hideHint = () => { if (!hinted) { hinted = true; hint.classList.add("gone"); } };
+    if (touchUI) hint.textContent = "Swipe to move · Tap View to open";
+    function setCount(i) { cur = i; showCap(); }
+    function showCap() {
+      const f = frames[cur];
+      countEl.textContent = f ? `${cur + 1} / ${frames.length}` : "End";
+      capName.textContent = f ? f.p.name : "Design your own";
+      capPrice.textContent = f ? (api.isOut(f.p) ? "Sold out" : `From ${api.price(f.p)}`) : "Dawn Sogni Studio";
+      viewBtn.textContent = f ? "View" : "Open Studio";
+      root.querySelector(".gl-prev").disabled = cur === 0; root.querySelector(".gl-next").disabled = cur === stops.length - 1;
+    }
+    function goStop(i) { hideHint(); cur = Math.max(0, Math.min(stops.length - 1, i)); target = stops[cur]; showCap(); }
+    const step = dir => { if (mode === "walk") goStop(cur + dir); };
+    const nearestStop = v => stops.reduce((b, s, i) => (Math.abs(s - v) < Math.abs(stops[b] - v) ? i : b), 0);
+    const openStudio = () => { window.DSGallery.close(); const a = document.querySelector('a[href*="/printcanvas"]'); if (a) a.click(); };
+    viewBtn.onclick = () => { if (mode !== "walk") return; frames[cur] ? goTo(cur) : openStudio(); };
+    root.querySelector(".gl-next").onclick = () => step(1);
+    root.querySelector(".gl-prev").onclick = () => step(-1);
+    root.querySelector(".gl-back").onclick = () => window.DSGallery.close();
+
     function goTo(i) {
       const f = frames[i]; if (!f) return;
-      mode = "focus"; focus = i; hideHint();
+      mode = "focus"; focus = i; cur = i; showCap(); hideHint();
       const pos = f.world.clone().add(f.normal.clone().multiplyScalar(portrait() ? 3.4 : 2.7)); pos.y = eye + .15;
       tweenTo(pos, f.world.clone(), 900, () => {
         if (!f.full) { f.full = true; loadTex(f.src).then(t => { if (t) { f.teeMat.map = t; f.teeMat.needsUpdate = true; } }); }
         api.open(f.p.id);
       });
-      setCount(i);
     }
     function backToWalk() {
       if (mode !== "focus") return;
-      const f = frames[focus]; mode = "tween";
-      z = target = clamp(f.world.z + 2.4);
+      mode = "tween"; cur = focus; z = target = stops[focus];
       const back = walkLook(); xNow = side;
       tweenTo(new THREE.Vector3(side, eye, z), back, 750, () => { mode = "walk"; focus = null; });
     }
     api.onSheetClose(() => { if (!root.hidden && mode === "focus") backToWalk(); });
 
-    // input
-    const hint = root.querySelector(".gl-hint"); let hinted = false;
-    const hideHint = () => { if (!hinted) { hinted = true; hint.classList.add("gone"); } };
-    root.addEventListener("wheel", e => { if (mode !== "walk") return; e.preventDefault(); target = clamp(target - e.deltaY * .0045); hideHint(); }, { passive: false });
+    // computer: the wheel walks freely, then settles on the nearest design
+    root.addEventListener("wheel", e => {
+      if (mode !== "walk") return; e.preventDefault(); hideHint();
+      target = clamp(target - e.deltaY * .0045);
+      clearTimeout(snapT); snapT = setTimeout(() => goStop(nearestStop(target)), 280);
+    }, { passive: false });
+    // phone: each swipe is one step (left / up = next); a tap opens what you tapped
     let drag = null;
-    canvas.addEventListener("pointerdown", e => { drag = { y: e.clientY, x: e.clientX, t0: target, moved: 0 }; });
+    canvas.addEventListener("pointerdown", e => { if (mode !== "walk") return; drag = { x: e.clientX, y: e.clientY, t0: target, moved: 0, at: performance.now(), mouse: e.pointerType === "mouse" }; });
     addEventListener("pointermove", e => {
       mx = e.clientX / innerWidth - .5; my = e.clientY / innerHeight - .5;
-      if (drag && mode === "walk") { const dy = e.clientY - drag.y, dx = e.clientX - drag.x; drag.moved = Math.max(drag.moved, Math.hypot(dx, dy)); target = clamp(drag.t0 + (dy + dx * .6) * .016); if (drag.moved > 8) hideHint(); }
+      if (drag && mode === "walk") {
+        const dx = e.clientX - drag.x, dy = e.clientY - drag.y; drag.moved = Math.max(drag.moved, Math.hypot(dx, dy));
+        // a small lean while the finger moves, so the swipe feels connected
+        const pull = Math.abs(dx) > Math.abs(dy) ? dx : dy;
+        target = clamp(drag.t0 + pull * (drag.mouse ? .012 : .0035));
+      }
       if (!drag && e.pointerType === "mouse") hover(e);
     });
-    addEventListener("pointerup", e => { if (drag && drag.moved < 8 && e.target === canvas) pick(e); drag = null; });
+    addEventListener("pointerup", e => {
+      if (!drag) return; const d = drag; drag = null;
+      if (d.moved < 10) { target = d.t0; if (e.target === canvas) pick(e); return; }
+      if (d.mouse) return goStop(nearestStop(target));
+      const dx = e.clientX - d.x, dy = e.clientY - d.y, dir = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 1 : -1) : (dy < 0 ? 1 : -1);
+      goStop(cur + dir);
+    });
+    addEventListener("pointercancel", () => { if (drag) { target = drag.t0; drag = null; } });
     addEventListener("keydown", e => {
       if (root.hidden || document.querySelector("dialog[open]")) return;
       if (e.key === "Escape") return window.DSGallery.close();
       if (mode !== "walk") return;
       if (["ArrowUp", "ArrowRight", "PageDown", " "].includes(e.key)) { e.preventDefault(); step(1); }
       if (["ArrowDown", "ArrowLeft", "PageUp"].includes(e.key)) { e.preventDefault(); step(-1); }
-      if (e.key === "Enter") { const i = nearest(); if (i > -1) goTo(i); }
+      if (e.key === "Enter") viewBtn.click();
     });
-    // jump to the next / previous piece
-    const nearest = () => { let bi = -1, bd = 1e9; frames.forEach((f, i) => { const d = Math.abs(z - 2.6 - f.world.z); if (d < bd) { bd = d; bi = i; } }); return bi; };
-    function step(dir) { hideHint(); const i = Math.max(0, Math.min(frames.length - 1, nearest() + dir)); target = clamp(frames[i].world.z + 2.6); setCount(i); }
-    root.querySelector(".gl-next").onclick = () => step(1);
-    root.querySelector(".gl-prev").onclick = () => step(-1);
-    root.querySelector(".gl-back").onclick = () => window.DSGallery.close();
 
     const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
     const hit = e => { const r = canvas.getBoundingClientRect(); ndc.set((e.clientX - r.left) / r.width * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1); ray.setFromCamera(ndc, camera); const h = ray.intersectObjects(pickables, false)[0]; return h && h.distance < 14 ? h.object : null; };
@@ -204,19 +239,14 @@
     function hover(e) {
       if (mode !== "walk") return;
       const o = hit(e), i = o && o.userData.frame != null ? o.userData.frame : -1;
-      canvas.style.cursor = o ? "pointer" : "grab";
-      if (i !== hovered) { hovered = i; }
+      canvas.style.cursor = o ? "pointer" : "grab"; hovered = i;
     }
     function pick(e) {
       if (mode !== "walk") return;
       const o = hit(e); if (!o) return;
-      if (o.userData.studio) { window.DSGallery.close(); const a = document.querySelector('a[href*="/printcanvas"]'); if (a) a.click(); return; }
+      if (o.userData.studio) return openStudio();
       goTo(o.userData.frame);
     }
-
-    // count + progress
-    const countEl = root.querySelector(".gl-count"), bar = root.querySelector(".gl-progress i");
-    function setCount(i) { countEl.textContent = `${i + 1} / ${frames.length}`; }
 
     // ---------- render loop ----------
     let running = false, last = performance.now(), xNow = 0;
@@ -237,12 +267,11 @@
       key.position.set(0, H - .4, camera.position.z - 2.5);
       frames.forEach((f, i) => { const s = ART * (i === hovered && mode === "walk" ? 1.035 : 1); f.art.scale.lerp(new THREE.Vector3(s, s, 1), Math.min(1, dt * 8)); });
       bar.style.transform = `scaleX(${Math.min(1, Math.max(0, (walkMin - z) / (walkMin - walkMax)))})`;
-      if (mode === "walk") { const n = nearest(); if (n > -1 && Math.abs(z - 2.6 - frames[n].world.z) < 1.6) setCount(n); }
       renderer.render(scene, camera);
       requestAnimationFrame(frame);
     }
     root.querySelector(".gl-loading").classList.add("done");
-    setCount(0);
+    showCap();
     return {
       resume() { if (running) return; running = true; last = performance.now(); resize(); requestAnimationFrame(frame); },
       pause() { running = false; }
